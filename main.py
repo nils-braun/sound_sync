@@ -157,9 +157,31 @@ class SoundSync():
 
         self.get_format_pid()
 
+    def move_sink(self):
+        """
+            Gets the id of all the sink-inputs and the id of the rtp-null-output
+            If there is only on sink-inout, connect it to the rtp-null-output
+            Else ?? Warning: Dont move the rtp to the rtp...
+        """
+
+        if self.send_module_id != -1:
+
+            sink_inputs = [x.decode("utf_8").split()[0] for x in subprocess.Popen('pactl list sink-inputs short',
+                                                                                  shell=True, stdout=subprocess.PIPE)
+                                                                           .stdout.readlines()]
+
+            rtp_null = [x.decode("utf_8").split() for x in subprocess.Popen('pactl list sinks short', shell=True,
+                                                                            stdout=subprocess.PIPE).stdout.readlines()]
+
+            rtp_null = [y for y in rtp_null if ("rtp" in y and "module-null-sink.c" in y)][0][0]
+
+            if len(sink_inputs) == 1:
+                subprocess.Popen('pactl move-sink-input ' + sink_inputs[0] + ' ' + rtp_null, shell=True)
+
 if __name__ == "__main__":
 
     soundSync = SoundSync()
+
     top = tkinter.Tk()
 
     senderButton = tkinter.Button(top, text="")
@@ -180,6 +202,7 @@ if __name__ == "__main__":
             soundSync.start_null_module()
             soundSync.start_send_module()
             soundSync.start_format_p()
+            soundSync.move_sink()
         else:
             soundSync.stop_null_module()
             soundSync.stop_send_module()
