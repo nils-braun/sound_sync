@@ -22,7 +22,10 @@ class SoundSync():
                              'duplicate{dst=rtp{dst=' + self.multicast_address + \
                              ',mux=ts,port=' + self.multicast_port + '}}"'
 
-        self.recv_string = 'cvlc rtp://@' + self.multicast_address + ':' + self.multicast_port
+        #mplayer -cache 2048 -demuxer format=0x20776172 rtp://225.0.0.1:12345
+
+        self.recv_string = 'mplayer -cache 2048 -demuxer format=0x20776172 rtp://' + self.multicast_address + ':'\
+                           + self.multicast_port
 
         self.get_null_module_id()
         self.get_send_module_id()
@@ -59,7 +62,7 @@ class SoundSync():
         """
             Get pid of receiver cvlc
         """
-        temp = subprocess.Popen('ps a | grep "vlc.*' + self.multicast_address + ':' + self.multicast_port + '"',
+        temp = subprocess.Popen('ps a | grep "mplayer.*' + self.multicast_address + ':' + self.multicast_port + '"',
                                 stdout=subprocess.PIPE, shell=True).stdout.readlines()
 
         temp = [y[0] for y in [x.decode("utf-8").split() for x in temp] if "grep" not in y]
