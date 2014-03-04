@@ -47,7 +47,7 @@ class SoundSync():
 
     def get_send_module_id(self):
         """
-            Get sender module id from pactl
+            Get sender module id from pactlt
         """
         self.send_module_id = subprocess.Popen('pactl list modules short | '
                                                'grep "module-rtp-send.*source=rtp\.monitor" | '
