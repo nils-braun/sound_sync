@@ -18,7 +18,7 @@ class SoundSync():
         self.local_port = "46998"
 
         self.format_string = 'cvlc rtp://@127.0.0.1:' + self.local_port + ' ' \
-                             '":sout=#transcode{acodec=mp3,ab=256,channels=2}:' \
+                             '":sout=#transcode{acodec=mp3,ab=256,channels=1}:' \
                              'duplicate{dst=rtp{dst=' + self.multicast_address + \
                              ',mux=ts,port=' + self.multicast_port + '}}"'
 
@@ -62,10 +62,10 @@ class SoundSync():
         """
             Get pid of receiver cvlc
         """
-        temp = subprocess.Popen('ps a | grep "mplayer.*' + self.multicast_address + ':' + self.multicast_port + '"',
+        temp = subprocess.Popen('ps aux | grep "mplayer.*' + self.multicast_address + ':' + self.multicast_port + '"',
                                 stdout=subprocess.PIPE, shell=True).stdout.readlines()
 
-        temp = [y[0] for y in [x.decode("utf-8").split() for x in temp] if "grep" not in y]
+        temp = [y[1] for y in [x.decode("utf-8").split() for x in temp] if "grep" not in y]
 
         if len(temp) == 0:
             self.recv_pid = -1
@@ -76,11 +76,12 @@ class SoundSync():
         """
             Get pid of format cvlc
         """
-        temp = subprocess.Popen('ps a | grep "vlc.*' + self.local_port + '.*sout.*dst=' +
+        temp = subprocess.Popen('ps aux | grep "vlc.*' + self.local_port + '.*sout.*dst=' +
                                 self.multicast_address + '.*port=' + self.multicast_port + '"',
                                 stdout=subprocess.PIPE, shell=True).stdout.readlines()
 
-        temp = [y[0] for y in [x.decode("utf-8").split() for x in temp] if "grep" not in y]
+        temp = [y[1] for y in [x.decode("utf-8").split() for x in temp] if "grep" not in y]
+
 
         if len(temp) == 0:
             self.format_pid = -1
