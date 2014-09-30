@@ -30,7 +30,7 @@ class UpdateThread(Thread):
             time_stamp = time.time() * 1000
             if int(time_stamp + self.delta) % self.waiting_time == 0:
 
-                #self.call()
+                self.call()
 
                 if DEBUG:
                     deviation = time_stamp - int(time_stamp / self.waiting_time) * self.waiting_time
@@ -105,18 +105,25 @@ class ClientListener:
         self.client.close()
 
 
+def call(buffers):
+    pass
+    #data = buffers.pop(0)
+    #client.device.write(bytes(data))
+
+
 if __name__ == "__main__":
 
     client = ClientListener()
     client.connect()
-    thread = UpdateThread(0, client.waiting_time, 0.8)
+    buffers = list()
+    thread = UpdateThread(lambda: call(buffers), client.waiting_time, 0.8)
 
     try:
-        #thread.start()
+        thread.start()
         while True:
             data = client.recv_exact()
             if data:
-                client.device.write(bytes(data))
+                buffers.append(data)
             else:
                 print("Aborting!")
                 break
