@@ -50,6 +50,9 @@ class ServerInterface:
     def is_sender(self, sender):
         return self.sender is sender
 
+    def is_empty(self):
+        return self.end_pointer == 0
+
 serverInterface = ServerInterface()
 
 
@@ -105,9 +108,13 @@ class RequestHandler(socketserver.BaseRequestHandler):
             elif data.startswith(b"receiver"):
                 print("[%s %s] New Client is Receiver" % self.client_address)
 
-                serverInterface.add_listener(self)
+                if serverInterface.is_empty():
+                    print("[%s %s] There is no sender!" % self.client_address)
+                    return
+                else:
+                    serverInterface.add_listener(self)
 
-                self.running = True
+                    self.running = True
 
             else:
                 print("[%s %s] Do not understand new Client!" % self.client_address)

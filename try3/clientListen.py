@@ -3,11 +3,11 @@ import socket
 import ConfigParser as configparser
 import alsaaudio
 import math
-import wave
+import time
 from threading import Thread
 
 
-DEBUG = 1
+DEBUG = True
 
 class UpdateThread(Thread):
 
@@ -33,9 +33,9 @@ class UpdateThread(Thread):
                 #self.call()
 
                 if DEBUG:
-                    deviation = time_stamp - int(time_stamp / WAITING_TIME) * WAITING_TIME
+                    deviation = time_stamp - int(time_stamp / self.waiting_time) * self.waiting_time
                     if deviation > 1:
-                        deviation -= WAITING_TIME
+                        deviation -= self.waiting_time
                     self._dev += deviation
 
                     self._counter += 1
@@ -63,13 +63,13 @@ class ClientListener:
             self.port = int(config["DEFAULT"]["Port"])
             self.buffer_size = int(4*(2**math.log(int(config["DEFAULT"]["WaitingTime"])/1000.0 *
                                                   int(config["DEFAULT"]["FrameRate"]), 2)))
-            self.waiting_time = int(config["DEFAULT"]["WaitingTime"])/1000.0
+            self.waiting_time = int(config["DEFAULT"]["WaitingTime"])
             self.framerate = int(config["DEFAULT"]["FrameRate"])
         except AttributeError:
             self.port = int(config.get("DEFAULT", "Port"))
             self.buffer_size = int(4*(2**math.log(int(config.get("DEFAULT", "WaitingTime"))/1000.0 *
                                                   int(config.get("DEFAULT", "FrameRate")), 2)))
-            self.waiting_time = int(config.get("DEFAULT", "WaitingTime"))/1000.0
+            self.waiting_time = int(config.get("DEFAULT", "WaitingTime"))
             self.framerate = int(config.get("DEFAULT", "FrameRate"))
 
     # TODO: get buffer_size and frame_rate from server!
@@ -108,14 +108,22 @@ class ClientListener:
 if __name__ == "__main__":
 
     client = ClientListener()
-    client.connect()
+    #client.connect()
+    thread = UpdateThread(0, client.waiting_time, 0.8)
 
     try:
-        while True:
-            data = client.recv_exact()
-            #data = bytearray(f.readframes(int(client.buffer_size)))
-            client.device.write(bytes(data))
+        thread.start()
+        #while True:
+            #data = client.recv_exact()
+            #if data:
+            #    pass
+            #    #data = bytearray(f.readframes(int(client.buffer_size)))
+            #    #client.device.write(bytes(data))
+            #else:
+            #    print("Aborting!")
+            #    break
     except KeyboardInterrupt:
-        pass
-    finally:
-        client.close()
+        thread.stopped = True
+    #finally:
+
+        #client.close()
