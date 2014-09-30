@@ -4,6 +4,51 @@ import ConfigParser as configparser
 import alsaaudio
 import math
 import wave
+from threading import Thread
+
+
+DEBUG = 1
+
+class UpdateThread(Thread):
+
+    def __init__(self, call, waiting_time, delta):
+        self.stopped = False
+        self.call = call
+        self.delta = delta
+        self.waiting_time = waiting_time
+
+        if DEBUG:
+            self._dev = 0.0
+            self._counter = 0
+
+        # Call the super constructor
+        Thread.__init__(self)
+
+    def run(self):
+        while not self.stopped:
+            # in ms
+            time_stamp = time.time() * 1000
+            if int(time_stamp + self.delta) % self.waiting_time == 0:
+
+                #self.call()
+
+                if DEBUG:
+                    deviation = time_stamp - int(time_stamp / WAITING_TIME) * WAITING_TIME
+                    if deviation > 1:
+                        deviation -= WAITING_TIME
+                    self._dev += deviation
+
+                    self._counter += 1
+
+                    if self._counter == 10:
+                        print(self._dev/10.0)
+                        self._dev = 0
+                        self._counter = 0
+            else:
+                time.sleep(1/10000.0)
+
+    def start(self):
+        Thread.start(self)
 
 
 class ClientListener:
@@ -17,15 +62,17 @@ class ClientListener:
         try:
             self.port = int(config["DEFAULT"]["Port"])
             self.buffer_size = int(4*(2**math.log(int(config["DEFAULT"]["WaitingTime"])/1000.0 *
-                                                int(config["DEFAULT"]["FrameRate"]), 2)))
+                                                  int(config["DEFAULT"]["FrameRate"]), 2)))
+            self.waiting_time = int(config["DEFAULT"]["WaitingTime"])/1000.0
             self.framerate = int(config["DEFAULT"]["FrameRate"])
         except AttributeError:
             self.port = int(config.get("DEFAULT", "Port"))
             self.buffer_size = int(4*(2**math.log(int(config.get("DEFAULT", "WaitingTime"))/1000.0 *
-                                                int(config.get("DEFAULT", "FrameRate")), 2)))
+                                                  int(config.get("DEFAULT", "FrameRate")), 2)))
+            self.waiting_time = int(config.get("DEFAULT", "WaitingTime"))/1000.0
             self.framerate = int(config.get("DEFAULT", "FrameRate"))
 
-
+    # TODO: get buffer_size and frame_rate from server!
     def connect(self):
         self.device = alsaaudio.PCM(card="default")
         self.device.setchannels(2)

@@ -46,6 +46,11 @@ class ClientSender:
     def close(self):
         self.client.close()
 
+# Main function
+# Initialize a new instance of the client sender module
+# and connect to the server.
+# Then start the message loop (send parts of the file to the server)
+# until Ctrl-C is hit.
 if __name__ == "__main__":
 
     client = ClientSender()
