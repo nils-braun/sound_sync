@@ -51,7 +51,7 @@ class ServerInterface:
         return self.sender is sender
 
     def is_empty(self):
-        return self.end_pointer == 0
+        return self.end_pointer == 0 or self.sender == 0
 
 serverInterface = ServerInterface()
 
@@ -62,7 +62,6 @@ class RequestHandler(socketserver.BaseRequestHandler):
 
     def __init__(self, request, client_address, server):
 
-        self.sender = False
         self.running = False
 
         socketserver.BaseRequestHandler.__init__(self, request, client_address, server)
@@ -74,6 +73,7 @@ class RequestHandler(socketserver.BaseRequestHandler):
             data = self.request.recv(buffer_size - pointer)
             if not data:
                 print("[%s %s] Removing Client" % self.client_address)
+                serverInterface.sender = 0
                 self.running = False
                 return
 
@@ -133,10 +133,14 @@ class RequestHandler(socketserver.BaseRequestHandler):
         else:
             while self.running:
                 try:
+                    if serverInterface.is_empty():
+                        print("[%s %s] There is no sender!" % self.client_address)
+                        return
+
                     buffer = serverInterface.get_buffer(self)
                     if buffer != 0:
                         self.request.sendall(buffer)
-                except BrokenPipeError:
+                except ConnectionResetError:
                     self.running = False
                     print("[%s %s] Removing Client" % self.client_address)
                     return
