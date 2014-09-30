@@ -6,32 +6,54 @@ import configparser
 import math
 import time
 
-if __name__ == "__main__":
 
-    config = configparser.ConfigParser()
-    config.read("settings.conf")
+class ClientSender:
+    def __init__(self):
+        config = configparser.ConfigParser()
+        config.read("settings.conf")
+        self.port = int(config["DEFAULT"]["Port"])
+        self.buffer_size = int((2**math.log(int(config["DEFAULT"]["WaitingTime"])/1000.0 *
+                                            int(config["DEFAULT"]["FrameRate"]), 2)))
+        self.start_buffer_size = int(config["DEFAULT"]["BufferSize"])
 
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect(("localhost", int(config["DEFAULT"]["Port"])))
+        self.waiting_time = int(config["DEFAULT"]["WaitingTime"])/1000.0
+        self.client = 0
 
-    buffer_size = 2**int(math.log(int(config["DEFAULT"]["WaitingTime"])/1000.0 *
-                                  int(config["DEFAULT"]["FrameRate"]), 2))
+    def connect(self):
+        # connect to the server
+        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.client.connect(("localhost", self.port))
 
-    client.sendall(b"sender")
-    client.sendall(str(buffer_size).encode())
+        # tell the server we are a sender
+        self.client.sendall(b"sender")
+        # tell the server the buffer size
+        self.client.sendall(str(self.buffer_size).encode())
+        # wait for the ok from the server
+        self.client.recv(self.start_buffer_size)
 
-    client.recv(int(config["DEFAULT"]["BufferSize"]))
+    def send(self, message):
+        self.client.sendall(message)
 
-    # Faktor 4???
-    try:
+    def message_loop(self):
         while True:
             f = wave.open("../test.wav", "rb")
-            for i in range(1000):
-                data = f.readframes(int(buffer_size/4))
-                client.sendall(data)
-
-                time.sleep(int(config["DEFAULT"]["WaitingTime"])/1000.0)
-
+            for i in range(50):
+                buffer = bytearray(f.readframes(int(self.buffer_size)))
+                self.send(buffer)
+                time.sleep(self.waiting_time)
             f.close()
+
+    def close(self):
+        self.client.close()
+
+if __name__ == "__main__":
+
+    client = ClientSender()
+    client.connect()
+
+    try:
+        client.message_loop()
+    except KeyboardInterrupt:
+        pass
     finally:
         client.close()
