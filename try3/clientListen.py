@@ -82,7 +82,7 @@ class ClientListener:
 
         # Connect to the server
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.client.connect(("localhost", self.port))
+        self.client.connect(("192.168.178.200", self.port))
 
         # Tell the server we are a receiver
         self.client.sendall(b"receiver")
@@ -108,22 +108,22 @@ class ClientListener:
 if __name__ == "__main__":
 
     client = ClientListener()
-    #client.connect()
+    client.connect()
     thread = UpdateThread(0, client.waiting_time, 0.8)
 
     try:
-        thread.start()
-        #while True:
-            #data = client.recv_exact()
-            #if data:
-            #    pass
-            #    #data = bytearray(f.readframes(int(client.buffer_size)))
-            #    #client.device.write(bytes(data))
-            #else:
-            #    print("Aborting!")
-            #    break
+        #thread.start()
+        while True:
+            data = client.recv_exact()
+            if data:
+                client.device.write(bytes(data))
+            else:
+                print("Aborting!")
+                break
     except KeyboardInterrupt:
+        pass
+    finally:
+        client.close()
         thread.stopped = True
-    #finally:
 
         #client.close()

@@ -136,7 +136,7 @@ class RequestHandler(socketserver.BaseRequestHandler):
                     buffer = serverInterface.get_buffer(self)
                     if buffer != 0:
                         self.request.sendall(buffer)
-                except (ConnectionResetError, BrokenPipeError):
+                except BrokenPipeError:
                     self.running = False
                     print("[%s %s] Removing Client" % self.client_address)
                     return

@@ -22,7 +22,7 @@ class ClientSender:
     def connect(self):
         # connect to the server
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.client.connect(("localhost", self.port))
+        self.client.connect(("192.168.178.200", self.port))
 
         # tell the server we are a sender
         self.client.sendall(b"sender")
@@ -37,7 +37,7 @@ class ClientSender:
     def message_loop(self):
         while True:
             f = wave.open("../test.wav", "rb")
-            for i in range(50):
+            for i in range(1):
                 buffer = bytearray(f.readframes(int(self.buffer_size)))
                 self.send(buffer)
                 time.sleep(self.waiting_time)
