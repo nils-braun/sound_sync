@@ -5,15 +5,17 @@ import alsaaudio
 import math
 import time
 from threading import Thread
+import select, sys
 
 
 DEBUG = True
 
 class UpdateThread(Thread):
 
-    def __init__(self, call, waiting_time, delta):
+    def __init__(self, call, next, waiting_time, delta):
         self.stopped = False
         self.call = call
+        self.next = next
         self.delta = delta
         self.waiting_time = waiting_time
 
@@ -28,15 +30,19 @@ class UpdateThread(Thread):
         while not self.stopped:
             # in ms
             time_stamp = time.time() * 1000
+            #print(int(time_stamp) % self.waiting_time)
             if int(time_stamp + self.delta) % self.waiting_time == 0:
 
                 self.call()
+                if int(time_stamp + self.delta) % self.waiting_time == 0:
+                    time.sleep(1/1000.0)
 
                 if DEBUG:
                     deviation = time_stamp - int(time_stamp / self.waiting_time) * self.waiting_time
                     if deviation > 1:
                         deviation -= self.waiting_time
                     self._dev += deviation
+                    print(deviation)
 
                     self._counter += 1
 
@@ -44,8 +50,14 @@ class UpdateThread(Thread):
                         print(self._dev/10.0)
                         self._dev = 0
                         self._counter = 0
-            else:
-                time.sleep(1/10000.0)
+
+            i, _, _ = select.select([sys.stdin], [], [], 1/10000.0)
+            for s in i:
+                if s == sys.stdin:
+                    test = sys.stdin.readline()
+                    if test == "n\n":
+                        print("next")
+                        self.next()
 
     def start(self):
         Thread.start(self)
@@ -106,9 +118,13 @@ class ClientListener:
 
 
 def call(buffers):
-    pass
-    #data = buffers.pop(0)
-    #client.device.write(bytes(data))
+    #pass
+    data = buffers.pop(0)
+    client.device.write(bytes(data))
+
+
+def next(buffers):
+    buffers.pop(0)
 
 
 if __name__ == "__main__":
@@ -116,7 +132,7 @@ if __name__ == "__main__":
     client = ClientListener()
     client.connect()
     buffers = list()
-    thread = UpdateThread(lambda: call(buffers), client.waiting_time, 0.8)
+    thread = UpdateThread(lambda: call(buffers), lambda: next(buffers), client.waiting_time, 0.1)
 
     try:
         thread.start()
