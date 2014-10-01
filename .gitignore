@@ -2,3 +2,5 @@ test.wav
 try1
 try2
 __pycache__
+.pyc
+*.pyc

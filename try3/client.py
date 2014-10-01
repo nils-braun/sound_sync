@@ -2,45 +2,34 @@
 
 import socket
 import wave
-import configparser
 import math
 import time
+from clientBase import ClientBase
 
 
-class ClientSender:
+class ClientSender(ClientBase):
     def __init__(self):
-        config = configparser.ConfigParser()
-        config.read("settings.conf")
-        self.port = int(config["DEFAULT"]["Port"])
-        self.buffer_size = int((2**math.log(int(config["DEFAULT"]["WaitingTime"])/1000.0 *
-                                            int(config["DEFAULT"]["FrameRate"]), 2)))
-        self.start_buffer_size = int(config["DEFAULT"]["BufferSize"])
-
-        self.waiting_time = int(config["DEFAULT"]["WaitingTime"])/1000.0
-        self.client = 0
+        ClientBase.__init__(self)
+        self.read_values_from_file()
 
     def connect(self):
         # connect to the server
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.client.connect(("192.168.178.200", self.port))
+        self.client.connect((self.server_ip, self.port))
 
         # tell the server we are a sender
         self.client.sendall(b"sender")
-        # tell the server the buffer size
-        self.client.sendall(str(self.buffer_size).encode())
-        # wait for the ok from the server
-        self.client.recv(self.start_buffer_size)
+        self.recv()
 
-    def send(self, message):
-        self.client.sendall(message)
+        self.send_values_to_server()
 
     def message_loop(self):
         while True:
             f = wave.open("../test.wav", "rb")
-            for i in range(50):
-                buffer = bytearray(f.readframes(int(self.buffer_size)))
+            for i in range(200):
+                buffer = bytearray(f.readframes(int(self.buffer_size/4.0)))
                 self.send(buffer)
-                time.sleep(self.waiting_time)
+                time.sleep(self.waiting_time/1000.0)
             f.close()
 
     def close(self):

@@ -2,10 +2,10 @@
 
 import socketserver
 import select
-import configparser
 from socket import error as SocketError
+import math
 
-start_buffer_size = 0
+start_buffer_size = 1024
 buffer_size = 0
 
 
@@ -18,16 +18,15 @@ class ServerInterface:
         self.start_pointer = 0
         self.end_pointer = 0
         self.buffer_size = 10
+        self.client_waiting_time = 0
+        self.client_frame_rate = 0
 
     def add_sender(self, sender):
-        if self.sender == 0:
-            self.sender = sender
-        else:
-            print("[Server] New sender!")
-            self.sender = sender
+        self.sender = sender
 
     def add_listener(self, listener):
         self.listener.append(listener)
+        # TODO: Get the right number!
         self.listener_buffer_number.append(self.start_pointer)
 
     def add_buffer(self, buffer):
@@ -52,7 +51,10 @@ class ServerInterface:
         return self.sender is sender
 
     def is_empty(self):
-        return self.end_pointer == 0 or self.sender == 0
+        return self.end_pointer == 0
+
+    def no_sender(self):
+        return self.sender == 0
 
 serverInterface = ServerInterface()
 
@@ -88,34 +90,48 @@ class RequestHandler(socketserver.BaseRequestHandler):
 
         global buffer_size
 
-        print("[%s %s] Added new Client" % self.client_address)
+        print("[%s %s] Added new Client." % self.client_address)
 
         # Receive first message to switch between sender and listener
         data = self.request.recv(start_buffer_size)
 
         if data:
             if data.startswith(b"sender"):
-                print("[%s %s] New Client is Sender" % self.client_address)
-
-                buffer_size = (4*int(data[len("sender"):]))
-                print("[Server] buffer_size: %d" % buffer_size)
-
+                print("[%s %s] New Client is Sender." % self.client_address)
                 self.request.sendall(b"ok")
 
-                serverInterface.add_sender(self)
+                # Receive frame rate in Hz
+                serverInterface.client_frame_rate = int(self.request.recv(start_buffer_size))
+                self.request.sendall(b"ok")
 
+                # Receive waiting time in ms
+                serverInterface.client_waiting_time = int(self.request.recv(start_buffer_size))
+                self.request.sendall(b"ok")
+
+                buffer_size = int(4*(2**math.log(serverInterface.client_waiting_time / 1000.0 *
+                                                 serverInterface.client_frame_rate, 2)))
+
+                serverInterface.add_sender(self)
                 self.running = True
+                print("[%s %s] Added new Sender." % self.client_address)
 
             elif data.startswith(b"receiver"):
-                print("[%s %s] New Client is Receiver" % self.client_address)
+                print("[%s %s] New Client is Receiver." % self.client_address)
 
-                if serverInterface.is_empty():
+                if serverInterface.no_sender():
                     print("[%s %s] There is no sender!" % self.client_address)
                     return
                 else:
-                    serverInterface.add_listener(self)
 
+                    self.request.sendall(str(serverInterface.client_frame_rate).encode())
+                    self.request.recv(start_buffer_size)
+
+                    self.request.sendall(str(serverInterface.client_waiting_time).encode())
+                    self.request.recv(start_buffer_size)
+
+                    serverInterface.add_listener(self)
                     self.running = True
+                    print("[%s %s] Added new Listener." % self.client_address)
 
             else:
                 print("[%s %s] Do not understand new Client!" % self.client_address)
@@ -149,13 +165,10 @@ class RequestHandler(socketserver.BaseRequestHandler):
 
 if __name__ == "__main__":
 
-    config = configparser.ConfigParser()
-    config.read("settings.conf")
-
-    start_buffer_size = int(config["DEFAULT"]["BufferSize"])
+    server = socketserver.ThreadingTCPServer(("", 50007), RequestHandler)
 
     try:
-        socketserver.ThreadingTCPServer(("", int(config["DEFAULT"]["Port"])), RequestHandler).serve_forever()
+        server.serve_forever()
     except KeyboardInterrupt:
-        pass
+        server.server_close()
 
