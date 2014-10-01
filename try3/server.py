@@ -27,8 +27,10 @@ class ServerInterface:
 
     def add_listener(self, listener):
         self.listener.append(listener)
-        # TODO: Get the right number!
-        self.listener_buffer_number.append(self.start_pointer)
+        if len(self.listener_buffer_number) > 0:
+            self.listener_buffer_number.append(max(self.listener_buffer_number))
+        else:
+            self.listener_buffer_number.append(self.start_pointer)
 
     def add_buffer(self, buffer):
         self.buffers.append(buffer)
@@ -57,6 +59,13 @@ class ServerInterface:
     def no_sender(self):
         return self.sender == 0
 
+    def remove_sender(self):
+        self.sender = 0
+
+    def remove_listener(self, listener):
+        self.listener_buffer_number.pop(self.listener.index(listener))
+        self.listener.remove(listener)
+
 serverInterface = ServerInterface()
 
 
@@ -76,9 +85,6 @@ class RequestHandler(socketserver.BaseRequestHandler):
         while pointer < buffer_size:
             data = self.request.recv(buffer_size - pointer)
             if not data:
-                print("[%s %s] Removing Client" % self.client_address)
-                serverInterface.sender = 0
-                self.running = False
                 return
 
             tmp_buffer[pointer:pointer + len(data)] = data
@@ -147,6 +153,11 @@ class RequestHandler(socketserver.BaseRequestHandler):
                 buffer = self.recv_exact()
                 if buffer:
                     serverInterface.add_buffer(buffer)
+                else:
+                    print("[%s %s] Removing Client" % self.client_address)
+                    serverInterface.remove_sender()
+                    self.running = False
+                    return
 
         else:
             while self.running:
@@ -162,8 +173,9 @@ class RequestHandler(socketserver.BaseRequestHandler):
                     # Is sleeping 1 ms better for performance issues?
                     time.sleep(1/1000.0)
                 except SocketError:
-                    self.running = False
                     print("[%s %s] Removing Client" % self.client_address)
+                    serverInterface.remove_listener(self)
+                    self.running = False
                     return
 
 
