@@ -9,7 +9,7 @@ import sys
 from clientBase import ClientBase
 
 
-DEBUG = True
+DEBUG = False
 
 
 class UpdateThread(Thread):

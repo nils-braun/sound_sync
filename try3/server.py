@@ -2,6 +2,7 @@
 
 import socketserver
 import select
+import time
 from socket import error as SocketError
 import math
 
@@ -157,6 +158,9 @@ class RequestHandler(socketserver.BaseRequestHandler):
                     buffer = serverInterface.get_buffer(self)
                     if buffer != 0:
                         self.request.sendall(buffer)
+
+                    # Is sleeping 1 ms better for performance issues?
+                    time.sleep(1/1000.0)
                 except SocketError:
                     self.running = False
                     print("[%s %s] Removing Client" % self.client_address)

@@ -12,7 +12,7 @@ class ClientBase:
         self.frame_rate = 0
         self.buffer_size = 0
         self.start_buffer_size = 1024
-        self.server_ip = "192.168.178.142"
+        self.server_ip = "192.168.178.200"
 
         self.config = configparser.ConfigParser()
         self.config.read("settings.conf")
