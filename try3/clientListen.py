@@ -20,10 +20,7 @@ class UpdateThread(Thread):
         self.next = next
         self.delta = delta
         self.waiting_time = waiting_time
-
-        if DEBUG:
-            self._dev = 0.0
-            self._counter = 0
+        self.counter = 0
 
         # Call the super constructor
         Thread.__init__(self)
@@ -31,28 +28,25 @@ class UpdateThread(Thread):
     def run(self):
         while not self.stopped:
             # in ms
-            time_stamp = time.time() * 1000
-            #print(int(time_stamp) % self.waiting_time)
-            if int(time_stamp + self.delta) % self.waiting_time == 0:
+            time_stamp = int(time.time() * 1000 + self.delta)
+            if time_stamp % self.waiting_time == 0:
+
+                tmp_counter = int(time_stamp / self.waiting_time)
+
+                if self.counter == 0:
+                    self.counter = tmp_counter
+                else:
+                    while self.counter != tmp_counter + 1:
+                        print("[Client] Going forward...")
+                        self.next()
+                        self.counter += 1
 
                 self.call()
+                self.counter += 1
                 if int(time_stamp + self.delta) % self.waiting_time == 0:
                     time.sleep(1/1000.0)
 
-                if DEBUG:
-                    deviation = time_stamp - int(time_stamp / self.waiting_time) * self.waiting_time
-                    if deviation > 1:
-                        deviation -= self.waiting_time
-                    self._dev += deviation
-                    print(deviation)
-
-                    self._counter += 1
-
-                    if self._counter == 10:
-                        print(self._dev/10.0)
-                        self._dev = 0
-                        self._counter = 0
-
+            # Just for debugging!
             i, _, _ = select.select([sys.stdin], [], [], 1/10000.0)
             for s in i:
                 if s == sys.stdin:
@@ -93,6 +87,7 @@ class ClientListener (ClientBase):
 
 def call(buffers):
     # TODO: play the right buffer to the right time...
+
     if len(buffers) > 0:
         data = buffers.pop(0)
         client.device.write(bytes(data))

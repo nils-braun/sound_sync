@@ -26,7 +26,7 @@ class ClientSender(ClientBase):
     def message_loop(self):
         while True:
             f = wave.open("../test.wav", "rb")
-            for i in range(200):
+            for i in range(100):
                 buffer = bytearray(f.readframes(int(self.buffer_size/4.0)))
                 self.send(buffer)
                 time.sleep(self.waiting_time/1000.0)
