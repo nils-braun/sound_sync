@@ -102,6 +102,7 @@ class ClientListener (ClientBase):
         ClientBase.__init__(self)
         self.device = 0
         self.buffers = list()
+        self.running = False
 
     def connect(self):
         """
@@ -124,16 +125,19 @@ class ClientListener (ClientBase):
         self.device.setrate(self.frame_rate)
         self.device.setperiodsize(int(self.buffer_size/4))
 
+        self.running = True
+
     def message_loop(self):
         """
         The message loop where the data is received from the server. Blocking!
         """
-        while True:
+        while self.running:
             data = self.recv_exact()
             if data:
                 self.buffers.append(data)
             else:
                 print("[Client] No new data. Aborting!")
+                self.running = False
                 break
 
 
@@ -157,6 +161,7 @@ def main():
     except KeyboardInterrupt:
         pass
     finally:
+        client.running = False
         client.close()
         thread.stop()
 
