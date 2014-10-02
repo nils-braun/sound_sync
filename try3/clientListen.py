@@ -54,6 +54,12 @@ class UpdateThread(Thread):
                     if test == "n\n":
                         print("next")
                         self.next()
+                    if test == "a\n":
+                        print("-10")
+                        self.delta -= 10
+                    if test == "d\n":
+                        print("+10")
+                        self.delta += 10
 
     def start(self):
         Thread.start(self)
