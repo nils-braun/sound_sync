@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 This module implements the class ClientBase - a starting point for all client classes.
 """

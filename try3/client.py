@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
 This module starts the sender.
 """
@@ -10,6 +10,7 @@ import socket
 import subprocess
 import wave
 import time
+import alsaaudio
 from clientBase import ClientBase
 import tempfile
 
@@ -22,7 +23,15 @@ class ClientSender(ClientBase):
     """
     def __init__(self):
         ClientBase.__init__(self)
-        self.read_values_from_file()
+        self.pcm = alsaaudio.PCM(type=alsaaudio.PCM_CAPTURE, card=u'hw:Loopback,1,0')
+        self.waiting_time = 1200
+        self.frame_rate = 44100
+
+    def set_pcm(self):
+        self.pcm.setchannels(2)
+        self.pcm.setrate(self.frame_rate)
+        self.pcm.setformat(alsaaudio.PCM_FORMAT_S16_LE)
+        self.pcm.setperiodsize(self.buffer_size/4/(self.waiting_time/10))
 
     def connect(self):
         """
@@ -38,27 +47,19 @@ class ClientSender(ClientBase):
         # Send the parameters to the server.
         self.send_values_to_server()
 
+        # initialize the capture pcm
+        self.set_pcm()
+
     def message_loop(self, filename):
         """
         Start sending the sound buffers to the server in a loop.
-        In the moment these sound files come from a mp3 file which is converted to wav before using avconv.
         """
-        _, tmp_file = tempfile.mkstemp()
 
-        convert_command = ['avconv', '-y']
-        convert_command += ['-i', filename]
-        convert_command += ['-vn', '-f', 'wav', tmp_file]
+        while True:
+            length, buffer = self.pcm.read()
+            if length > 0:
+                self.send(buffer)
 
-        ret_code = subprocess.call(convert_command, stderr=subprocess.STDOUT, stdout=subprocess.DEVNULL)
-        assert ret_code == 0
-
-        f = wave.open(tmp_file, "rb")
-        max_number = int(f.getnframes()/self.buffer_size*4.0)
-        for i in range(max_number):
-            buffer = bytearray(f.readframes(int(self.buffer_size/4.0)))
-            self.send(buffer)
-            time.sleep(self.waiting_time/1000.0)
-        f.close()
 
 
 def main():
@@ -71,11 +72,6 @@ def main():
     """
     client = ClientSender()
     client.connect()
-
-    # TODO: Get data not from file but from the currently playing sound!
-    # For this: switch the pulse-audio output to the alsa-loopback and collect this output via
-    # pcm = alsaaudio.PCM(type=alsaaudio.PCM_CAPTURE, card=u'hw:Loopback,1,0')
-    # pcm.read()
 
     try:
         client.message_loop("/media/Daten/Music/In Flames/A Sense Of Purpose/02. Disconnected.mp3")

@@ -84,10 +84,7 @@ class ClientListener (ClientBase):
         self.device.setperiodsize(int(self.buffer_size/4))
 
 
-
 def call(buffers):
-    # TODO: play the right buffer to the right time...
-
     if len(buffers) > 0:
         data = buffers.pop(0)
         client.device.write(bytes(data))
@@ -120,5 +117,3 @@ if __name__ == "__main__":
     finally:
         client.close()
         thread.stopped = True
-
-        #client.close()
