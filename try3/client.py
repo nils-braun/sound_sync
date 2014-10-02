@@ -7,12 +7,8 @@ __author__ = "nilpferd1991"
 __version__ = "1.0.0"
 
 import socket
-import subprocess
-import wave
-import time
 import alsaaudio
 from clientBase import ClientBase
-import tempfile
 
 
 class ClientSender(ClientBase):
@@ -50,16 +46,14 @@ class ClientSender(ClientBase):
         # initialize the capture pcm
         self.set_pcm()
 
-    def message_loop(self, filename):
+    def message_loop(self):
         """
         Start sending the sound buffers to the server in a loop.
         """
-
         while True:
             length, buffer = self.pcm.read()
             if length > 0:
                 self.send(buffer)
-
 
 
 def main():
@@ -74,7 +68,7 @@ def main():
     client.connect()
 
     try:
-        client.message_loop("/media/Daten/Music/In Flames/A Sense Of Purpose/02. Disconnected.mp3")
+        client.message_loop()
     except KeyboardInterrupt:
         pass
     finally:

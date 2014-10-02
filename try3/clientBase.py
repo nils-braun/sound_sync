@@ -5,10 +5,6 @@ This module implements the class ClientBase - a starting point for all client cl
 __author__ = "nilpferd1991"
 __version__ = "1.0.0"
 
-try:
-    import configparser
-except ImportError:
-    import ConfigParser as configparser
 import math
 
 
@@ -27,19 +23,7 @@ class ClientBase:
         self.buffer_size = 0
         self.start_buffer_size = 1024
         self.server_ip = "192.168.178.200"
-
-        self.config = configparser.ConfigParser()
-        self.config.read("settings.conf")
         self.port = 50007
-
-    def read_values_from_file(self):
-        """ DEPRICATED
-        :rtype: None
-        """
-        # in ms
-        self.waiting_time = int(self.config["DEFAULT"]["WaitingTime"])
-        # in Hz
-        self.frame_rate = int(self.config["DEFAULT"]["FrameRate"])
 
     def read_values_from_server(self):
         """
