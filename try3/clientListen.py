@@ -41,7 +41,7 @@ class PlayThread(Thread):
         self.delta = 0.1
         self.counter = 0
         self.client = client
-        self._started = 0
+        self.started = False
 
         Thread.__init__(self)
 
@@ -51,10 +51,13 @@ class PlayThread(Thread):
         audio snippet or skipps one.
         """
         while not self.stopped:
+
+            if len(self.client.buffers) > 5:
+                self._call()
+                self._call()
+                self.started = True
+
             # in ms
-            if self._started < 2:
-                if self._call():
-                    self._started += 1
             time_stamp = int(time.time() * 1000 + self.delta)
             if time_stamp % self.client.waiting_time == 0:
 
@@ -68,7 +71,9 @@ class PlayThread(Thread):
                         self._next()
                         self.counter += 1
 
-                self._call()
+                if self.started:
+                    self._call()
+
                 self.counter += 1
                 if int(time_stamp + self.delta) % self.client.waiting_time == 0:
                     time.sleep(1/1000.0)

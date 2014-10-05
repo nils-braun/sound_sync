@@ -142,18 +142,6 @@ class RequestHandler(socketserver.BaseRequestHandler):
                     self.running = True
                     print("[%s %s] Added new Listener." % self.client_address)
 
-
-                    if serverInterface.is_empty():
-                        print("[%s %s] There is no sender!" % self.client_address)
-                        return
-
-                    buffer = serverInterface.get_buffer(self, inc=False)
-                    if buffer != 0:
-                        self.request.sendall(buffer)
-                    buffer = serverInterface.get_buffer(self, inc=False)
-                    if buffer != 0:
-                        self.request.sendall(buffer)
-
             else:
                 print("[%s %s] Do not understand new Client!" % self.client_address)
                 return
