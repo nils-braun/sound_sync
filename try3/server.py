@@ -28,7 +28,7 @@ class ServerInterface:
     def add_listener(self, listener):
         self.listener.append(listener)
         if len(self.listener_buffer_number) > 0:
-            self.listener_buffer_number.append(max(self.listener_buffer_number))
+            self.listener_buffer_number.append(max(self.listener_buffer_number) - 5)
         else:
             self.listener_buffer_number.append(self.start_pointer)
 
