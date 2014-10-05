@@ -33,14 +33,15 @@ class PlayThread(Thread):
 
     def _next(self):
         # The function to call when we skip a buffer
-        self.client.buffers.pop(0)
+        if len(self.client.buffers) > 0:
+            self.client.buffers.pop(0)
 
     def __init__(self, client):
         self.stopped = False
         self.delta = 0.1
         self.counter = 0
         self.client = client
-        self._started = 1
+        self._started = 0
 
         Thread.__init__(self)
 
@@ -51,7 +52,7 @@ class PlayThread(Thread):
         """
         while not self.stopped:
             # in ms
-            if self._started < 5:
+            if self._started < 2:
                 if self._call():
                     self._started += 1
             time_stamp = int(time.time() * 1000 + self.delta)

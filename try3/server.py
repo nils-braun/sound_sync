@@ -28,7 +28,7 @@ class ServerInterface:
     def add_listener(self, listener):
         self.listener.append(listener)
         if len(self.listener_buffer_number) > 0:
-            self.listener_buffer_number.append(max(self.listener_buffer_number) - 5)
+            self.listener_buffer_number.append(max(self.listener_buffer_number))
         else:
             self.listener_buffer_number.append(self.start_pointer)
 
@@ -139,6 +139,19 @@ class RequestHandler(socketserver.BaseRequestHandler):
                     serverInterface.add_listener(self)
                     self.running = True
                     print("[%s %s] Added new Listener." % self.client_address)
+
+
+                    try:
+                        if serverInterface.is_empty():
+                            print("[%s %s] There is no sender!" % self.client_address)
+                            return
+
+                        buffer = serverInterface.get_buffer(self)
+                        if buffer != 0:
+                            self.request.sendall(buffer)
+                        buffer = serverInterface.get_buffer(self)
+                        if buffer != 0:
+                            self.request.sendall(buffer)
 
             else:
                 print("[%s %s] Do not understand new Client!" % self.client_address)
