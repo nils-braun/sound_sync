@@ -39,15 +39,17 @@ class ServerInterface:
             self.buffers.pop(0)
             self.start_pointer += 1
 
-    def get_buffer(self, listener):
+    def get_buffer(self, listener, inc=True):
         index = self.listener_buffer_number[self.listener.index(listener)] - self.start_pointer
         if index < 0:
-            self.listener_buffer_number[self.listener.index(listener)] = self.start_pointer + 1
+            if inc:
+                self.listener_buffer_number[self.listener.index(listener)] = self.start_pointer + 1
             return self.buffers[0]
         elif index >= self.end_pointer - self.start_pointer:
             return 0
         else:
-            self.listener_buffer_number[self.listener.index(listener)] += 1
+            if inc:
+                self.listener_buffer_number[self.listener.index(listener)] += 1
             return self.buffers[index]
 
     def is_sender(self, sender):
@@ -145,10 +147,10 @@ class RequestHandler(socketserver.BaseRequestHandler):
                         print("[%s %s] There is no sender!" % self.client_address)
                         return
 
-                    buffer = serverInterface.get_buffer(self)
+                    buffer = serverInterface.get_buffer(self, inc=False)
                     if buffer != 0:
                         self.request.sendall(buffer)
-                    buffer = serverInterface.get_buffer(self)
+                    buffer = serverInterface.get_buffer(self, inc=False)
                     if buffer != 0:
                         self.request.sendall(buffer)
 
