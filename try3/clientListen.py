@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# coding=utf-8
 """
 This module implements the listener client.
 """
@@ -23,13 +24,7 @@ class PlayThread(Thread):
     """
 
     def _call(self):
-        # The function to call when we play a buffer.
-        if len(self.client.buffers) > 0:
-            data = self.client.buffers.pop(0)
-            self.client.device.write(bytes(data))
-        else:
-            print("no")
-            return
+        self.client.device.pause(0)
 
     def _next(self):
         # The function to call when we skip a buffer
@@ -41,79 +36,37 @@ class PlayThread(Thread):
         self.delta = 0.1
         self.counter = 0
         self.client = client
-	# Fill in some buffers before running
-        self.started = False
+        self.started = False    # Fill in some buffers before running
 
         Thread.__init__(self)
 
     def run(self):
         """
-        This function is called everytime the thread is executed. It waits for the correct time and plays an
-        audio snippet or skipps one.
+        This function is called everytime the thread is executed. It waits for the correct time and starts playing.
+        If playing is started, the buffers from the incoming data are automatically moved to the sound device.
+        The waiting for the "correct" start time is crucial. We check every cycle
+        (when time + delta % waiting_time == 0) if the number of saved frames is bigger than 10 (arbitrary)
+        Then we calculate the number of cycles between the beginning of the client (the server
+        told us this time) and now and start the corresponding frame minus 5 (arbitrary).
         """
-
-
-	"""
-	Folgende Probleme:
-	1) Falls direkt das Paket gespielt wird, welches auch gerade ankommt, gibt es Probleme, weil das Paket vielleicht noch nicht da ist und call() läuft ins Leere.
-	2) Falls sich immer nur ein Paket im Sound-Puffer befindet, kommt es zu "Klicken", da dann das nächste Paket vielleicht zu spät kommt (das Paket wird ja gerade erst abgerufen!). Dafür ist es dann synchron!
-
-	Mögliche Lösungen:
-	1) Zuerst mindestens 5 Pakete holen (schon implementiert)
-	2a) Pakete immer direkt spielen, wenn sie kommen und nur den Start des ersten Pakets überprüfen. Nachteil: Synchronität nicht für die ganze Periode geklärt!
-	2b) Neues Paket erst dann reinschrieben, wenn es dran kommen soll. Nachteil: ist zwar perfekt synchron, kann aber klicken. Warum klickts eigentlich? Weil das neue Paket noch nicht da ist oder weil noch keins in den Sound-Puffer geschoben wurde?
-	2c) Neues Packet kurz vorher reinschieben. Muss getestet werden. Ne Quatsch, oder?
-	2d) Immer mehrere Packete gleichzeitig reinschrieben. Klicken wäre nicht so oft. Muss getestet werden.
-	2e) Synchronität laufend überprüfen (wie??) und wenn nötig Pausen einfügen
-	"""
 
         while not self.stopped:
 
-	    # Start only of the buffer is filled. (1)
-            if len(self.client.buffers) > 5:
-                self.started = True
+            if not self.started:
+                time_stamp = int(time.time() * 1000 + self.delta)
+                if len(self.client.buffers) > 10 and time_stamp % self.client.waiting_time == 0:
+                    real_index = int((time_stamp - self.client.start_time*1000.0)/self.client.waiting_time)
+                    del self.client.buffers[:real_index - self.client.start_counter - 5]
+                    self.started = True
 
-	    # Every waiting_time do:
-            time_stamp = int(time.time() * 1000 + self.delta)
-            if time_stamp % self.client.waiting_time == 0:
+            else:
+                while len(self.client.buffers) > 0:
+                    data = self.client.buffers.pop(0)
+                    if self.client.device.write(bytes(data)) == 0:
+                        self.client.buffers.insert(0, data)
+                        break
 
-		# time delta
-		delta = self.waiting_time * int(time_stamp/self.waiting_time) - time_stamp
-		print(delta)
-
-		# Periods:
-                tmp_counter = int(time_stamp / self.client.waiting_time)
-
-                if self.counter == 0:
-                    self.counter = tmp_counter
-                else:
-		    # we have skipped one period! Bad things...
-                    while self.counter != tmp_counter + 1:
-                        print("[Client] Going forward...", time_stamp - self.counter * self.waiting_time)
-                        self._next()
-                        self.counter += 1
-
-                if self.started:
-                    self._call()
-
-                self.counter += 1
-                if int(time_stamp + self.delta) % self.client.waiting_time == 0:
-                    time.sleep(1/1000.0)
-
-            # Just for debugging!
-            i, _, _ = select.select([sys.stdin], [], [], 1/10000.0)
-            for s in i:
-                if s == sys.stdin:
-                    test = sys.stdin.readline()
-                    if test == "n\n":
-                        print("next")
-                        self._next()
-                    if test == "a\n":
-                        print("-10")
-                        self.delta -= 10
-                    if test == "d\n":
-                        print("+10")
-                        self.delta += 10
+            time.sleep(1/1000.0)
 
     def start(self):
         """
@@ -154,22 +107,30 @@ class ClientListener (ClientBase):
         self.read_values_from_server()
 
         # Set the audio device
-        self.device = alsaaudio.PCM(card="default")
+        self.device = alsaaudio.PCM(card="default", type=alsaaudio.PCM_PLAYBACK, mode=alsaaudio.PCM_NONBLOCK)
         self.device.setchannels(2)
         self.device.setformat(alsaaudio.PCM_FORMAT_S16_LE)
         self.device.setrate(self.frame_rate)
-        self.device.setperiodsize(int(self.buffer_size/4))
+        self.device.setperiodsize(int(self.buffer_size/4.0))
 
         self.running = True
+
+    def set_buffer_size(self):
+        ClientBase.set_buffer_size(self)
+        self.buffer_size *= 4
 
     def message_loop(self):
         """
         The message loop where the data is received from the server. Blocking!
         """
         while self.running:
+            index = self.client.recv(self.start_buffer_size)
+            self.send_ok()
             data = self.recv_exact()
             if data:
                 self.buffers.append(data)
+                if self.start_counter == 0:
+                    self.start_counter = int(index)
             else:
                 print("[Client] No new data. Aborting!")
                 self.running = False
@@ -183,19 +144,18 @@ def main():
     and connect to the server.
     Then start the message loop (receive the data from the server).
     Also initialize a new thread to play the audio. Start waiting for the correct time.
-    Repeat until Ctrl-C is hit.
+    Repeat until Ctrl-C is hit and the sound buffer is empty.
     """
     client = ClientListener()
     client.connect()
 
     thread = PlayThread(client)
-    thread.start()
 
     try:
+        thread.start()
         client.message_loop()
     except KeyboardInterrupt:
-        pass
-    finally:
+        # ATTENTION: Stops only if the sound buffer is empty!
         client.running = False
         client.close()
         thread.stop()

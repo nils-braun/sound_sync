@@ -5,8 +5,6 @@ This module implements the class ClientBase - a starting point for all client cl
 __author__ = "nilpferd1991"
 __version__ = "1.0.0"
 
-import math
-
 
 class ClientBase:
     """ class ClientBase
@@ -20,14 +18,17 @@ class ClientBase:
         self.client = 0
         self.waiting_time = 0
         self.frame_rate = 0
+        self.factor = 50
         self.buffer_size = 0
         self.start_buffer_size = 1024
         self.server_ip = "192.168.178.200"
         self.port = 50007
+        self.start_time = 0
+        self.start_counter = 0
 
     def read_values_from_server(self):
         """
-        Receive the frame rate and the waiting time from the server.
+        Receive the frame rate, the waiting time and the start time from the server.
 
         :rtype: None
         """
@@ -38,6 +39,10 @@ class ClientBase:
 
         # Then waiting_time in ms
         self.waiting_time = int(self.recv())
+        self.send_ok()
+
+        # Then start_time in s
+        self.start_time = float(self.recv())
         self.send_ok()
 
         # set the buffer size with the new data
@@ -55,7 +60,7 @@ class ClientBase:
         # get ok
         self.recv_ok()
         # tell the server the waiting time in ms
-        self.send(str(self.waiting_time).encode())
+        self.send(str(self.factor*self.waiting_time).encode())
         # get ok
         self.recv_ok()
 
@@ -65,13 +70,12 @@ class ClientBase:
     def set_buffer_size(self):
         """
         Set the buffer_size to the number of bytes used for the sound snippet of length
-        waiting_time (now in seconds!) * frame_rate. Multiplication by 4 is used because of
-        format SE_16.
+        waiting_time (now in seconds!) * frame_rate.
 
         :rtype: None
         """
 
-        self.buffer_size = int(4*(2**math.log(self.waiting_time / 1000.0 * self.frame_rate, 2)))
+        self.buffer_size = int(self.waiting_time / 1000.0 * self.frame_rate)
 
     def recv_exact(self):
         """

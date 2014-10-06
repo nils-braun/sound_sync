@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 
 import socketserver
-import select
 import time
 from socket import error as SocketError
-import math
 
 start_buffer_size = 1024
 buffer_size = 0
@@ -17,6 +15,7 @@ class ServerInterface:
         self.listener_buffer_number = list()
         self.buffers = list()
         self.start_pointer = 0
+        self.start_time = 0
         self.end_pointer = 0
         self.buffer_size = 10
         self.client_waiting_time = 0
@@ -34,23 +33,31 @@ class ServerInterface:
 
     def add_buffer(self, buffer):
         self.buffers.append(buffer)
+        if self.end_pointer == 0:
+            # first buffer
+            self.start_time = time.time()
         self.end_pointer += 1
         if len(self.buffers) > self.buffer_size:
             self.buffers.pop(0)
             self.start_pointer += 1
 
-    def get_buffer(self, listener, inc=True):
-        index = self.listener_buffer_number[self.listener.index(listener)] - self.start_pointer
-        if index < 0:
-            if inc:
-                self.listener_buffer_number[self.listener.index(listener)] = self.start_pointer + 1
-            return self.buffers[0]
-        elif index >= self.end_pointer - self.start_pointer:
-            return 0
+    def get_index(self, listener):
+        index = self.listener_buffer_number[self.listener.index(listener)]
+        if index < self.start_pointer:
+            self.listener_buffer_number[self.listener.index(listener)] = self.start_pointer + 1
+            return self.start_pointer + 1
+        elif index >= self.end_pointer:
+            return False
         else:
-            if inc:
-                self.listener_buffer_number[self.listener.index(listener)] += 1
-            return self.buffers[index]
+            return index
+
+    def get_buffer(self, listener):
+        if self.get_index(listener):
+            buffer = self.buffers[self.get_index(listener) - self.start_pointer]
+            self.listener_buffer_number[self.listener.index(listener)] += 1
+            return buffer
+        else:
+            return 0
 
     def is_sender(self, sender):
         return self.sender is sender
@@ -117,8 +124,7 @@ class RequestHandler(socketserver.BaseRequestHandler):
                 serverInterface.client_waiting_time = int(self.request.recv(start_buffer_size))
                 self.request.sendall(b"ok")
 
-                buffer_size = int(4*(2**math.log(serverInterface.client_waiting_time / 1000.0 *
-                                                 serverInterface.client_frame_rate, 2)))
+                buffer_size = int(4*serverInterface.client_waiting_time / 1000.0 * serverInterface.client_frame_rate)
 
                 serverInterface.add_sender(self)
                 self.running = True
@@ -136,6 +142,9 @@ class RequestHandler(socketserver.BaseRequestHandler):
                     self.request.recv(start_buffer_size)
 
                     self.request.sendall(str(serverInterface.client_waiting_time).encode())
+                    self.request.recv(start_buffer_size)
+
+                    self.request.sendall(str(serverInterface.start_time).encode())
                     self.request.recv(start_buffer_size)
 
                     serverInterface.add_listener(self)
@@ -168,9 +177,11 @@ class RequestHandler(socketserver.BaseRequestHandler):
                         print("[%s %s] There is no sender!" % self.client_address)
                         return
 
-                    buffer = serverInterface.get_buffer(self)
-                    if buffer != 0:
-                        self.request.sendall(buffer)
+                    index = serverInterface.get_index(self)
+                    if index:
+                        self.request.sendall(str(index).encode())
+                        self.request.recv(start_buffer_size)
+                        self.request.sendall(serverInterface.get_buffer(self))
 
                     # Is sleeping 1 ms better for performance issues?
                     time.sleep(1/1000.0)

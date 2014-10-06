@@ -20,14 +20,14 @@ class ClientSender(ClientBase):
     def __init__(self):
         ClientBase.__init__(self)
         self.pcm = alsaaudio.PCM(type=alsaaudio.PCM_CAPTURE, card=u'hw:Loopback,1,0')
-        self.waiting_time = 1200
+        self.waiting_time = 10
         self.frame_rate = 44100
 
     def set_pcm(self):
         self.pcm.setchannels(2)
         self.pcm.setrate(self.frame_rate)
         self.pcm.setformat(alsaaudio.PCM_FORMAT_S16_LE)
-        self.pcm.setperiodsize(self.buffer_size/4/(self.waiting_time/10))
+        self.pcm.setperiodsize(self.buffer_size)
 
     def connect(self):
         """
@@ -48,12 +48,15 @@ class ClientSender(ClientBase):
 
     def message_loop(self):
         """
-        Start sending the sound buffers to the server in a loop.
+        Start sending the sound buffers to the server in a loop. Do factor buffers back-to-back.
         """
         while True:
-            length, buffer = self.pcm.read()
+            tmp_buffer = bytearray()
+            for _ in range(self.factor):
+                length, buffer = self.pcm.read()
+                tmp_buffer.extend(buffer)
             if length > 0:
-                self.send(buffer)
+                self.send(tmp_buffer)
 
 
 def main():
