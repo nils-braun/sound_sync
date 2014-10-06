@@ -41,6 +41,7 @@ class PlayThread(Thread):
         self.delta = 0.1
         self.counter = 0
         self.client = client
+	# Fill in some buffers before running
         self.started = False
 
         Thread.__init__(self)
@@ -50,24 +51,45 @@ class PlayThread(Thread):
         This function is called everytime the thread is executed. It waits for the correct time and plays an
         audio snippet or skipps one.
         """
+
+
+	"""
+	Folgende Probleme:
+	1) Falls direkt das Paket gespielt wird, welches auch gerade ankommt, gibt es Probleme, weil das Paket vielleicht noch nicht da ist und call() läuft ins Leere.
+	2) Falls sich immer nur ein Paket im Sound-Puffer befindet, kommt es zu "Klicken", da dann das nächste Paket vielleicht zu spät kommt (das Paket wird ja gerade erst abgerufen!). Dafür ist es dann synchron!
+
+	Mögliche Lösungen:
+	1) Zuerst mindestens 5 Pakete holen (schon implementiert)
+	2a) Pakete immer direkt spielen, wenn sie kommen und nur den Start des ersten Pakets überprüfen. Nachteil: Synchronität nicht für die ganze Periode geklärt!
+	2b) Neues Paket erst dann reinschrieben, wenn es dran kommen soll. Nachteil: ist zwar perfekt synchron, kann aber klicken. Warum klickts eigentlich? Weil das neue Paket noch nicht da ist oder weil noch keins in den Sound-Puffer geschoben wurde?
+	2c) Neues Packet kurz vorher reinschieben. Muss getestet werden. Ne Quatsch, oder?
+	2d) Immer mehrere Packete gleichzeitig reinschrieben. Klicken wäre nicht so oft. Muss getestet werden.
+	2e) Synchronität laufend überprüfen (wie??) und wenn nötig Pausen einfügen
+	"""
+
         while not self.stopped:
 
+	    # Start only of the buffer is filled. (1)
             if len(self.client.buffers) > 5:
-                self._call()
-                self._call()
                 self.started = True
 
-            # in ms
+	    # Every waiting_time do:
             time_stamp = int(time.time() * 1000 + self.delta)
             if time_stamp % self.client.waiting_time == 0:
 
+		# time delta
+		delta = self.waiting_time * int(time_stamp/self.waiting_time) - time_stamp
+		print(delta)
+
+		# Periods:
                 tmp_counter = int(time_stamp / self.client.waiting_time)
 
                 if self.counter == 0:
                     self.counter = tmp_counter
                 else:
+		    # we have skipped one period! Bad things...
                     while self.counter != tmp_counter + 1:
-                        print("[Client] Going forward...")
+                        print("[Client] Going forward...", time_stamp - self.counter * self.waiting_time)
                         self._next()
                         self.counter += 1
 
