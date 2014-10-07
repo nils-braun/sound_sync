@@ -4,6 +4,8 @@
 This module implements the listener client.
 """
 
+from __future__ import print_function
+
 # TODO: Implement a restart after some minutes!
 
 __author__ = "nilpferd1991"
@@ -156,7 +158,6 @@ class ClientListener (ClientBase):
                 print("[Client] No new data. Aborting!")
                 self.running = False
                 break
-
 
 
 def main():

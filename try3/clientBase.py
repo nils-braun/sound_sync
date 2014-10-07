@@ -87,7 +87,7 @@ class ClientBase:
         Receive exact buffer_size bytes from the server. If received less, repeat until the buffer
         is full. If an error occurred, return nothing.
 
-        :rtype: bytearray
+        :rtype: bytearray, None
         """
 
         pointer = 0
