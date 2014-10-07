@@ -27,7 +27,6 @@ class PlayThread(Thread):
         self.stopped = False    # Set to True to stop the thread
         self.delta = 0.1        # The delta in ms to correct for wrong timing. Not very useful at the moment?
         self.client = client    # The listener we will use
-        self.started = False    # Fill in some buffers before running, then start the movement of buffers
 
         Thread.__init__(self)
 
@@ -44,7 +43,7 @@ class PlayThread(Thread):
         while not self.stopped:
 
             # no audio playing now:
-            if not self.started:
+            if not self.client.started:
                 # calculate the delta-corrected current time in ms.
                 time_stamp = int(time.time() * 1000 + self.delta)
                 # if we have filled the buffer list long enough and the time is correct:
@@ -52,19 +51,14 @@ class PlayThread(Thread):
                     # calculate the index of the buffer that should come next by using the start_time from the server
                     real_index = int((time_stamp - self.client.start_time*1000.0)/self.client.waiting_time)
                     # delete all packages before this correct time minus 5 packages
+                    print("Our clock says period:", real_index)
+                    print("The first package from the server is", self.client.start_counter)
+                    print("So we delete ", real_index - self.client.start_counter - 5)
                     del self.client.buffers[:real_index - self.client.start_counter - 5]
                     # start the audio playing
-                    self.started = True
-
-            # audio playing:
-            else:
-                # only play audio if there are buffers in the buffer list
-                while len(self.client.buffers) > 0:
-                    data = self.client.buffers.pop(0)
-                    # the write() gives 0, if the sound queue is full. We have to add this buffer the next time
-                    if self.client.device.write(bytes(data)) == 0:
-                        self.client.buffers.insert(0, data)
-                        break
+                    self.client.device.write(bytes(self.client.buffers.pop(0)))
+                    self.client.started = True
+                    return
 
             time.sleep(1/1000.0)
 
@@ -88,9 +82,10 @@ class ClientListener (ClientBase):
     """
     def __init__(self):
         ClientBase.__init__(self)
-        self.device = 0
-        self.buffers = list()
-        self.running = False
+        self.device = 0         # The PCM device we play to
+        self.buffers = list()   # The buffers we fill in the beginning
+        self.running = False    # Set to false to stop running
+        self.started = False    # Fill in some buffers before running, then start the movement of buffers
 
     def connect(self):
         """
@@ -136,17 +131,30 @@ class ClientListener (ClientBase):
             # Receive the data
             data = self.recv_exact()
             if data:
-                self.buffers.append(data)
-                # "Calibrate" to the start_point to have the same list with the same index as the server
-                # To calculate which package is needed to which time, just use int(T/waiting_time) - start_counter
-                # were T is time - start_time.
-                if self.start_counter == 0:
-                    self.start_counter = int(index)
+                # we are in pre-filling mode
+                if not self.started:
+                    self.buffers.append(data)
+                    # "Calibrate" to the start_point to have the same list with the same index as the server
+                    # To calculate which package is needed to which time, just use int(T/waiting_time) - start_counter
+                    # were T is time - start_time.
+                    if self.start_counter == 0:
+                        self.start_counter = int(index)
+                # play audio
+                else:
+                    self.buffers.append(data)
+                    # only play audio if there are buffers in the buffer list
+                    if len(self.buffers) > 0:
+                        data = self.buffers.pop(0)
+                        # the write() gives 0, if the sound queue is full. We have to add this buffer the next time
+                        if self.device.write(bytes(data)) == 0:
+                            self.buffers.insert(0, data)
+                            break
             else:
                 # This should not happen. The server is dead.
                 print("[Client] No new data. Aborting!")
                 self.running = False
                 break
+
 
 
 def main():
