@@ -55,8 +55,10 @@ class PlayThread(Thread):
                     print("The first package from the server is", self.client.start_counter)
                     print("So we delete ", real_index - self.client.start_counter - 5)
                     del self.client.buffers[:real_index - self.client.start_counter - 5]
+                    print("Now we have ", len(self.client.buffers))
                     # start the audio playing
-                    self.client.device.write(bytes(self.client.buffers.pop(0)))
+                    for _ in xrange(len(self.client.buffers) - 4):
+                        self.client.device.write(bytes(self.client.buffers.pop(0)))
                     self.client.started = True
                     return
 
@@ -122,7 +124,7 @@ class ClientListener (ClientBase):
     def message_loop(self):
         """
         The message loop where the data and the corresponding index (in the list on the server)
-        is received from the server.
+        is received from the server. Play a new buffer only if a new buffer is coming fom the server!
         """
         while self.running:
             # Receive the index of the buffer in the server list
