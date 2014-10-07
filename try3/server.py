@@ -25,6 +25,15 @@ class ServerInterface:
 
     def add_sender(self, sender):
         self.sender = sender
+        if len(self.listener) > 0:
+            print("We have listeners here, but a new client! Aborting.")
+            exit()
+        self.listener = list()
+        self.listener_buffer_number = list()
+        self.buffers = list()
+        self.start_pointer = 0
+        self.start_time = 0
+        self.end_pointer = 0
 
     def add_listener(self, listener):
         self.listener.append(listener)
