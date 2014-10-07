@@ -3,28 +3,32 @@ This module implements the class ClientBase - a starting point for all client cl
 """
 
 __author__ = "nilpferd1991"
-__version__ = "1.0.0"
+__version__ = "2.0.0"
 
 
 class ClientBase:
     """ class ClientBase
     This class is the starting point for a listener and a sender client.
     It introduces the needed variables like the server ip, the port and the client object,
-    but also the waiting time and the frame rate. The methods in this class supporting the crucial
+    but also the waiting time and the frame rate. The methods in this class supporting the basic
     messaging between the server and the client.
     """
 
     def __init__(self):
         self.client = 0
-        self.waiting_time = 0
-        self.frame_rate = 0
-        self.factor = 50
-        self.buffer_size = 0
-        self.start_buffer_size = 1024
-        self.server_ip = "192.168.178.200"
-        self.port = 50007
-        self.start_time = 0
-        self.start_counter = 0
+        self.waiting_time = 0                   # The value between two new frames. In ms
+        self.frame_rate = 0                     # The frame rate of the PCM devices. Normally 44100 Hz,
+        self.factor = 50                        # The sender gets as many frames at the same time
+        self.buffer_size = 0                    # the buffer size used by the PCM devices.
+                                                # Be careful with the factor of 4! The PCM devices need buffer_size
+                                                # as the period_size and all others have to use 4*buffer_size
+        self.start_buffer_size = 1024           # The buffer_size for pre-installation messages
+        self.server_ip = "192.168.178.200"      # The ip of the server. TODO: Should better be read from a file...
+        self.port = 50007                       # The port of the service on the server
+        self.start_time = 0                     # The time_stamp in s, when the server gets the first buffer
+                                                # from the sender
+        self.start_counter = 0                  # The counter of cycles from the server, when we receive the first frame.
+                                                # Is used as a kind of zero point to calibrate.
 
     def read_values_from_server(self):
         """
@@ -59,7 +63,8 @@ class ClientBase:
         self.send(str(self.frame_rate).encode())
         # get ok
         self.recv_ok()
-        # tell the server the waiting time in ms
+        # tell the server the waiting time in ms. Be careful! The senders waiting time differs from the
+        # normal waiting time by a factor of self.factor
         self.send(str(self.factor*self.waiting_time).encode())
         # get ok
         self.recv_ok()

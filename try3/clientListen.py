@@ -4,64 +4,64 @@
 This module implements the listener client.
 """
 
+# TODO: Implement a restart after some minutes!
+
 __author__ = "nilpferd1991"
-__version__ = "1.0.0"
+__version__ = "2.0.0"
 
 import socket
 import alsaaudio
 import time
 from threading import Thread
-import select
-import sys
 from clientBase import ClientBase
 
 
 class PlayThread(Thread):
     """
     A class to handle the thread to play the audio from the buffers of the client.
-    When running waits for the correct time (time + delta) % waiting_time == 0 and plays one buffer.
-    Skips one buffer if it is "too late".
+    When running waits for the correct time (time + delta) % waiting_time == 0 and starts playing the correct buffer.
+    After that, move all incoming buffers to the sound queue.
     """
 
-    def _call(self):
-        self.client.device.pause(0)
-
-    def _next(self):
-        # The function to call when we skip a buffer
-        if len(self.client.buffers) > 0:
-            self.client.buffers.pop(0)
-
     def __init__(self, client):
-        self.stopped = False
-        self.delta = 0.1
-        self.counter = 0
-        self.client = client
-        self.started = False    # Fill in some buffers before running
+        self.stopped = False    # Set to True to stop the thread
+        self.delta = 0.1        # The delta in ms to correct for wrong timing. Not very useful at the moment?
+        self.client = client    # The listener we will use
+        self.started = False    # Fill in some buffers before running, then start the movement of buffers
 
         Thread.__init__(self)
 
     def run(self):
         """
-        This function is called everytime the thread is executed. It waits for the correct time and starts playing.
+        This function is called every time the thread is executed. It waits for the correct time and starts playing.
         If playing is started, the buffers from the incoming data are automatically moved to the sound device.
-        The waiting for the "correct" start time is crucial. We check every cycle
-        (when time + delta % waiting_time == 0) if the number of saved frames is bigger than 10 (arbitrary)
+        The waiting for the "correct" start time is crucial. We check every beginning of the cycle
+        (when time + delta % waiting_time == 0) if the number of saved frames is bigger than 10 (TODO: arbitrary)
         Then we calculate the number of cycles between the beginning of the client (the server
-        told us this time) and now and start the corresponding frame minus 5 (arbitrary).
+        told us this time) and the time now and start the corresponding frame minus 5 (TODO: arbitrary).
         """
 
         while not self.stopped:
 
+            # no audio playing now:
             if not self.started:
+                # calculate the delta-corrected current time in ms.
                 time_stamp = int(time.time() * 1000 + self.delta)
+                # if we have filled the buffer list long enough and the time is correct:
                 if len(self.client.buffers) > 10 and time_stamp % self.client.waiting_time == 0:
+                    # calculate the index of the buffer that should come next by using the start_time from the server
                     real_index = int((time_stamp - self.client.start_time*1000.0)/self.client.waiting_time)
+                    # delete all packages before this correct time minus 5 packages
                     del self.client.buffers[:real_index - self.client.start_counter - 5]
+                    # start the audio playing
                     self.started = True
 
+            # audio playing:
             else:
+                # only play audio if there are buffers in the buffer list
                 while len(self.client.buffers) > 0:
                     data = self.client.buffers.pop(0)
+                    # the write() gives 0, if the sound queue is full. We have to add this buffer the next time
                     if self.client.device.write(bytes(data)) == 0:
                         self.client.buffers.insert(0, data)
                         break
@@ -116,22 +116,34 @@ class ClientListener (ClientBase):
         self.running = True
 
     def set_buffer_size(self):
+        """
+        Now we set the buffer_size to buffer_size*4 - so it corresponds to the real buffer size.
+        Attention: For all PCM devices we will now need buffer_size/4.
+        :rtype: None
+        """
         ClientBase.set_buffer_size(self)
         self.buffer_size *= 4
 
     def message_loop(self):
         """
-        The message loop where the data is received from the server. Blocking!
+        The message loop where the data and the corresponding index (in the list on the server)
+        is received from the server.
         """
         while self.running:
+            # Receive the index of the buffer in the server list
             index = self.client.recv(self.start_buffer_size)
             self.send_ok()
+            # Receive the data
             data = self.recv_exact()
             if data:
                 self.buffers.append(data)
+                # "Calibrate" to the start_point to have the same list with the same index as the server
+                # To calculate which package is needed to which time, just use int(T/waiting_time) - start_counter
+                # were T is time - start_time.
                 if self.start_counter == 0:
                     self.start_counter = int(index)
             else:
+                # This should not happen. The server is dead.
                 print("[Client] No new data. Aborting!")
                 self.running = False
                 break
@@ -155,7 +167,7 @@ def main():
         thread.start()
         client.message_loop()
     except KeyboardInterrupt:
-        # ATTENTION: Stops only if the sound buffer is empty!
+        # ATTENTION: Stops only if the sound buffer is empty! So we must wait until all audio is played!
         client.running = False
         client.close()
         thread.stop()

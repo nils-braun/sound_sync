@@ -4,12 +4,11 @@ This module starts the sender.
 """
 
 __author__ = "nilpferd1991"
-__version__ = "1.0.0"
+__version__ = "2.0.0"
 
 import socket
 import alsaaudio
 from clientBase import ClientBase
-
 
 class ClientSender(ClientBase):
     """
@@ -19,11 +18,17 @@ class ClientSender(ClientBase):
     """
     def __init__(self):
         ClientBase.__init__(self)
+        # The PCM device of the ALSA-Loopback-Adapter. The data coming from the applications
+        # is send through this loopback into the program. We need a frame rate of 44100 Hz and collect 10 ms of data
+        # at once.
         self.pcm = alsaaudio.PCM(type=alsaaudio.PCM_CAPTURE, card=u'hw:Loopback,1,0')
         self.waiting_time = 10
         self.frame_rate = 44100
 
     def set_pcm(self):
+        """
+        Set the PCM device with the usual parameters.
+        """
         self.pcm.setchannels(2)
         self.pcm.setrate(self.frame_rate)
         self.pcm.setformat(alsaaudio.PCM_FORMAT_S16_LE)
@@ -48,13 +53,16 @@ class ClientSender(ClientBase):
 
     def message_loop(self):
         """
-        Start sending the sound buffers to the server in a loop. Do factor buffers back-to-back.
+        Start getting the data from the PCM and sending the sound buffers to the server in a loop.
+        Collect factor*waiting_time ms at once and send after that.
         """
         while True:
             tmp_buffer = bytearray()
+            # collect the data...
             for _ in range(self.factor):
                 length, buffer = self.pcm.read()
                 tmp_buffer.extend(buffer)
+            # ... and send it:
             if length > 0:
                 self.send(tmp_buffer)
 
@@ -64,7 +72,7 @@ def main():
     Main function
     Initialize a new instance of the client sender module
     and connect to the server.
-    Then start the message loop (decode the file to wav and send it to the server)
+    Then start the message loop (get the data from the Alsa-PCM and send it to the server)
     until Ctrl-C is hit.
     """
     client = ClientSender()

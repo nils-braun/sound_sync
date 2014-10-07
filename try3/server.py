@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# TODO: comments!
+
 import socketserver
 import time
 from socket import error as SocketError
