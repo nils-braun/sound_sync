@@ -2,6 +2,9 @@
 """
 This module starts the sender.
 """
+WAITING_TIME = 10
+FRAME_RATE = 44100
+CARD_NAME = u'hw:Loopback,1,0'
 
 __author__ = "nilpferd1991"
 __version__ = "2.0.0"
@@ -9,6 +12,7 @@ __version__ = "2.0.0"
 import socket
 import alsaaudio
 from clientBase import ClientBase
+
 
 class ClientSender(ClientBase):
     """
@@ -21,9 +25,16 @@ class ClientSender(ClientBase):
         # The PCM device of the ALSA-Loopback-Adapter. The data coming from the applications
         # is send through this loopback into the program. We need a frame rate of 44100 Hz and collect 10 ms of data
         # at once.
-        self.pcm = alsaaudio.PCM(type=alsaaudio.PCM_CAPTURE, card=u'hw:Loopback,1,0')
-        self.waiting_time = 10
-        self.frame_rate = 44100
+
+        card_list = alsaaudio.cards()
+        if not "Loopback" in card_list:
+            print("There is no Loopback module loaded by ALSA. Loopback is needed by the program. "
+                  "Try loading it via modprobe or add it to /etc/modules or to a file in /etc/modules.d/. Aborting.")
+            exit()
+
+        self.pcm = alsaaudio.PCM(type=alsaaudio.PCM_CAPTURE, card=CARD_NAME)
+        self.waiting_time = WAITING_TIME
+        self.frame_rate = FRAME_RATE
 
     def set_pcm(self):
         """

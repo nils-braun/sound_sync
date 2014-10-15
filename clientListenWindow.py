@@ -7,6 +7,7 @@ import clientListen
 import Tkinter
 from threading import Thread
 
+
 class ControlThread(Thread):
     def __init__(self):
         self.client = clientListen.ClientListener()
@@ -22,6 +23,7 @@ class ControlThread(Thread):
     def stop(self):
         self.client.running = False
         self.thread.stop()
+
 
 class App:
     def __init__(self):

@@ -1,12 +1,15 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
 This module implements the server.
 """
 
+START_BUFFER_SIZE = 1024
+PORT = 50007                # TODO: Should better be read from a file...
+
 __author__ = "nilpferd1991"
 __version__ = "2.0.0"
 
-import socketserver
+import SocketServer as socketserver
 import time
 from socket import error as SocketError
 
@@ -155,7 +158,7 @@ class RequestHandler(socketserver.BaseRequestHandler):
         self.running = False            # set to False to stop the server
         self.buffer_size = 0            # the buffer size of the clients is calculated from teh waiting_time and
                                         # the frame rate. Fo more information see ClientBase.
-        self.start_buffer_size = 1024   # The buffer_size to be used for pre-audio messaging.
+        self.start_buffer_size = START_BUFFER_SIZE   # The buffer_size to be used for pre-audio messaging.
 
         socketserver.BaseRequestHandler.__init__(self, request, client_address, server)
 
@@ -305,7 +308,7 @@ def main():
     """
     The main function. Starts the TCP Server on port 50007 and receives new senders or listeners.
     """
-    server = socketserver.ThreadingTCPServer(("", 50007), RequestHandler)
+    server = socketserver.ThreadingTCPServer(("", PORT), RequestHandler)
 
     try:
         server.serve_forever()

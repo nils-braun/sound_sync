@@ -1,6 +1,9 @@
 """
 This module implements the class ClientBase - a starting point for all client classes.
 """
+IP_ADDRESS = "192.168.178.200"      # TODO: Should better be read from a file...
+PORT = 50007                        # TODO: Should better be read from a file...
+START_BUFFER_SIZE = 1024
 
 __author__ = "nilpferd1991"
 __version__ = "2.0.0"
@@ -22,9 +25,9 @@ class ClientBase:
         self.buffer_size = 0                    # the buffer size used by the PCM devices.
                                                 # Be careful with the factor of 4! The PCM devices need buffer_size
                                                 # as the period_size and all others have to use 4*buffer_size
-        self.start_buffer_size = 1024           # The buffer_size for pre-installation messages
-        self.server_ip = "192.168.178.200"      # The ip of the server. TODO: Should better be read from a file...
-        self.port = 50007                       # The port of the service on the server
+        self.start_buffer_size = START_BUFFER_SIZE  # The buffer_size for pre-installation messages
+        self.server_ip = IP_ADDRESS             # The ip of the server. TODO: Should better be read from a file...
+        self.port = PORT                        # The port of the service on the server
         self.start_time = 0                     # The time_stamp in s, when the server gets the first buffer
                                                 # from the sender
         self.start_counter = 0                  # The counter of cycles from the server, when we receive the first frame.
