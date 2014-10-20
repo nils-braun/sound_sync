@@ -37,8 +37,8 @@ class RequestHandler(socketserver.BaseRequestHandler, ServerBase):
     def __init__(self, request, client_address, server):
         self.running = False            # set to False to stop the server
 
+        ServerBase.__init__(self, request)
         socketserver.BaseRequestHandler.__init__(self, request, client_address, server)
-        ServerBase.__init__(self, self.request)
 
     def handle(self):
         """
