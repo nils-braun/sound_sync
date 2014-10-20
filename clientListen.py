@@ -99,6 +99,7 @@ class ClientListener (ClientBase):
 
         # Tell the server we are a receiver
         self.client.sendall(b"receiver")
+        self.recv_ok()
 
         # Get data from Server
         try:
