@@ -83,11 +83,12 @@ class ClientListener (ClientBase):
     waiting time and starts receiving audio buffers.
     """
     def __init__(self):
-        ClientBase.__init__(self)
         self.device = 0         # The PCM device we play to
         self.buffers = list()   # The buffers we fill in the beginning
         self.running = False    # Set to false to stop running
         self.started = False    # Fill in some buffers before running, then start the movement of buffers
+        self.client = 0
+        ClientBase.__init__(self, self.client)
 
     def connect(self):
         """
@@ -189,8 +190,9 @@ def main():
     Repeat until Ctrl-C is hit and the sound buffer is empty.
     """
 
+    client = ClientListener()
+
     try:
-        client = ClientListener()
         client.connect()
 
         reset_thread(client)

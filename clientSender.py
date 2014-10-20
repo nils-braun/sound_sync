@@ -55,7 +55,8 @@ class ClientSender(ClientBase, PCMPlayer):
     starts sending sound buffers to the sender.
     """
     def __init__(self):
-        ClientBase.__init__(self)
+        self.client = 0
+        ClientBase.__init__(self, self.client)
         PCMPlayer.__init__(self)
 
     def connect(self):

@@ -14,8 +14,8 @@ class ClientListHandler:
         self.buffers = list()                   # the list with the current buffers from the sender
         self.start_pointer = 0                  # the index of the first buffer in the buffers list
         self.start_time = 0                     # the time when the client started sending data. Should be send to the
-                                                # listeners with the information of the current period number for them to
-                                                # calibrate their buffer list
+                                                # listeners with the information of the current period number for them
+                                                # to calibrate their buffer list
         self.end_pointer = 0                    # the index of the last item in the buffers list
         self.buffer_size = 10                   # the maximum of numbers in the buffers list (arbitrary)
         self.client_waiting_time = 0            # the waiting time of the clients. Is received from the sender and

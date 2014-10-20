@@ -8,7 +8,7 @@ from socket import error as SocketError
 from serverBase import ServerBase
 from serverClientListHandler import ClientListHandler
 
-import SocketServer as socketserver
+import SocketServer
 
 PORT = 50007                # TODO: Should better be read from a file...
 
@@ -16,7 +16,7 @@ __author__ = "nilpferd1991"
 __version__ = "2.0.0"
 
 
-class RequestHandler(socketserver.BaseRequestHandler, ServerBase):
+class RequestHandler(SocketServer.BaseRequestHandler, ServerBase):
     """
     This class is the RequestHandler of the server. It collects data from the new clients (if it is a sender or a
     listener) and receives buffers from senders or sends buffers to listeners. It is threaded - so every new client
@@ -38,14 +38,9 @@ class RequestHandler(socketserver.BaseRequestHandler, ServerBase):
         self.running = False            # set to False to stop the server
 
         ServerBase.__init__(self, request)
-        socketserver.BaseRequestHandler.__init__(self, request, client_address, server)
+        SocketServer.BaseRequestHandler.__init__(self, request, client_address, server)
 
     def handle(self):
-        """
-        This function is called every time a new client wants to get access to the server. It tries to get the type of
-        the new client and handles the messaging as describes above.
-        """
-
         self.handle_new_client()
         self.mainloop()
 
@@ -109,9 +104,6 @@ class RequestHandler(socketserver.BaseRequestHandler, ServerBase):
         self.running = False
 
     def mainloop_sender(self):
-        # If the client is a sender and the status is set to running, we receive a new buffer
-        # of the exact size of self.buffer_length and add it to the buffers list.
-        # If the sender stops sending data, we release it and remove it from the serverInterface.
         new_sound_buffer = self.receive_exact()
         if new_sound_buffer:
             RequestHandler.static_client_list.add_buffer(new_sound_buffer)
@@ -123,7 +115,6 @@ class RequestHandler(socketserver.BaseRequestHandler, ServerBase):
         # its own buffers list, than the buffer itself. We try to send it to him except the case
         # the listener is not there anymore. Then we release it and remove it from the serverInterface.
         try:
-            # Do not send data if there is no client.
             if RequestHandler.static_client_list.is_empty():
                 print("[%s %s] There is no sender!" % self.client_address)
                 self.remove_listener()
@@ -135,7 +126,7 @@ class RequestHandler(socketserver.BaseRequestHandler, ServerBase):
                     self.send_information(buffer_index)
                     self.send_message(RequestHandler.static_client_list.get_buffer(self))
 
-            # Sleeping 1 ms is better for performance issues
+            # Sleeping 1 ms is better for performance issues (??)
             time.sleep(1 / 1000.0)
         except SocketError:
             self.remove_listener()
@@ -155,7 +146,7 @@ def main():
     """
     The main function. Starts the TCP Server on port 50007 and receives new senders or listeners.
     """
-    server = socketserver.ThreadingTCPServer(("", PORT), RequestHandler)
+    server = SocketServer.ThreadingTCPServer(("", PORT), RequestHandler)
 
     try:
         server.serve_forever()

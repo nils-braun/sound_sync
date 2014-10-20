@@ -1,7 +1,7 @@
 """
 This module implements the class ClientBase - a starting point for all client classes.
 """
-IP_ADDRESS = "192.168.178.142"      # TODO: Should better be read from a file...
+IP_ADDRESS = "192.168.178.200"      # TODO: Should better be read from a file...
 PORT = 50007                        # TODO: Should better be read from a file...
 START_BUFFER_SIZE = 1024
 
@@ -17,8 +17,8 @@ class ClientBase:
     messaging between the server and the client.
     """
 
-    def __init__(self):
-        self.client = 0
+    def __init__(self, client):
+        self.client = client
         self.waiting_time = 0                   # The value between two new frames. In ms
         self.frame_rate = 0                     # The frame rate of the PCM devices. Normally 44100 Hz,
         self.factor = 50                        # The sender gets as many frames at the same time
@@ -30,7 +30,7 @@ class ClientBase:
         self.port = PORT                        # The port of the service on the server
         self.start_time = 0                     # The time_stamp in s, when the server gets the first buffer
                                                 # from the sender
-        self.start_counter = 0                  # The counter of cycles from the server, when we receive the first frame.
+        self.start_counter = 0                  # The counter of cycles from the server, when we receive the first frame
                                                 # Is used as a kind of zero point to calibrate.
 
     def read_values_from_server(self):
