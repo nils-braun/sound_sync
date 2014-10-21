@@ -2,8 +2,7 @@
 """
 This module starts the sender.
 """
-WAITING_TIME = 10
-FRAME_RATE = 44100
+
 CARD_NAME = u'hw:Loopback,1,0'
 
 __author__ = "nilpferd1991"
@@ -22,7 +21,7 @@ class PCMCapture:
 
     def __init__(self):
         self.search_for_loopback_card()
-        self.pcm = alsaaudio.PCM(type=alsaaudio.PCM_CAPTURE, card=CARD_NAME)
+        self.pcm = None
 
     def search_for_loopback_card(self):
         card_list = alsaaudio.cards()
@@ -35,6 +34,8 @@ class PCMCapture:
         """
         Set the PCM device with the usual parameters.
         """
+        self.pcm = alsaaudio.PCM(type=alsaaudio.PCM_CAPTURE, card=CARD_NAME)
+
         self.pcm.setchannels(2)
         self.pcm.setrate(frame_rate)
         self.pcm.setformat(alsaaudio.PCM_FORMAT_S16_LE)
@@ -43,6 +44,9 @@ class PCMCapture:
     def get_sound_data(self):
         length, sound_buffer = self.pcm.read()
         return sound_buffer, length
+
+    def close_sound(self):
+        self.pcm.close()
 
 
 class ClientSender(ClientBase, PCMCapture):
@@ -57,6 +61,10 @@ class ClientSender(ClientBase, PCMCapture):
         ClientSender.clientInformation.frame_rate = 44100
         ClientSender.clientInformation.waiting_time = 10
 
+    def tell_server_sender_identity(self):
+        self.client.sendall(b"sender")
+        self.receive_ok()
+
     def connect(self):
         """
         Connect to the server and send frame rate and waiting time.
@@ -64,9 +72,7 @@ class ClientSender(ClientBase, PCMCapture):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.connect((ClientSender.addressInformation.server_ip, ClientSender.addressInformation.port))
 
-        self.client.sendall(b"sender")
-        self.receive_ok()
-
+        self.tell_server_sender_identity()
         self.send_values_to_server()
 
         self.initialize_pcm(ClientSender.clientInformation.frame_rate, ClientSender.clientInformation.sound_buffer_size)
@@ -109,6 +115,7 @@ def main():
         print("stopped")
     finally:
         client.close()
+        client.close_sound()
 
 if __name__ == "__main__":
     main()

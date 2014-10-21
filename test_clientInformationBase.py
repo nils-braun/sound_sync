@@ -11,5 +11,5 @@ class TestClientInformationBase(TestCase):
         client_information.frame_rate = 100340435
         client_information.waiting_time = 2395945
         client_information.set_sound_buffer_size()
-        self.assertEqual(client_information.sound_buffer_size,
-                         int(4 * client_information.waiting_time / 1000.0 * client_information.frame_rate))
+        self.assertEqual(int(4 * client_information.waiting_time / 1000.0 * client_information.frame_rate),
+                         client_information.sound_buffer_size)
