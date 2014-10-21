@@ -37,7 +37,8 @@ class RequestHandler(SocketServer.BaseRequestHandler, ServerBase):
     def __init__(self, request, client_address, server):
         self.running = False            # set to False to stop the server
 
-        ServerBase.__init__(self, request)
+        ServerBase.__init__(self)
+        self.client = request
         SocketServer.BaseRequestHandler.__init__(self, request, client_address, server)
 
     def handle(self):
@@ -54,7 +55,7 @@ class RequestHandler(SocketServer.BaseRequestHandler, ServerBase):
 
     def handle_new_client(self):
         print("[%s %s] Added new Client." % self.client_address)
-        first_identity_message = self.receive_message()
+        first_identity_message = self.receive()
         if first_identity_message:
             if first_identity_message.startswith(b"sender"):
                 self.handle_new_sender()
@@ -67,7 +68,8 @@ class RequestHandler(SocketServer.BaseRequestHandler, ServerBase):
 
     def handle_new_listener(self):
         print("[%s %s] New Client is Listener." % self.client_address)
-        self.say_ok()
+        self.send_ok()
+        self.receive_ok()
 
         if RequestHandler.static_client_list.no_sender():
             # Kill the client if we have no sender.
@@ -75,8 +77,8 @@ class RequestHandler(SocketServer.BaseRequestHandler, ServerBase):
             print("[%s %s] There is no sender!" % self.client_address)
             self.running = False
         else:
-            self.send_information(RequestHandler.static_client_list.client_frame_rate)
-            self.send_information(RequestHandler.static_client_list.client_waiting_time)
+            self.send_information(RequestHandler.clientInformation.frame_rate)
+            self.send_information(RequestHandler.clientInformation.waiting_time)
             self.send_information(RequestHandler.static_client_list.start_time)
 
             RequestHandler.static_client_list.add_listener(self)
@@ -86,12 +88,11 @@ class RequestHandler(SocketServer.BaseRequestHandler, ServerBase):
 
     def handle_new_sender(self):
         print("[%s %s] New Client is Sender." % self.client_address)
-        self.say_ok()
+        self.send_ok()
 
-        RequestHandler.static_client_list.client_frame_rate = int(self.receive_information())
-        RequestHandler.static_client_list.client_waiting_time = int(self.receive_information())
-        self.set_buffer_size(RequestHandler.static_client_list.client_waiting_time,
-                             RequestHandler.static_client_list.client_frame_rate)
+        RequestHandler.clientInformation.frame_rate = int(self.receive_information())
+        RequestHandler.clientInformation.waiting_time = int(self.receive_information())
+        RequestHandler.clientInformation.set_sound_buffer_size()
 
         RequestHandler.static_client_list.add_sender(self)
 
@@ -104,7 +105,7 @@ class RequestHandler(SocketServer.BaseRequestHandler, ServerBase):
         self.running = False
 
     def mainloop_sender(self):
-        new_sound_buffer = self.receive_exact()
+        new_sound_buffer = self.receive_buffer_with_exact_length()
         if new_sound_buffer:
             RequestHandler.static_client_list.add_buffer(new_sound_buffer)
         else:
@@ -124,7 +125,7 @@ class RequestHandler(SocketServer.BaseRequestHandler, ServerBase):
                 buffer_index = RequestHandler.static_client_list.get_index(self)
                 if buffer_index:
                     self.send_information(buffer_index)
-                    self.send_message(RequestHandler.static_client_list.get_buffer(self))
+                    self.send(RequestHandler.static_client_list.get_buffer(self))
 
             # Sleeping 1 ms is better for performance issues (??)
             time.sleep(1 / 1000.0)

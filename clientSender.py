@@ -15,17 +15,14 @@ import alsaaudio
 from clientBase import ClientBase
 
 
-class PCMPlayer:
+class PCMCapture:
     # The PCM device of the ALSA-Loopback-Adapter. The data coming from the applications
     # is send through this loopback into the program. We need a frame rate of 44100 Hz and collect 10 ms of data
     # at once.
 
     def __init__(self):
-        self.frame_rate = FRAME_RATE
-        self.pcm = alsaaudio.PCM(type=alsaaudio.PCM_CAPTURE, card=CARD_NAME)
-        self.waiting_time = WAITING_TIME
-
         self.search_for_loopback_card()
+        self.pcm = alsaaudio.PCM(type=alsaaudio.PCM_CAPTURE, card=CARD_NAME)
 
     def search_for_loopback_card(self):
         card_list = alsaaudio.cards()
@@ -34,44 +31,45 @@ class PCMPlayer:
                   "Try loading it via modprobe or add it to /etc/modules or to a file in /etc/modules.d/. Aborting.")
             exit()
 
-    def initialize_pcm(self, buffer_size):
+    def initialize_pcm(self, frame_rate, buffer_size):
         """
         Set the PCM device with the usual parameters.
         """
         self.pcm.setchannels(2)
-        self.pcm.setrate(self.frame_rate)
+        self.pcm.setrate(frame_rate)
         self.pcm.setformat(alsaaudio.PCM_FORMAT_S16_LE)
-        self.pcm.setperiodsize(buffer_size)
+        self.pcm.setperiodsize(int(buffer_size/4.0))
 
     def get_sound_data(self):
-        length, buffer = self.pcm.read()
-        return buffer, length
+        length, sound_buffer = self.pcm.read()
+        return sound_buffer, length
 
 
-class ClientSender(ClientBase, PCMPlayer):
+class ClientSender(ClientBase, PCMCapture):
     """
     This class implements the sender to the server. It connects to the server,
     sends the values of the frame rate and the waiting time to the server and
     starts sending sound buffers to the sender.
     """
     def __init__(self):
-        self.client = 0
-        ClientBase.__init__(self, self.client)
-        PCMPlayer.__init__(self)
+        ClientBase.__init__(self)
+        PCMCapture.__init__(self)
+        ClientSender.clientInformation.frame_rate = 44100
+        ClientSender.clientInformation.waiting_time = 10
 
     def connect(self):
         """
         Connect to the server and send frame rate and waiting time.
         """
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.client.connect((self.server_ip, self.port))
+        self.client.connect((ClientSender.addressInformation.server_ip, ClientSender.addressInformation.port))
 
         self.client.sendall(b"sender")
-        self.recv()
+        self.receive_ok()
 
         self.send_values_to_server()
 
-        self.initialize_pcm(self.buffer_size)
+        self.initialize_pcm(ClientSender.clientInformation.frame_rate, ClientSender.clientInformation.sound_buffer_size)
 
     def message_loop(self):
         """
@@ -87,9 +85,9 @@ class ClientSender(ClientBase, PCMPlayer):
         tmp_buffer = bytearray()
         tmp_length = 0
         # collect the data...
-        for _ in range(self.factor):
-            buffer, length = self.get_sound_data()
-            tmp_buffer.extend(buffer)
+        for _ in range(ClientSender.clientInformation.multiple_buffer_factor):
+            sound_buffer, length = self.get_sound_data()
+            tmp_buffer.extend(sound_buffer)
             tmp_length += length
         return tmp_length, tmp_buffer
 

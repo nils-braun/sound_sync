@@ -49,14 +49,16 @@ class PlayThread(Thread):
                 # calculate the delta-corrected current time in ms.
                 time_stamp = int(time.time() * 1000 + self.delta)
                 # if we have filled the buffer list long enough and the time is correct:
-                if len(self.client.buffers) > FULL_BUFFER_SIZE and time_stamp % self.client.waiting_time == 0:
+                if len(self.client.buffers) > FULL_BUFFER_SIZE and time_stamp % \
+                        ClientListener.clientInformation.waiting_time == 0:
                     # calculate the index of the buffer that should come next by using the start_time from the server
-                    real_index = int((time_stamp - self.client.start_time*1000.0)/self.client.waiting_time)
+                    real_index = int((time_stamp - self.client.start_time*1000.0) /
+                                     ClientListener.clientInformation.waiting_time)
                     # delete all packages before this correct time minus 5 packages
                     del self.client.buffers[:real_index - self.client.start_counter - 5]
                     # start the audio playing
                     for _ in xrange(len(self.client.buffers) - 4):
-                        self.client.device.write(bytes(self.client.buffers.pop(0)))
+                        self.client.play_buffer(bytes(self.client.buffers.pop(0)))
                     self.client.started = True
                     print("..started")
                     return
@@ -77,55 +79,38 @@ class PlayThread(Thread):
         STOPPED = True
 
 
-class ClientListener (ClientBase):
+class PCMPlay:
+    # The PCM device of the ALSA-Loopback-Adapter. The data coming from the applications
+    # is send through this loopback into the program. We need a frame rate of 44100 Hz and collect 10 ms of data
+    # at once.
+
+    def __init__(self):
+        self.pcm = alsaaudio.PCM(card="default", type=alsaaudio.PCM_PLAYBACK, mode=alsaaudio.PCM_NONBLOCK)
+
+    def initialize_pcm(self, frame_rate, buffer_size):
+        """
+        Set the PCM device with the usual parameters.
+        """
+        self.pcm.setchannels(2)
+        self.pcm.setrate(frame_rate)
+        self.pcm.setformat(alsaaudio.PCM_FORMAT_S16_LE)
+        self.pcm.setperiodsize(int(buffer_size/4.0))
+
+    def play_buffer(self, data):
+        return self.pcm.write(bytes(data))
+
+
+class ClientListener (ClientBase, PCMPlay):
     """
     A class to handle the listener client. Connects to the server, receives the correct values for frame rate and
     waiting time and starts receiving audio buffers.
     """
     def __init__(self):
-        self.device = 0         # The PCM device we play to
         self.buffers = list()   # The buffers we fill in the beginning
         self.running = False    # Set to false to stop running
         self.started = False    # Fill in some buffers before running, then start the movement of buffers
-        self.client = 0
-        ClientBase.__init__(self, self.client)
-
-    def connect(self):
-        """
-        Connect to the server and get frame rate and waiting time. Then start the playing device.
-        """
-        # Connect to the server
-        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.client.connect((self.server_ip, self.port))
-
-        # Tell the server we are a receiver
-        self.client.sendall(b"receiver")
-        self.recv_ok()
-
-        # Get data from Server
-        try:
-            self.read_values_from_server()
-        except ValueError:
-            print("There is no client sending data to the server. Aborting.")
-            exit()
-
-        # Set the audio device
-        self.device = alsaaudio.PCM(card="default", type=alsaaudio.PCM_PLAYBACK, mode=alsaaudio.PCM_NONBLOCK)
-        self.device.setchannels(2)
-        self.device.setformat(alsaaudio.PCM_FORMAT_S16_LE)
-        self.device.setrate(self.frame_rate)
-        self.device.setperiodsize(int(self.buffer_size/4.0))
-
-        self.running = True
-
-    def set_buffer_size(self):
-        """
-        Now we set the buffer_size to buffer_size*4 - so it corresponds to the real buffer size.
-        Attention: For all PCM devices we will now need buffer_size/4.
-        :rtype: None
-        """
-        ClientBase.set_buffer_size(self)
-        self.buffer_size *= 4
+        ClientBase.__init__(self)
+        PCMPlay.__init__(self)
 
     def message_loop(self):
         """
@@ -133,34 +118,78 @@ class ClientListener (ClientBase):
         is received from the server. Play a new buffer only if a new buffer is coming fom the server!
         """
         while self.running:
-            # Receive the index of the buffer in the server list
-            index = self.client.recv(self.start_buffer_size)
-            self.send_ok()
+            index = self.receive_index()
             # Receive the data
-            data = self.recv_exact()
-            if data:
-                # we are in pre-filling mode
-                if not self.started:
-                    self.buffers.append(data)
-                    # "Calibrate" to the start_point to have the same list with the same index as the server
-                    # To calculate which package is needed to which time, just use int(T/waiting_time) - start_counter
-                    # were T is time - start_time.
-                    if self.start_counter == 0:
-                        self.start_counter = int(index)
-                # play audio
-                else:
-                    self.buffers.append(data)
-                    # only play audio if there are buffers in the buffer list
-                    if len(self.buffers) > 0:
-                        data = self.buffers.pop(0)
-                        # the write() gives 0, if the sound queue is full. We have to add this buffer the next time
-                        if self.device.write(bytes(data)) == 0:
-                            self.buffers.insert(0, data)
+            data = self.receive_buffer_with_exact_length()
+            self.handle_new_sound_buffer(data, index)
+
+    def handle_new_sound_buffer(self, data, index):
+        if data:
+            if not self.started:
+                self.calibrate_start_index(data, index)
             else:
-                # This should not happen. The server is dead.
-                print("[Client] No new data. Aborting!")
-                self.running = False
-                break
+                self.store_or_play_audio_buffer(data)
+        else:
+            self.exit_message_loop()
+
+    def calibrate_start_index(self, data, index):
+        self.buffers.append(data)
+        # "Calibrate" to the start_point to have the same list with the same index as the server
+        # To calculate which package is needed to which time, just use int(T/waiting_time) - start_counter
+        # were T is time - start_time.
+        if self.start_counter == 0:
+            self.start_counter = int(index)
+
+    def store_or_play_audio_buffer(self, data):
+        self.buffers.append(data)
+        # only play audio if there are buffers in the buffer list
+        if len(self.buffers) > 0:
+            data = self.buffers.pop(0)
+            # the write() gives 0, if the sound queue is full. We have to add this buffer the next time
+            if self.play_buffer(data) == 0:
+                self.buffers.insert(0, data)
+
+    def exit_message_loop(self):
+        # This should not happen. The server is dead.
+        print("[Client] No new data. Aborting!")
+        self.running = False
+
+    def connect_to_server(self):
+        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.client.connect((ClientListener.addressInformation.server_ip, ClientListener.addressInformation.port))
+
+    def tell_server_receiver_identity(self):
+        self.client.sendall(b"receiver")
+        self.receive_ok()
+        self.send_ok()
+
+    def get_audio_information(self):
+        try:
+            self.read_values_from_server()
+        except ValueError:
+            print("There is no client sending data to the server. Aborting.")
+            exit()
+
+    def connect(self):
+        """
+        Connect to the server and get frame rate and waiting time. Then start the playing device.
+        """
+        self.connect_to_server()
+        self.tell_server_receiver_identity()
+        self.get_audio_information()
+        self.initialize_pcm(ClientListener.clientInformation.frame_rate,
+                            ClientListener.clientInformation.sound_buffer_size)
+
+        self.running = True
+
+    def receive_index(self):
+        # Receive the index of the buffer in the server list
+        index = self.receive_information()
+        return index
+
+
+
+
 
 
 def reset_thread(client):
