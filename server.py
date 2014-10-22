@@ -129,7 +129,11 @@ class RequestHandler(SocketServer.BaseRequestHandler, ServerBase):
                 buffer_index = RequestHandler.static_client_list.get_index(self)
                 if buffer_index:
                     self.send_information(buffer_index)
-                    self.send(RequestHandler.static_client_list.get_buffer(self))
+                    try:
+                        self.send(RequestHandler.static_client_list.get_buffer(self))
+                    except IndexError:
+                        print("Haa?")
+                        self.remove_listener()
 
             # Sleeping 1 ms is better for performance issues (??)
             time.sleep(1 / 1000.0)

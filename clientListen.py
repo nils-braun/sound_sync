@@ -130,8 +130,6 @@ class ClientListener (ClientBase, PCMPlay):
                 self.calibrate_start_index(data, index)
             else:
                 self.store_or_play_audio_buffer(data)
-        else:
-            self.exit_message_loop()
 
     def calibrate_start_index(self, data, index):
         self.buffers.append(data)
