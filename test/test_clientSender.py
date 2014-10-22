@@ -48,3 +48,13 @@ class TestClientSender(TestCase):
                          ClientSender.clientInformation.sound_buffer_size, 4*test_length)
         self.assertEqual(4*test_length, len(test_buffer))
 
+    def test_send_sound_data(self):
+        self.initialize_socket()
+        self.initialize_sound()
+        ClientSender.clientInformation.multiple_buffer_factor = 2
+
+        # TODO send data to server
+
+        self.client.close_sound()
+        self.assertEqual(ClientSender.clientInformation.sound_buffer_size, len(self.mocking_client.get_in_message()))
+
