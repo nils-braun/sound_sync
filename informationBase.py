@@ -15,8 +15,8 @@ class ReadFromConfig:
 class AddressInformationBase(ReadFromConfig):
     def __init__(self):
         ReadFromConfig.__init__(self)
-        self.server_ip = self.get_attribute("ip")
-        self.port = self.get_attribute("port")
+        self.server_ip = str(self.get_attribute("ip"))
+        self.port = int(self.get_attribute("port"))
 
 
 class ClientInformationBase(ReadFromConfig):
