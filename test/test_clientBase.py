@@ -46,8 +46,7 @@ class TestClientBase(TestCase):
         self.client.send_values_to_server()
 
         self.assertEqual(ClientBase.clientInformation.frame_rate, int(self.mocking_client.get_in_message()))
-        self.assertEqual(ClientBase.clientInformation.multiple_buffer_factor *
-                         ClientBase.clientInformation.waiting_time, int(self.mocking_client.get_in_message()))
+        self.assertEqual(ClientBase.clientInformation.waiting_time, int(self.mocking_client.get_in_message()))
         self.assertRaises(IndexError, self.mocking_client.get_in_message)
         self.assertEqual(0, len(self.mocking_client.last_out_message))
         self.assertEqual(ClientBase.clientInformation.information_buffer_size, self.mocking_client.last_buffer_size)

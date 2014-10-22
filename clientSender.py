@@ -61,7 +61,7 @@ class ClientSender(ClientBase, PCMCapture):
         ClientBase.__init__(self)
         PCMCapture.__init__(self)
         ClientSender.clientInformation.frame_rate = int(self.get_attribute("frame_rate"))
-        ClientSender.clientInformation.waiting_time = int(self.get_attribute("waiting_time"))
+        ClientSender.clientInformation.waiting_time = ClientSender.clientInformation.multiple_buffer_factor * int(self.get_attribute("waiting_time"))
 
     def tell_server_sender_identity(self):
         self.client.sendall(b"sender")
@@ -77,7 +77,7 @@ class ClientSender(ClientBase, PCMCapture):
         self.tell_server_sender_identity()
         self.send_values_to_server()
 
-        self.initialize_pcm(ClientSender.clientInformation.frame_rate, ClientSender.clientInformation.sound_buffer_size)
+        self.initialize_pcm(ClientSender.clientInformation.frame_rate, ClientSender.clientInformation.sound_buffer_size/ClientSender.clientInformation.multiple_buffer_factor)
 
     def message_loop(self):
         """
@@ -85,9 +85,12 @@ class ClientSender(ClientBase, PCMCapture):
         Collect factor*waiting_time ms at once and send after that.
         """
         while True:
-            sound_buffer_length, sound_buffer = self.collect_sound_data()
-            if sound_buffer_length > 0:
-                self.send(sound_buffer)
+            self.collect_and_send_sound_data()
+
+    def collect_and_send_sound_data(self):
+        sound_buffer_length, sound_buffer = self.collect_sound_data()
+        if sound_buffer_length > 0:
+            self.send(sound_buffer)
 
     def collect_sound_data(self):
         tmp_buffer = bytearray()

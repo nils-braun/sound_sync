@@ -27,3 +27,16 @@ class MockingClient:
     def get_in_message(self):
         return self.last_in_message.pop(0)
 
+class MockingPCM:
+    def __init__(self):
+      self.message_stack = list()
+      self.sound_buffer_size = 0
+
+    def read(self):
+      if len(self.message_stack) > 0:
+        return int(self.sound_buffer_size/4), self.message_stack.pop(0)
+      else:
+        raise IndexError
+
+    def add_buffer(self, buffer)
+      self.message_stack.append(buffer)

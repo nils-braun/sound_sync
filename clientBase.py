@@ -49,11 +49,6 @@ class ClientBase(SocketBase):
         """
 
         self.send_information(ClientBase.clientInformation.frame_rate)
+        self.send_information(ClientBase.clientInformation.waiting_time)
 
-        # tell the server the waiting time in ms. Be careful! The senders waiting time differs from the
-        # normal waiting time by a factor of self.multiple_buffer_factor
-        self.send_information(ClientBase.clientInformation.multiple_buffer_factor *
-                              ClientBase.clientInformation.waiting_time)
-
-        # set the buffer size with the data
         ClientBase.clientInformation.set_sound_buffer_size()

@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from clientSender import ClientSender
-from test.test_mockingClient import MockingClient
+from test.test_mockingClient import MockingClient, MockingPCM
 
 __author__ = 'nils'
 
@@ -11,6 +11,12 @@ class TestClientSender(TestCase):
         self.client = ClientSender()
         self.mocking_client = MockingClient()
         self.client.client = self.mocking_client
+
+    def initialize_sound_mocking(self):
+        ClientSender.clientInformation.set_sound_buffer_size()
+        self.mocking_pcm = MockingPCM()
+        self.client.pcm = self.mocking_pcm()
+        self.mocking_pcm.sound_buffer_size = ClientSender.clientInformation.sound_buffer_size
 
     def initialize_sound(self):
         ClientSender.clientInformation.set_sound_buffer_size()
@@ -32,8 +38,8 @@ class TestClientSender(TestCase):
         result_buffer, result_length = self.client.get_sound_data()
         self.client.close_sound()
 
-        self.assertEqual(ClientSender.clientInformation.sound_buffer_size, 4*result_length)
-        self.assertEqual(4*result_length, len(result_buffer))
+        self.assertEqual(ClientSender.clientInformation.sound_buffer_size, ClientSender.clientInformation.multiple_buffer_factor * len(result_buffer))
+        self.assertEqual(self.client.get_attribute("sound_data_size")*result_length, len(result_buffer))
 
     def test_collect_sound_data(self):
         self.initialize_socket()
@@ -44,17 +50,23 @@ class TestClientSender(TestCase):
 
         self.client.close_sound()
 
-        self.assertEqual(ClientSender.clientInformation.multiple_buffer_factor *
-                         ClientSender.clientInformation.sound_buffer_size, 4*test_length)
-        self.assertEqual(4*test_length, len(test_buffer))
+        self.assertEqual(ClientSender.clientInformation.sound_buffer_size, len(test_buffer))
+        self.assertEqual(self.client.get_attribute("sound_data_size")*test_length, len(test_buffer))
 
-    def test_send_sound_data(self):
+    def test_collect_and_send_sound_data(self):
         self.initialize_socket()
-        self.initialize_sound()
+        self.initialize_sound_mocking()
+        # TODO initialize with correct buffer size!
+        self.fail()
+        test_message = "test message"
+        self.mocking_pcm.add_message(test_message)
+        self.mocking_pcm.add_message(test_message)
         ClientSender.clientInformation.multiple_buffer_factor = 2
-
-        # TODO send data to server
+        self.client.set_sound_buffer_size()
+        
+        self.client.collect_and_send_sound_data()
 
         self.client.close_sound()
-        self.assertEqual(ClientSender.clientInformation.sound_buffer_size, len(self.mocking_client.get_in_message()))
+        
+        self.assertEqual(ClientSender.clientInformation.sound_buffer_size, len(self.mocking_client.get_in_message())
 
