@@ -57,13 +57,10 @@ class ClientListHandler(BufferListHandler):
     def add_listener(self, listener_socket):
         if not self.is_listener(listener_socket):
             if len(self.listener_list) == 0:
-                self.listener_list[listener_socket] = 0
+                self.listener_list[listener_socket] = self.start_buffer_index
             else:
                 max_index = max(self.listener_list.values())
-                if max_index > 10:
-                    self.listener_list[listener_socket] = max_index - 10
-                else:
-                    self.listener_list[listener_socket] = 0
+                self.listener_list[listener_socket] = max_index
 
     def is_listener(self, listener_socket):
         return listener_socket in self.listener_list
@@ -93,6 +90,7 @@ class ClientListHandler(BufferListHandler):
     def add_sender(self, sender_socket):
         if not self.is_sender(sender_socket):
             self.sender = sender_socket
+            self.start_time = time.time()
 
     def is_sender(self, sender_socket):
         return self.sender == sender_socket
@@ -102,3 +100,4 @@ class ClientListHandler(BufferListHandler):
 
     def remove_sender(self):
         self.sender = None
+        BufferListHandler.__init__(self)
