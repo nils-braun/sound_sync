@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from clientBase import ClientBase
-from test_mockingClient import MockingClient
+from test.test_mockingClient import MockingClient
 
 __author__ = 'nils'
 

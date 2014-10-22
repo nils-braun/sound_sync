@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from informationBase import SocketBase
-from test_mockingClient import MockingClient
+from test.test_mockingClient import MockingClient
 
 
 __author__ = 'nils'

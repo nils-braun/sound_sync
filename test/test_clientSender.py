@@ -1,8 +1,7 @@
-from time import sleep
 from unittest import TestCase
 
-from clientSender import ClientSender, CARD_NAME
-from test_mockingClient import MockingClient
+from clientSender import ClientSender
+from test.test_mockingClient import MockingClient
 
 __author__ = 'nils'
 
