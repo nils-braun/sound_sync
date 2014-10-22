@@ -6,7 +6,7 @@ import time
 from socket import error as SocketError
 
 from serverBase import ServerBase
-from serverClientListHandler import ClientListHandler
+from serverClientListHandler import ClientListHandler, IndexToHighException, IndexToLowException, EmptyException
 
 import SocketServer
 
@@ -119,26 +119,22 @@ class RequestHandler(SocketServer.BaseRequestHandler, ServerBase):
         # A running listener waits for a message with to parts: First the current period number to calibrate
         # its own buffers list, than the buffer itself. We try to send it to him except the case
         # the listener is not there anymore. Then we release it and remove it from the serverInterface.
+
+        if RequestHandler.static_client_list.is_empty():
+            print("[%s %s] There are no buffers!" % self.client_address)
+            self.remove_listener()
+            return
+
         try:
-            if RequestHandler.static_client_list.is_empty():
-                print("[%s %s] There are no buffers!" % self.client_address)
-                self.remove_listener()
+            buffer_index = RequestHandler.static_client_list.get_buffer_index(self)
+            self.send_information(buffer_index)
+            self.send(RequestHandler.static_client_list.get_buffer(self))
 
-            # Send the period number and the buffer to the listener if it is not to far ahead.
-            else:
-                buffer_index = RequestHandler.static_client_list.get_index(self)
-                if buffer_index:
-                    self.send_information(buffer_index)
-                    try:
-                        self.send(RequestHandler.static_client_list.get_buffer(self))
-                    except IndexError:
-                        print("Haa?")
-                        self.remove_listener()
-
-            # Sleeping 1 ms is better for performance issues (??)
-            time.sleep(1 / 1000.0)
         except SocketError:
             self.remove_listener()
+        except IndexToHighException:
+            # Sleeping 1 ms is better for performance issues (??)
+            time.sleep(1 / 1000.0)
 
     def remove_sender(self):
         print("[%s %s] Removing Sender" % self.client_address)

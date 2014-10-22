@@ -129,3 +129,8 @@ class TestAllCases(TestCase):
         self.assertEqual(tmp_waiting_time, SocketBase.clientInformation.waiting_time)
         self.assertEqual(tmp_sound_buffer_size, SocketBase.clientInformation.sound_buffer_size)
 
+    def test_buffer_transport_sender_server(self):
+        self.fail()
+
+    def test_buffer_transport_server_listener(self):
+        self.fail()
