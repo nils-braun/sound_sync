@@ -49,9 +49,13 @@ class RequestHandler(SocketServer.BaseRequestHandler, ServerBase):
         if RequestHandler.static_client_list.is_sender(self):
             while self.running:
                 self.mainloop_sender()
+
+            self.client.close()
         else:
             while self.running:
                 self.mainloop_listener()
+
+            self.client.close()
 
     def handle_new_client(self):
         print("[%s %s] Added new Client." % self.client_address)
@@ -117,7 +121,7 @@ class RequestHandler(SocketServer.BaseRequestHandler, ServerBase):
         # the listener is not there anymore. Then we release it and remove it from the serverInterface.
         try:
             if RequestHandler.static_client_list.is_empty():
-                print("[%s %s] There is no sender!" % self.client_address)
+                print("[%s %s] There are no buffers!" % self.client_address)
                 self.remove_listener()
 
             # Send the period number and the buffer to the listener if it is not to far ahead.

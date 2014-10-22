@@ -61,7 +61,8 @@ class ClientSender(ClientBase, PCMCapture):
         ClientBase.__init__(self)
         PCMCapture.__init__(self)
         ClientSender.clientInformation.frame_rate = int(self.get_attribute("frame_rate"))
-        ClientSender.clientInformation.waiting_time = ClientSender.clientInformation.multiple_buffer_factor * int(self.get_attribute("waiting_time"))
+        ClientSender.clientInformation.waiting_time = ClientSender.clientInformation.multiple_buffer_factor * \
+                                                      int(self.get_attribute("waiting_time"))
 
     def tell_server_sender_identity(self):
         self.client.sendall(b"sender")
@@ -77,7 +78,9 @@ class ClientSender(ClientBase, PCMCapture):
         self.tell_server_sender_identity()
         self.send_values_to_server()
 
-        self.initialize_pcm(ClientSender.clientInformation.frame_rate, ClientSender.clientInformation.sound_buffer_size/ClientSender.clientInformation.multiple_buffer_factor)
+        self.initialize_pcm(ClientSender.clientInformation.frame_rate,
+                            ClientSender.clientInformation.sound_buffer_size /
+                            ClientSender.clientInformation.multiple_buffer_factor)
 
     def message_loop(self):
         """
