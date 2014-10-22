@@ -17,6 +17,7 @@ import alsaaudio
 import time
 from threading import Thread, Timer
 from clientBase import ClientBase
+from informationBase import ReadFromConfig
 
 
 class PlayThread(Thread):
@@ -79,22 +80,23 @@ class PlayThread(Thread):
         STOPPED = True
 
 
-class PCMPlay:
+class PCMPlay(ReadFromConfig):
     # The PCM device of the ALSA-Loopback-Adapter. The data coming from the applications
     # is send through this loopback into the program. We need a frame rate of 44100 Hz and collect 10 ms of data
     # at once.
 
     def __init__(self):
-        self.pcm = alsaaudio.PCM(card="default", type=alsaaudio.PCM_PLAYBACK, mode=alsaaudio.PCM_NONBLOCK)
+        ReadFromConfig.__init__(self)
 
     def initialize_pcm(self, frame_rate, buffer_size):
         """
         Set the PCM device with the usual parameters.
         """
-        self.pcm.setchannels(2)
+        self.pcm = alsaaudio.PCM(card="default", type=alsaaudio.PCM_PLAYBACK, mode=alsaaudio.PCM_NONBLOCK)
+        self.pcm.setchannels(int(self.get_attribute("channels")))
         self.pcm.setrate(frame_rate)
         self.pcm.setformat(alsaaudio.PCM_FORMAT_S16_LE)
-        self.pcm.setperiodsize(int(buffer_size/4.0))
+        self.pcm.setperiodsize(int(buffer_size/float(self.get_attribute("sound_data_size"))))
 
     def play_buffer(self, data):
         return self.pcm.write(bytes(data))
@@ -119,9 +121,8 @@ class ClientListener (ClientBase, PCMPlay):
         """
         while self.running:
             index = self.receive_index()
-            # Receive the data
-            data = self.receive_buffer_with_exact_length()
-            self.handle_new_sound_buffer(data, index)
+            sound_data = self.receive_buffer_with_exact_length()
+            self.handle_new_sound_buffer(sound_data, index)
 
     def handle_new_sound_buffer(self, data, index):
         if data:
@@ -186,10 +187,6 @@ class ClientListener (ClientBase, PCMPlay):
         # Receive the index of the buffer in the server list
         index = self.receive_information()
         return index
-
-
-
-
 
 
 def reset_thread(client):

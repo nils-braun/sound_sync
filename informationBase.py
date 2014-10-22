@@ -1,19 +1,32 @@
+import ConfigParser
+
 __author__ = 'nils'
 
 
-class AddressInformationBase:
+class ReadFromConfig:
     def __init__(self):
-        self.server_ip = "192.168.178.142"
-        self.port = 50007
+        self.configParser = ConfigParser.RawConfigParser()
+        self.configParser.read("/etc/sound-sync.conf")
+
+    def get_attribute(self, attribute):
+        return self.configParser.get("defaults", attribute)
 
 
-class ClientInformationBase:
+class AddressInformationBase(ReadFromConfig):
     def __init__(self):
+        ReadFromConfig.__init__(self)
+        self.server_ip = self.get_attribute("ip")
+        self.port = self.get_attribute("port")
+
+
+class ClientInformationBase(ReadFromConfig):
+    def __init__(self):
+        ReadFromConfig.__init__(self)
         self.waiting_time = 0
         self.frame_rate = 0
         self.sound_buffer_size = 0
         self.information_buffer_size = 1024
-        self.multiple_buffer_factor = 50
+        self.multiple_buffer_factor = int(self.get_attribute("multiple_buffer_factor"))
 
     def set_sound_buffer_size(self):
         """
@@ -23,7 +36,8 @@ class ClientInformationBase:
         :rtype: None
         """
 
-        self.sound_buffer_size = int(4 * self.waiting_time / 1000.0 * self.frame_rate)
+        self.sound_buffer_size = int(float(self.get_attribute("sound_data_size")) *
+                                     self.waiting_time / 1000.0 * self.frame_rate)
 
 
 class SocketBase():

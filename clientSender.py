@@ -12,14 +12,16 @@ import socket
 
 import alsaaudio
 from clientBase import ClientBase
+from informationBase import ReadFromConfig
 
 
-class PCMCapture:
+class PCMCapture(ReadFromConfig):
     # The PCM device of the ALSA-Loopback-Adapter. The data coming from the applications
     # is send through this loopback into the program. We need a frame rate of 44100 Hz and collect 10 ms of data
     # at once.
 
     def __init__(self):
+        ReadFromConfig.__init__(self)
         self.search_for_loopback_card()
         self.pcm = None
 
@@ -36,10 +38,10 @@ class PCMCapture:
         """
         self.pcm = alsaaudio.PCM(type=alsaaudio.PCM_CAPTURE, card=CARD_NAME)
 
-        self.pcm.setchannels(2)
+        self.pcm.setchannels(int(self.get_attribute("channels")))
         self.pcm.setrate(frame_rate)
         self.pcm.setformat(alsaaudio.PCM_FORMAT_S16_LE)
-        self.pcm.setperiodsize(int(buffer_size/4.0))
+        self.pcm.setperiodsize(int(buffer_size/float(self.get_attribute("sound_data_size"))))
 
     def get_sound_data(self):
         length, sound_buffer = self.pcm.read()
@@ -58,8 +60,8 @@ class ClientSender(ClientBase, PCMCapture):
     def __init__(self):
         ClientBase.__init__(self)
         PCMCapture.__init__(self)
-        ClientSender.clientInformation.frame_rate = 44100
-        ClientSender.clientInformation.waiting_time = 10
+        ClientSender.clientInformation.frame_rate = int(self.get_attribute("frame_rate"))
+        ClientSender.clientInformation.waiting_time = int(self.get_attribute("waiting_time"))
 
     def tell_server_sender_identity(self):
         self.client.sendall(b"sender")

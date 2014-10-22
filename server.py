@@ -147,7 +147,7 @@ def main():
     """
     The main function. Starts the TCP Server on port 50007 and receives new senders or listeners.
     """
-    server = SocketServer.ThreadingTCPServer(("", PORT), RequestHandler)
+    server = SocketServer.ThreadingTCPServer(("", ServerBase.addressInformation.port), RequestHandler)
 
     try:
         server.serve_forever()

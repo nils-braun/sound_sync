@@ -16,7 +16,7 @@ class MockingClient:
         if len(self.last_out_message) > 0:
             return self.last_out_message.pop(0)
         else:
-            return ""
+            return None
 
     def close(self):
         self.closed = True
@@ -26,3 +26,4 @@ class MockingClient:
 
     def get_in_message(self):
         return self.last_in_message.pop(0)
+
