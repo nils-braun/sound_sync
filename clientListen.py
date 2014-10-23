@@ -114,15 +114,18 @@ class ClientListener (ClientBase, PCMPlay):
         ClientBase.__init__(self)
         PCMPlay.__init__(self)
 
+    def handle_new_message_loop(self):
+        index = self.receive_index()
+        sound_data = self.receive_buffer_with_exact_length()
+        self.handle_new_sound_buffer(sound_data, index)
+
     def message_loop(self):
         """
         The message loop where the data and the corresponding index (in the list on the server)
         is received from the server. Play a new buffer only if a new buffer is coming fom the server!
         """
         while self.running:
-            index = self.receive_index()
-            sound_data = self.receive_buffer_with_exact_length()
-            self.handle_new_sound_buffer(sound_data, index)
+            self.handle_new_message_loop()
 
     def handle_new_sound_buffer(self, data, index):
         if data:

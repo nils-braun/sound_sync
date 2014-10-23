@@ -1,4 +1,5 @@
 import ConfigParser
+from socket import error as SocketError
 
 __author__ = 'nils'
 
@@ -65,7 +66,7 @@ class SocketBase():
         while pointer < SocketBase.clientInformation.sound_buffer_size:
             data = self.receive(SocketBase.clientInformation.sound_buffer_size - pointer)
             if not data:
-                return
+                raise SocketError
 
             tmp_buffer[pointer:pointer + len(data)] = data
             pointer += len(data)

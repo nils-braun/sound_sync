@@ -90,6 +90,7 @@ class ClientListHandler(BufferListHandler):
     def add_sender(self, sender_socket):
         if not self.is_sender(sender_socket):
             self.sender = sender_socket
+            BufferListHandler.__init__(self)
             self.start_time = time.time()
 
     def is_sender(self, sender_socket):
@@ -100,4 +101,3 @@ class ClientListHandler(BufferListHandler):
 
     def remove_sender(self):
         self.sender = None
-        BufferListHandler.__init__(self)

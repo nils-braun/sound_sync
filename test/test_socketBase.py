@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from informationBase import SocketBase
 from test.test_mockingClient import MockingClient
-
+from socket import error as SocketError
 
 __author__ = 'nils'
 
@@ -39,9 +39,7 @@ class TestSocketBase(TestCase):
         test_buffer = bytes("a")
         self.mocking_client.add_out_message(test_buffer)
 
-        result_buffer = self.socket.receive_buffer_with_exact_length()
-
-        self.assertEqual(None, result_buffer)
+        self.assertRaises(SocketError, self.socket.receive_buffer_with_exact_length)
 
     def test_receive_buffer_with_exact_length_too_much_content(self):
         self.initialize_socket()
@@ -67,6 +65,8 @@ class TestSocketBase(TestCase):
 
     def test_send_information(self):
         self.initialize_socket()
+
+        self.mocking_client.add_out_message("ok")
         test_message = "test message"
         self.socket.send_information(test_message)
 
@@ -83,6 +83,10 @@ class TestSocketBase(TestCase):
 
     def test_receive_ok(self):
         self.initialize_socket()
+
+        test_message = "test message"
+        self.mocking_client.add_out_message(test_message)
+
         self.socket.receive_information()
         self.assertEqual(SocketBase.clientInformation.information_buffer_size, self.mocking_client.last_buffer_size)
 
@@ -101,6 +105,9 @@ class TestSocketBase(TestCase):
     def test_receive_default_buffer_size(self):
         self.initialize_socket()
 
+        test_message = "test message"
+        self.mocking_client.add_out_message(test_message)
+
         self.socket.receive()
         self.assertEqual(SocketBase.clientInformation.information_buffer_size, self.mocking_client.last_buffer_size)
 
@@ -108,6 +115,8 @@ class TestSocketBase(TestCase):
         self.initialize_socket()
 
         test_buffer_size = 10000
+        test_message = "test message"
+        self.mocking_client.add_out_message(test_message)
 
         self.socket.receive(test_buffer_size)
         self.assertEqual(test_buffer_size, self.mocking_client.last_buffer_size)

@@ -1,6 +1,8 @@
 __author__ = 'nils'
 
 
+from socket import error as SocketError
+
 class MockingClient:
     def __init__(self):
         self.last_in_message = list()
@@ -16,7 +18,7 @@ class MockingClient:
         if len(self.last_out_message) > 0:
             return self.last_out_message.pop(0)
         else:
-            return None
+            raise SocketError
 
     def close(self):
         self.closed = True
@@ -38,6 +40,10 @@ class MockingPCM:
             return int(self.sound_buffer_size / 4), self.message_stack.pop(0)
         else:
             raise IndexError
+
+    def write(self, buffer):
+        self.message_stack.append(buffer)
+        return len(buffer)
 
     def add_buffer(self, buffer):
         self.message_stack.append(buffer)

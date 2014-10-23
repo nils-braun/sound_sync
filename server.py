@@ -109,10 +109,13 @@ class RequestHandler(SocketServer.BaseRequestHandler, ServerBase):
         self.running = False
 
     def mainloop_sender(self):
-        new_sound_buffer = self.receive_buffer_with_exact_length()
-        if new_sound_buffer:
-            RequestHandler.static_client_list.add_buffer(new_sound_buffer)
-        else:
+        try:
+            new_sound_buffer = self.receive_buffer_with_exact_length()
+            if new_sound_buffer:
+                RequestHandler.static_client_list.add_buffer(new_sound_buffer)
+            else:
+                self.remove_sender()
+        except SocketError:
             self.remove_sender()
 
     def mainloop_listener(self):
