@@ -1,7 +1,7 @@
 import alsaaudio
 from informationBase import ReadFromConfig
 
-__author__ = 'nils'
+__author__ = 'nilpferd'
 
 
 class PCMPlay(ReadFromConfig):
@@ -10,6 +10,7 @@ class PCMPlay(ReadFromConfig):
     # at once.
 
     def __init__(self):
+        self.pcm = None
         ReadFromConfig.__init__(self)
 
     def initialize_pcm(self, frame_rate, buffer_size):
@@ -36,7 +37,8 @@ class PCMCapture(ReadFromConfig):
         self.search_for_loopback_card()
         self.pcm = None
 
-    def search_for_loopback_card(self):
+    @staticmethod
+    def search_for_loopback_card():
         card_list = alsaaudio.cards()
         if not "Loopback" in card_list:
             print("There is no Loopback module loaded by ALSA. Loopback is needed by the program. "

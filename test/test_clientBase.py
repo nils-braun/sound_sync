@@ -3,7 +3,7 @@ from unittest import TestCase
 from clientBase import ClientBase
 from test.test_mockingClient import MockingClient
 
-__author__ = 'nils'
+__author__ = 'nilpferd'
 
 
 class TestClientBase(TestCase):

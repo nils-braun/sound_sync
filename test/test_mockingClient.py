@@ -1,7 +1,7 @@
-__author__ = 'nils'
-
+__author__ = 'nilpferd'
 
 from socket import error as SocketError
+
 
 class MockingClient:
     def __init__(self):
@@ -41,9 +41,9 @@ class MockingPCM:
         else:
             raise IndexError
 
-    def write(self, buffer):
-        self.message_stack.append(buffer)
-        return len(buffer)
+    def write(self, sound_buffer):
+        self.message_stack.append(sound_buffer)
+        return len(sound_buffer)
 
-    def add_buffer(self, buffer):
-        self.message_stack.append(buffer)
+    def add_buffer(self, sound_buffer):
+        self.message_stack.append(sound_buffer)

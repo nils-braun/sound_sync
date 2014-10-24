@@ -7,11 +7,10 @@ from clientSender import ClientSender
 from informationBase import SocketBase
 
 
-__author__ = "nils"
+__author__ = "nilpferd"
 
 
 class TestAllCases(TestCase):
-    # TODO Test the buffer size of all components
     def initialize_all_sockets(self):
         self.mocking_client_sender = MockingClient()
         self.mocking_client_listener = MockingClient()
@@ -281,7 +280,6 @@ class TestAllCases(TestCase):
         RequestHandler.static_client_list.sender = True
         test_start_time = 736
         RequestHandler.static_client_list.start_time = test_start_time
-        test_buffer = bytes(bytearray(SocketBase.clientInformation.sound_buffer_size))
 
         for i in xrange(10):
             RequestHandler.static_client_list.add_buffer(i)
@@ -318,7 +316,6 @@ class TestAllCases(TestCase):
         RequestHandler.static_client_list.sender = True
         test_start_time = 736
         RequestHandler.static_client_list.start_time = test_start_time
-        test_buffer = bytes(bytearray(SocketBase.clientInformation.sound_buffer_size))
 
         for i in xrange(100):
             RequestHandler.static_client_list.add_buffer(i)
@@ -355,7 +352,6 @@ class TestAllCases(TestCase):
         RequestHandler.static_client_list.sender = True
         test_start_time = 736
         RequestHandler.static_client_list.start_time = test_start_time
-        test_buffer = bytes(bytearray(SocketBase.clientInformation.sound_buffer_size))
 
         for i in xrange(100):
             RequestHandler.static_client_list.add_buffer(i)

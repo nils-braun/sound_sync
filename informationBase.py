@@ -1,7 +1,7 @@
 import ConfigParser
 from socket import error as SocketError
 
-__author__ = 'nils'
+__author__ = 'nilpferd'
 
 
 class ReadFromConfig:
@@ -48,7 +48,7 @@ class SocketBase():
     addressInformation = AddressInformationBase()
 
     def __init__(self):
-        self.client = 0
+        self.client = None
 
     def connect(self):
         """
@@ -99,7 +99,7 @@ class SocketBase():
         """
         Send the message message to the server if any.
         """
-        if self.client != 0:
+        if self.client is not None:
             self.client.sendall(message)
 
     def receive(self, buffer_size=None):
@@ -109,12 +109,12 @@ class SocketBase():
         """
         if buffer_size is None:
             buffer_size = SocketBase.clientInformation.information_buffer_size
-        if self.client != 0:
+        if self.client is not None:
             return self.client.recv(buffer_size)
 
     def close(self):
         """
         Close the connection to the server if any.
         """
-        if self.client != 0:
+        if self.client is not None:
             self.client.close()

@@ -4,7 +4,7 @@ from informationBase import SocketBase
 from test.test_mockingClient import MockingClient
 from socket import error as SocketError
 
-__author__ = 'nils'
+__author__ = 'nilpferd'
 
 
 class TestSocketBase(TestCase):
@@ -12,10 +12,6 @@ class TestSocketBase(TestCase):
         self.socket = SocketBase()
         self.mocking_client = MockingClient()
         self.socket.client = self.mocking_client
-
-    def test_connect(self):
-        socket = SocketBase()
-        pass
 
     def initialize_sound_information(self):
         SocketBase.clientInformation.waiting_time = 23

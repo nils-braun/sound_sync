@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from listHandler import ClientListHandler, EmptyException, IndexToLowException, IndexToHighException
 
-__author__ = 'nils'
+__author__ = 'nilpferd'
 
 
 class TestClientListHandler(TestCase):

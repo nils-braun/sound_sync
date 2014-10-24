@@ -1,4 +1,4 @@
-__author__ = 'nils'
+__author__ = 'nilpferd'
 
 from informationBase import SocketBase
 

@@ -4,16 +4,22 @@ This module implements the server.
 """
 import time
 from socket import error as SocketError
-
 from serverBase import ServerBase
-from listHandler import ClientListHandler, IndexToHighException, IndexToLowException, EmptyException
-
+from listHandler import ClientListHandler, IndexToHighException
 import SocketServer
 
-PORT = 50007                # TODO: Should better be read from a file...
 
 __author__ = "nilpferd1991"
 __version__ = "2.0.0"
+
+
+def main():
+    server = SocketServer.ThreadingTCPServer(("", ServerBase.addressInformation.port), RequestHandler)
+
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        server.server_close()
 
 
 class RequestHandler(SocketServer.BaseRequestHandler, ServerBase):
@@ -76,8 +82,6 @@ class RequestHandler(SocketServer.BaseRequestHandler, ServerBase):
         self.receive_ok()
 
         if RequestHandler.static_client_list.no_sender():
-            # Kill the client if we have no sender.
-            # TODO Better Error Handling!
             print("[%s %s] There is no sender!" % self.client_address)
             self.running = False
         else:
@@ -136,8 +140,9 @@ class RequestHandler(SocketServer.BaseRequestHandler, ServerBase):
         except SocketError:
             self.remove_listener()
         except IndexToHighException:
-            # Sleeping 1 ms is better for performance issues (??)
-            time.sleep(1 / 1000.0)
+            pass
+
+        time.sleep(1 / 1000.0)
 
     def remove_sender(self):
         print("[%s %s] Removing Sender" % self.client_address)
@@ -148,18 +153,6 @@ class RequestHandler(SocketServer.BaseRequestHandler, ServerBase):
         print("[%s %s] Removing Listener" % self.client_address)
         RequestHandler.static_client_list.remove_listener(self)
         self.running = False
-
-
-def main():
-    """
-    The main function. Starts the TCP Server on port 50007 and receives new senders or listeners.
-    """
-    server = SocketServer.ThreadingTCPServer(("", ServerBase.addressInformation.port), RequestHandler)
-
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        server.server_close()
 
 if __name__ == "__main__":
     main()

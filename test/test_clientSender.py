@@ -3,7 +3,7 @@ from unittest import TestCase
 from clientSender import ClientSender
 from test.test_mockingClient import MockingClient, MockingPCM
 
-__author__ = 'nils'
+__author__ = 'nilpferd'
 
 
 class TestClientSender(TestCase):
@@ -69,7 +69,7 @@ class TestClientSender(TestCase):
         self.client.collect_and_send_sound_data()
 
         result_buffer = self.mocking_client.get_in_message()
-        # the length of the bytearray send to the server is sound_buffer_size!!!
+        # the length of the byte array send to the server is sound_buffer_size!!!
         self.assertEqual(ClientSender.clientInformation.sound_buffer_size, len(result_buffer))
         self.assertEqual(test_buffer*ClientSender.clientInformation.multiple_buffer_factor, result_buffer)
 

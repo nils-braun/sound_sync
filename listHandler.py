@@ -1,6 +1,6 @@
 import time
 
-__author__ = 'nils'
+__author__ = 'nilpferd'
 
 
 class IndexToLowException(Exception):

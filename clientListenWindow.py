@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-__author__ = 'nils'
+__author__ = 'nilpferd'
 __version__ = '1.0.0'
 
 import clientListen
@@ -11,7 +11,7 @@ from threading import Thread
 class ControlThread(Thread):
     def __init__(self):
         self.client = clientListen.ClientListener()
-        self.thread = 0
+        self.thread = None
         Thread.__init__(self)
 
     def run(self):
@@ -27,7 +27,7 @@ class ControlThread(Thread):
 
 class App:
     def __init__(self):
-        self.thread = 0
+        self.thread = None
 
         self.root = Tkinter.Tk()
         self.root.title("sound-sync")
@@ -58,7 +58,7 @@ class App:
 
     def mainloop(self):
         self.root.mainloop()
-        if self.thread != 0:
+        if not self.thread is None:
             self.thread.stop()
 
 

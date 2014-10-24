@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-__author__ = 'nils'
+__author__ = 'nilpferd'
 
 from informationBase import ClientInformationBase
 
