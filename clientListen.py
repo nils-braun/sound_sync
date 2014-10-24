@@ -55,19 +55,14 @@ class PlayThread(Thread):
                     # calculate the index of the buffer that should come next by using the start_time from the server
                     real_index = int((time_stamp - self.client.start_time*1000.0) /
                                      ClientListener.clientInformation.waiting_time)
-
-                    print("on", time_stamp, "playing", real_index, self.client.start_counter, len(self.client.buffers))
-                    # TODO there we are! We have to assure that the buffer with the correct number is played!
-                    # TODO We want to play real_index - 10!
-
                     # delete all packages before this correct time minus 5 packages
-                    #del self.client.buffers[:real_index - self.client.start_counter - 5]
+                    del self.client.buffers[:real_index - self.client.start_counter - 5]
                     # start the audio playing
-                    #for _ in xrange(len(self.client.buffers) - 4):
-                    #    self.client.play_buffer(bytes(self.client.buffers.pop(0)))
-                    #self.client.started = True
-                    #print("..started")
-                    #return
+                    for _ in xrange(len(self.client.buffers) - 4):
+                        self.client.play_buffer(bytes(self.client.buffers.pop(0)))
+                    self.client.started = True
+                    print("..started")
+                    return
 
             time.sleep(1/1000.0)
 
@@ -226,10 +221,7 @@ def main():
 
     try:
         client.connect()
-        print(ClientListener.clientInformation.sound_buffer_size)
-        print(ClientListener.clientInformation.frame_rate)
-        print(ClientListener.clientInformation.waiting_time)
-        print(client.start_time)
+
         reset_thread(client)
 
         client.message_loop()
