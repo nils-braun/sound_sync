@@ -46,7 +46,7 @@ class PlayThread(Thread):
         while not STOPPED:
 
             # no audio playing now:
-            if not self.client.started:
+            if not self.client.is_audio_playing:
                 # calculate the delta-corrected current time in ms.
                 time_stamp = int(time.time() * 1000 + self.delta)
                 # if we have filled the buffer list long enough and the time is correct:
@@ -60,17 +60,11 @@ class PlayThread(Thread):
                     # start the audio playing
                     for _ in xrange(len(self.client.buffers) - 4):
                         self.client.play_buffer(bytes(self.client.buffers.pop(0)))
-                    self.client.started = True
+                    self.client.is_audio_playing = True
                     print("..started")
                     return
 
             time.sleep(1/1000.0)
-
-    def start(self):
-        """
-        Start the thread.
-        """
-        Thread.start(self)
 
     def stop(self):
         """
@@ -81,17 +75,10 @@ class PlayThread(Thread):
 
 
 class PCMPlay(ReadFromConfig):
-    # The PCM device of the ALSA-Loopback-Adapter. The data coming from the applications
-    # is send through this loopback into the program. We need a frame rate of 44100 Hz and collect 10 ms of data
-    # at once.
-
     def __init__(self):
         ReadFromConfig.__init__(self)
 
     def initialize_pcm(self, frame_rate, buffer_size):
-        """
-        Set the PCM device with the usual parameters.
-        """
         self.pcm = alsaaudio.PCM(card="default", type=alsaaudio.PCM_PLAYBACK, mode=alsaaudio.PCM_NONBLOCK)
         self.pcm.setchannels(int(self.get_attribute("channels")))
         self.pcm.setrate(frame_rate)
@@ -110,7 +97,7 @@ class ClientListener (ClientBase, PCMPlay):
     def __init__(self):
         self.buffers = list()   # The buffers we fill in the beginning
         self.running = False    # Set to false to stop running
-        self.started = False    # Fill in some buffers before running, then start the movement of buffers
+        self.is_audio_playing = False    # Fill in some buffers before running, then start the movement of buffers
         ClientBase.__init__(self)
         PCMPlay.__init__(self)
 
@@ -120,16 +107,12 @@ class ClientListener (ClientBase, PCMPlay):
         self.handle_new_sound_buffer(sound_data, index)
 
     def message_loop(self):
-        """
-        The message loop where the data and the corresponding index (in the list on the server)
-        is received from the server. Play a new buffer only if a new buffer is coming fom the server!
-        """
         while self.running:
             self.handle_new_message_loop()
 
     def handle_new_sound_buffer(self, data, index):
         if data:
-            if not self.started:
+            if not self.is_audio_playing:
                 self.calibrate_start_index(data, index)
             else:
                 self.store_or_play_audio_buffer(data)
@@ -144,7 +127,6 @@ class ClientListener (ClientBase, PCMPlay):
 
     def store_or_play_audio_buffer(self, data):
         self.buffers.append(data)
-        # only play audio if there are buffers in the buffer list
         if len(self.buffers) > 0:
             data = self.buffers.pop(0)
             # the write() gives 0, if the sound queue is full. We have to add this buffer the next time
@@ -173,9 +155,6 @@ class ClientListener (ClientBase, PCMPlay):
             exit()
 
     def connect(self):
-        """
-        Connect to the server and get frame rate and waiting time. Then start the playing device.
-        """
         self.connect_to_server()
         self.tell_server_receiver_identity()
         self.get_audio_information()
@@ -185,7 +164,6 @@ class ClientListener (ClientBase, PCMPlay):
         self.running = True
 
     def receive_index(self):
-        # Receive the index of the buffer in the server list
         index = self.receive_information()
         return index
 
@@ -198,7 +176,7 @@ def reset_thread(client):
     """
     print("Starting (new)..")
     client.start_counter = 0
-    client.started = False
+    client.is_audio_playing = False
     client.buffers = list()
     thread_tmp = PlayThread(client)
     thread_tmp.start()
@@ -221,9 +199,7 @@ def main():
 
     try:
         client.connect()
-
         reset_thread(client)
-
         client.message_loop()
     except KeyboardInterrupt:
         print("stopping")
