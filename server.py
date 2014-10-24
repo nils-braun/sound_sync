@@ -6,7 +6,7 @@ import time
 from socket import error as SocketError
 
 from serverBase import ServerBase
-from serverClientListHandler import ClientListHandler, IndexToHighException, IndexToLowException, EmptyException
+from listHandler import ClientListHandler, IndexToHighException, IndexToLowException, EmptyException
 
 import SocketServer
 

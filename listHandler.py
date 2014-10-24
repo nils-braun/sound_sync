@@ -101,3 +101,19 @@ class ClientListHandler(BufferListHandler):
 
     def remove_sender(self):
         self.sender = None
+
+
+class ClientBufferListHandler(BufferListHandler):
+    def __init__(self):
+        self.current_buffer_index = -1
+        BufferListHandler.__init__(self)
+
+    def add_buffer_with_index(self, sound_buffer, buffer_index):
+        if buffer_index == self.end_buffer_index + 1:
+            self.add_buffer(sound_buffer)
+        else:
+            raise IndexError
+
+    def get_current_playable_buffer(self):
+        self.current_buffer_index += 1
+        return self.get_buffer_by_buffer_index(self.current_buffer_index - 1)

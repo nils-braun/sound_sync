@@ -9,7 +9,9 @@ running the programs
 
 You will need python2.7 and the python package *python-alsaaudio*. And *python-tk* for running the GUI.
 
-We need a minimum of three programs to implement this messaging protocol. 
+We need a minimum of three programs to implement this messaging protocol. The needed config options can be set in 
+`/etc/sound-sync.conf`. A default file can be found under `sound-sync.conf` in this repository.
+
 * First we need a server to handle all the requests. For this run **server.py** on a computer of your 
 choice. For me even a Raspberry Pi does the job perfectly well. Change the ip address in **clientBase.py** accordingly!
 * Then we need a client to send the audio data to the server. Thi sender can run on any computer you like. 
@@ -35,8 +37,6 @@ TODO
 
 ToDo
 ----
-* Renaming and refactoring
-* Implement better error handling
-* Implement reading the config from a file
+* Implement better error handling for server
 * Implement more than one client
 

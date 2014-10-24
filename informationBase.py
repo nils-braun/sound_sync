@@ -27,7 +27,8 @@ class ClientInformationBase(ReadFromConfig):
         self.frame_rate = 0
         self.sound_buffer_size = 0
         self.information_buffer_size = 1024
-        self.multiple_buffer_factor = int(self.get_attribute("multiple_buffer_factor"))
+        self.multiple_buffer_factor = 50
+        self.full_sound_buffer_size = 10
 
     def set_sound_buffer_size(self):
         """

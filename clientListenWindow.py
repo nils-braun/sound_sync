@@ -21,7 +21,7 @@ class ControlThread(Thread):
         self.client.message_loop()
 
     def stop(self):
-        self.client.running = False
+        self.client.is_running = False
         self.thread.stop()
 
 

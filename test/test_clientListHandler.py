@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from serverClientListHandler import ClientListHandler, EmptyException, IndexToLowException, IndexToHighException
+from listHandler import ClientListHandler, EmptyException, IndexToLowException, IndexToHighException
 
 __author__ = 'nils'
 

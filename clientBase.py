@@ -18,8 +18,7 @@ class ClientBase(SocketBase):
     def __init__(self):
         self.start_time = 0                     # The time_stamp in s, when the server gets the first buffer
                                                 # from the sender
-        self.start_counter = 0                  # The counter of cycles from the server, when we receive the first frame
-                                                # Is used as a kind of zero point to calibrate.
+                                                # TODO May be implemented better
 
         SocketBase.__init__(self)
 

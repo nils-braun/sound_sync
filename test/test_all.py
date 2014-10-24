@@ -216,7 +216,7 @@ class TestAllCases(TestCase):
             self.mocking_client_listener.add_out_message(10 + i)
             self.mocking_client_listener.add_out_message(test_buffer)
 
-        self.client_listener.running = True
+        self.client_listener.is_running = True
         self.client_listener.tell_server_receiver_identity()
         self.client_listener.get_audio_information()
 
@@ -224,15 +224,17 @@ class TestAllCases(TestCase):
             self.client_listener.handle_new_message_loop()
 
         self.assertEqual(b"receiver", self.mocking_client_listener.get_in_message())
-        self.assertEqual(2, len(self.client_listener.buffers))
-        self.assertEqual(test_buffer, self.client_listener.buffers[0])
-        self.assertEqual(10, self.client_listener.start_counter)
+        self.assertEqual(2, len(self.client_listener.static_sound_buffer_list.buffers))
+        self.assertEqual(test_buffer, self.client_listener.static_sound_buffer_list.get_buffer_by_buffer_index(10))
+        self.assertEqual(10, self.client_listener.static_sound_buffer_list.start_buffer_index)
+        self.assertEqual(11, self.client_listener.static_sound_buffer_list.end_buffer_index)
 
         for i in xrange(2):
-            self.mocking_client_listener.add_out_message(10 + i)
+            self.mocking_client_listener.add_out_message(12 + i)
             self.mocking_client_listener.add_out_message(test_buffer)
 
-        self.client_listener.started = True
+        self.client_listener.is_audio_playing = True
+        self.client_listener.static_sound_buffer_list.current_buffer_index = 10
 
         for i in xrange(2):
             self.client_listener.handle_new_message_loop()
@@ -242,9 +244,11 @@ class TestAllCases(TestCase):
         RequestHandler.static_client_list.sender = True
         RequestHandler.static_client_list.start_time = test_start_time
 
-        self.assertEqual(2, len(self.client_listener.buffers))
-        self.assertEqual(test_buffer, self.client_listener.buffers[0])
-        self.assertEqual(10, self.client_listener.start_counter)
+        self.assertEqual(4, len(self.client_listener.static_sound_buffer_list.buffers))
+        self.assertEqual(test_buffer, self.client_listener.static_sound_buffer_list.get_buffer_by_buffer_index(12))
+        self.assertEqual(10, self.client_listener.static_sound_buffer_list.start_buffer_index)
+        self.assertEqual(13, self.client_listener.static_sound_buffer_list.end_buffer_index)
+        self.assertEqual(12, self.client_listener.static_sound_buffer_list.current_buffer_index)
         self.assertEqual(2, len(self.mocking_pcm_listener.message_stack))
         self.assertEqual(test_buffer, self.mocking_pcm_listener.message_stack[0])
 
