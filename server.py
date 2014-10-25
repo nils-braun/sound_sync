@@ -133,10 +133,10 @@ class RequestHandler(SocketServer.BaseRequestHandler, ServerBase):
             return
 
         try:
-            buffer_index = RequestHandler.static_client_list.get_buffer_index(self)
+            buffer_index, sound_buffer = RequestHandler.static_client_list.get_buffer(self)
             if buffer_index is not None:
                 self.send_information(buffer_index)
-                self.send(RequestHandler.static_client_list.get_buffer(self))
+                self.send(sound_buffer)
 
             time.sleep(1 / 1000.0)
 
