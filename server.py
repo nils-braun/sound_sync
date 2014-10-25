@@ -134,15 +134,15 @@ class RequestHandler(SocketServer.BaseRequestHandler, ServerBase):
 
         try:
             buffer_index = RequestHandler.static_client_list.get_buffer_index(self)
-            self.send_information(buffer_index)
-            self.send(RequestHandler.static_client_list.get_buffer(self))
+            if buffer_index is not None:
+                self.send_information(buffer_index)
+                self.send(RequestHandler.static_client_list.get_buffer(self))
+
+            time.sleep(1 / 1000.0)
 
         except SocketError:
             self.remove_listener()
-        except IndexToHighException:
-            pass
 
-        time.sleep(1 / 1000.0)
 
     def remove_sender(self):
         print("[%s %s] Removing Sender" % self.client_address)

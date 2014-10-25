@@ -72,7 +72,6 @@ class TestClientListHandler(TestCase):
         self.client_list.add_buffer("test")
 
         self.assertEqual(0, self.client_list.get_buffer_index(self.test_socket))
-        self.assertRaises(ValueError, self.client_list.get_buffer_index, self.test_socket_2)
 
     def test_get_buffer_by_buffer_index(self):
         self.initialize_list()
@@ -104,7 +103,6 @@ class TestClientListHandler(TestCase):
 
         self.client_list.remove_listener(self.test_socket)
         self.assertFalse(self.client_list.is_listener(self.test_socket))
-        self.assertRaises(ValueError, self.client_list.get_buffer_index, self.test_socket)
 
         self.client_list.remove_listener(self.test_socket_2)
         self.assertFalse(self.client_list.is_listener(self.test_socket_2))

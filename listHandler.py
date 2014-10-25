@@ -66,22 +66,24 @@ class ClientListHandler(BufferListHandler):
         return listener_socket in self.listener_list
 
     def get_buffer_index(self, listener_socket):
-        if self.is_listener(listener_socket):
-            try:
-                self.get_buffer_by_buffer_index(self.listener_list[listener_socket])
-            except IndexToLowException:
-                self.listener_list[listener_socket] = self.start_buffer_index
-
-            return self.listener_list[listener_socket]
+        search_index = self.listener_list[listener_socket]
+        if search_index < self.start_buffer_index:
+            self.listener_list[listener_socket] = self.start_buffer_index
+            return self.start_buffer_index
+        elif search_index > self.end_buffer_index:
+            return None
         else:
-            raise ValueError
+            return search_index
 
     def get_buffer(self, listener_socket):
         if self.is_listener(listener_socket):
             return_index = self.get_buffer_index(listener_socket)
-            return_buffer = self.get_buffer_by_buffer_index(return_index)
-            self.listener_list[listener_socket] += 1
-            return return_buffer
+            if return_index is not None:
+                return_buffer = self.get_buffer_by_buffer_index(return_index)
+                self.listener_list[listener_socket] += 1
+                return return_buffer
+            else:
+                return None
 
     def remove_listener(self, listener_socket):
         if self.is_listener(listener_socket):
