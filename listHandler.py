@@ -30,8 +30,8 @@ class BufferListHandler:
         self.end_buffer_index += 1
 
         if len(self.buffers) > 50:
-            self.start_buffer_index += 1
             self.buffers.pop(0)
+            self.start_buffer_index += 1
 
     def is_empty(self):
         return len(self.buffers) == 0

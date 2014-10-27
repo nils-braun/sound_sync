@@ -134,7 +134,6 @@ class RequestHandler(SocketServer.BaseRequestHandler, ServerBase):
 
         try:
             buffer_index, sound_buffer = RequestHandler.static_client_list.get_buffer(self)
-            print(buffer_index, sound_buffer[20])
             if buffer_index is not None:
                 self.send_information(buffer_index)
                 self.send(sound_buffer)
