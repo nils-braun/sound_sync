@@ -116,7 +116,6 @@ class RequestHandler(SocketServer.BaseRequestHandler, ServerBase):
         try:
             new_sound_buffer = self.receive_buffer_with_exact_length()
             if new_sound_buffer:
-                print(new_sound_buffer[20])
                 RequestHandler.static_client_list.add_buffer(new_sound_buffer)
             else:
                 self.remove_sender()
@@ -135,6 +134,7 @@ class RequestHandler(SocketServer.BaseRequestHandler, ServerBase):
 
         try:
             buffer_index, sound_buffer = RequestHandler.static_client_list.get_buffer(self)
+            print(buffer_index, sound_buffer[20])
             if buffer_index is not None:
                 self.send_information(buffer_index)
                 self.send(sound_buffer)
