@@ -1,4 +1,7 @@
 import time
+from multiprocessing import Lock
+
+mutex = Lock()
 
 __author__ = 'nilpferd'
 
@@ -26,12 +29,15 @@ class BufferListHandler:
         self.end_buffer_index = -1
 
     def add_buffer(self, sound_buffer):
+        mutex.acquire()
         self.buffers.append(sound_buffer)
         self.end_buffer_index += 1
 
         if len(self.buffers) > 50:
             self.buffers.pop(0)
             self.start_buffer_index += 1
+
+        mutex.release()
 
     def is_empty(self):
         return len(self.buffers) == 0
@@ -58,15 +64,17 @@ class ClientListHandler(BufferListHandler):
         return listener_socket in self.listener_list
 
     def get_buffer(self, listener_socket):
+        mutex.acquire()
         search_index = self.listener_list[listener_socket]
         if search_index < self.start_buffer_index:
             self.listener_list[listener_socket] = self.start_buffer_index
         elif search_index > self.end_buffer_index:
+            mutex.release()
             return None, None
 
-        search_index = self.listener_list[listener_socket]
-        return_buffer = self.get_buffer_by_buffer_index(search_index)
+        return_buffer = self.buffers[self.listener_list[listener_socket] - self.start_buffer_index]
         self.listener_list[listener_socket] += 1
+        mutex.release()
         return search_index, return_buffer
 
     def remove_listener(self, listener_socket):
