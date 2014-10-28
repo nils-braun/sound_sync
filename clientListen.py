@@ -74,12 +74,9 @@ class PlayThread(Thread):
         self.client.static_sound_buffer_list.current_buffer_index = current_buffer_index
 
     def try_filling_audio_queue(self):
-        try:
-            for _ in xrange(ClientListener.clientInformation.full_sound_buffer_size - 5):
-                self.client.play_next_playable_buffer()
-            self.client.is_audio_playing = True
-        except IndexToHighException:
-            pass
+        for _ in xrange(ClientListener.clientInformation.full_sound_buffer_size - 5):
+            self.client.play_next_playable_buffer()
+        self.client.is_audio_playing = True
 
     def is_correct_time_and_sound_buffer_is_full(self, time_stamp):
         return len(self.client.static_sound_buffer_list.buffers) > \
@@ -169,13 +166,15 @@ class ClientListener (ClientBase, PCMPlay):
             self.add_new_sound_buffer_to_buffer_list(sound_buffer, sound_buffer_index)
 
     def play_next_playable_buffer(self):
-        playable_sound_buffer = self.static_sound_buffer_list.get_current_playable_buffer()
-        # the write() gives 0, if the sound queue is full. We have to add this buffer the next time
-        if self.play_buffer(playable_sound_buffer) == 0:
-            self.static_sound_buffer_list.current_buffer_index -= 1
+        try:
+            playable_sound_buffer = self.static_sound_buffer_list.get_current_playable_buffer()
+            # the write() gives 0, if the sound queue is full. We have to add this buffer the next time
+            if self.play_buffer(playable_sound_buffer) == 0:
+                self.static_sound_buffer_list.current_buffer_index -= 1
+        except IndexError:
+            pass
 
     def store_or_play_audio_buffer(self, sound_buffer, sound_buffer_index):
-        print(sound_buffer_index, sound_buffer[20])
         self.add_new_sound_buffer_to_buffer_list(sound_buffer, sound_buffer_index)
         self.play_next_playable_buffer()
 

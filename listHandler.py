@@ -109,5 +109,7 @@ class ClientBufferListHandler(BufferListHandler):
             raise IndexError
 
     def get_current_playable_buffer(self):
+        if self.current_buffer_index > self.end_buffer_index:
+            raise IndexError
         self.current_buffer_index += 1
         return self.get_buffer_by_buffer_index(self.current_buffer_index - 1)
