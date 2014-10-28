@@ -175,6 +175,7 @@ class ClientListener (ClientBase, PCMPlay):
             self.static_sound_buffer_list.current_buffer_index -= 1
 
     def store_or_play_audio_buffer(self, sound_buffer, sound_buffer_index):
+        print(sound_buffer_index, sound_buffer[20])
         self.add_new_sound_buffer_to_buffer_list(sound_buffer, sound_buffer_index)
         self.play_next_playable_buffer()
 
