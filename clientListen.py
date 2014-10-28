@@ -70,7 +70,7 @@ class PlayThread(Thread):
         real_sound_buffer_index = int((time_stamp - self.client.start_time*1000.0) /
                                       ClientListener.clientInformation.waiting_time)
 
-        current_buffer_index = real_sound_buffer_index - ClientListener.clientInformation.full_sound_buffer_size + 5
+        current_buffer_index = real_sound_buffer_index - ClientListener.clientInformation.full_sound_buffer_size + 3
         self.client.static_sound_buffer_list.current_buffer_index = current_buffer_index
 
     def try_filling_audio_queue(self):
@@ -79,9 +79,9 @@ class PlayThread(Thread):
         print("start:", ClientListener.static_sound_buffer_list.start_buffer_index)
         print()
         if ClientListener.static_sound_buffer_list.current_buffer_index + \
-                ClientListener.clientInformation.full_sound_buffer_size - 5 <= \
+                ClientListener.clientInformation.full_sound_buffer_size - 7 <= \
                 ClientListener.static_sound_buffer_list.end_buffer_index:
-            for _ in xrange(ClientListener.clientInformation.full_sound_buffer_size - 5):
+            for _ in xrange(ClientListener.clientInformation.full_sound_buffer_size - 7):
                 self.client.play_next_playable_buffer()
             self.client.is_audio_playing = True
 
