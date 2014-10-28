@@ -54,14 +54,8 @@ class ClientListHandler(BufferListHandler):
 
     def add_listener(self, listener_socket):
         if not self.is_listener(listener_socket):
-            if len(self.listener_list) == 0:
-                self.listener_list[listener_socket] = self.start_buffer_index
-            else:
-                max_index = max(self.listener_list.values())
-                if max_index >= 10:
-                    self.listener_list[listener_socket] = max_index - 10
-                else:
-                    self.listener_list[listener_socket] = max_index
+            self.listener_list[listener_socket] = self.start_buffer_index
+
 
     def is_listener(self, listener_socket):
         return listener_socket in self.listener_list
@@ -75,7 +69,8 @@ class ClientListHandler(BufferListHandler):
             mutex.release()
             return None, None
 
-        return_buffer = self.buffers[self.listener_list[listener_socket] - self.start_buffer_index]
+        search_index = self.listener_list[listener_socket]
+        return_buffer = self.buffers[search_index - self.start_buffer_index]
         self.listener_list[listener_socket] += 1
         mutex.release()
         return search_index, return_buffer

@@ -365,11 +365,11 @@ class TestAllCases(TestCase):
         RequestHandler.static_client_list.add_listener(self.mocking_client_server)
         RequestHandler.static_client_list.listener_list[self.mocking_client_server] = 60
 
-        self.start_server_listener(self.test_buffer_transport_server_listener_two_listener_2.__name__)
+        self.start_server_listener(self.test_buffer_transport_server_listener_two_listener_3.__name__)
 
         RequestHandler.static_client_list.__init__()
 
-        self.assertEqual(60, int(self.mocking_client_server.last_in_message[4]))
-        self.assertEqual(60, int(self.mocking_client_server.last_in_message[5]))
-        self.assertEqual(61, int(self.mocking_client_server.last_in_message[6]))
-        self.assertEqual(61, int(self.mocking_client_server.last_in_message[7]))
+        self.assertEqual(50, int(self.mocking_client_server.last_in_message[4]))
+        self.assertEqual(50, int(self.mocking_client_server.last_in_message[5]))
+        self.assertEqual(51, int(self.mocking_client_server.last_in_message[6]))
+        self.assertEqual(51, int(self.mocking_client_server.last_in_message[7]))

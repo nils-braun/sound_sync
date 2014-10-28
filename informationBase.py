@@ -28,7 +28,7 @@ class ClientInformationBase(ReadFromConfig):
         self.sound_buffer_size = 0
         self.information_buffer_size = 1024
         self.multiple_buffer_factor = 50
-        self.full_sound_buffer_size = 10
+        self.full_sound_buffer_size = 30
 
     def set_sound_buffer_size(self):
         """
