@@ -144,7 +144,6 @@ class ClientListener (ClientBase, PCMPlay):
         try:
             new_sound_buffer_index = int(self.receive_index())
             new_sound_buffer = self.receive_buffer_with_exact_length()
-            print(new_sound_buffer[20])
             self.handle_new_sound_buffer(new_sound_buffer, new_sound_buffer_index)
         except ValueError:
             print("[Client] There are no buffers loaded into the server. Aborting.")
