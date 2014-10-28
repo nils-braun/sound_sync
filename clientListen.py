@@ -74,9 +74,16 @@ class PlayThread(Thread):
         self.client.static_sound_buffer_list.current_buffer_index = current_buffer_index
 
     def try_filling_audio_queue(self):
-        for _ in xrange(ClientListener.clientInformation.full_sound_buffer_size - 5):
-            self.client.play_next_playable_buffer()
-        self.client.is_audio_playing = True
+        print("needed:", ClientListener.static_sound_buffer_list.current_buffer_index)
+        print("end:", ClientListener.static_sound_buffer_list.end_buffer_index)
+        print("start:", ClientListener.static_sound_buffer_list.start_buffer_index)
+        print()
+        if ClientListener.static_sound_buffer_list.current_buffer_index + \
+                ClientListener.clientInformation.full_sound_buffer_size - 5 <= \
+                ClientListener.static_sound_buffer_list.end_buffer_index:
+            for _ in xrange(ClientListener.clientInformation.full_sound_buffer_size - 5):
+                self.client.play_next_playable_buffer()
+            self.client.is_audio_playing = True
 
     def is_correct_time_and_sound_buffer_is_full(self, time_stamp):
         return len(self.client.static_sound_buffer_list.buffers) > \
@@ -166,13 +173,10 @@ class ClientListener (ClientBase, PCMPlay):
             self.add_new_sound_buffer_to_buffer_list(sound_buffer, sound_buffer_index)
 
     def play_next_playable_buffer(self):
-        try:
-            playable_sound_buffer = self.static_sound_buffer_list.get_current_playable_buffer()
-            # the write() gives 0, if the sound queue is full. We have to add this buffer the next time
-            if self.play_buffer(playable_sound_buffer) == 0:
-                self.static_sound_buffer_list.current_buffer_index -= 1
-        except IndexError:
-            pass
+        playable_sound_buffer = self.static_sound_buffer_list.get_current_playable_buffer()
+        # the write() gives 0, if the sound queue is full. We have to add this buffer the next time
+        if self.play_buffer(playable_sound_buffer) == 0:
+            self.static_sound_buffer_list.current_buffer_index -= 1
 
     def store_or_play_audio_buffer(self, sound_buffer, sound_buffer_index):
         self.add_new_sound_buffer_to_buffer_list(sound_buffer, sound_buffer_index)
