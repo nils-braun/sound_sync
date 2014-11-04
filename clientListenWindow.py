@@ -61,6 +61,7 @@ class App:
         while self.thread.client is None:
             pass
 
+        # TODO
         while self.thread.client.is_running and not self.thread.client.is_audio_playing:
             pass
 
