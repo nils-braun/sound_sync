@@ -30,7 +30,7 @@ def main():
 
     try:
         client.connect()
-        reset_thread(client)
+        handle_correct_start_time(client)
         client.message_loop()
     except KeyboardInterrupt:
         print("stopping")
@@ -41,18 +41,12 @@ def main():
         exit()
 
 
-def reset_thread(client):
-    client.start_counter = 0
-    client.started = False
-    client.static_sound_buffer_list.__init__()
-    thread_to_handle_correct_start_time = PlayThread(client)
+def handle_correct_start_time(client):
+    thread_to_handle_correct_start_time = HandleCorrectStartTimeThread(client)
     thread_to_handle_correct_start_time.start()
-    timer_until_automatic_restart = Timer(600.0, reset_thread, args=[client])
-    timer_until_automatic_restart.daemon = True
-    timer_until_automatic_restart.start()
 
 
-class PlayThread(Thread):
+class HandleCorrectStartTimeThread(Thread):
     """
     A class to handle the thread to play the audio from the buffers of the client.
     When running waits for the correct time (time + delta) % waiting_time == 0 and starts playing the correct buffer.
@@ -78,11 +72,6 @@ class PlayThread(Thread):
         real_sound_buffer_index = int((time_stamp - self.client.start_time*1000.0) /
                                       ClientListener.clientInformation.waiting_time)
         current_buffer_index = real_sound_buffer_index - ClientListener.clientInformation.full_sound_buffer_size
-        print("real:", real_sound_buffer_index)
-        print("end:", ClientListener.static_sound_buffer_list.end_buffer_index)
-        print("start:", ClientListener.static_sound_buffer_list.start_buffer_index)
-        print("trying:", current_buffer_index)
-        print()
         self.client.static_sound_buffer_list.current_buffer_index = current_buffer_index
 
     def try_filling_audio_queue(self):
