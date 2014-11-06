@@ -6,7 +6,7 @@ This module implements the listener client.
 
 from __future__ import print_function
 from pcmHandler import PCMPlay
-from listHandler import ClientBufferListHandler, IndexToHighException
+from listHandler import ClientBufferListHandler
 import socket
 import time
 from threading import Thread, Timer
@@ -45,6 +45,10 @@ def handle_correct_start_time(client):
     thread_to_handle_correct_start_time = HandleCorrectStartTimeThread(client)
     thread_to_handle_correct_start_time.start()
 
+    test_timer = Timer(60*10, handle_correct_start_time, args=[client])
+    test_timer.daemon = True
+    test_timer.start()
+
 
 class HandleCorrectStartTimeThread(Thread):
     """
@@ -55,11 +59,15 @@ class HandleCorrectStartTimeThread(Thread):
 
     def __init__(self, client):
         self.delta = 0.1        # The delta in ms to correct for wrong timing. Not very useful at the moment?
+        assert isinstance(client, ClientListener)
         self.client = client
 
         Thread.__init__(self)
 
     def run(self):
+
+        self.clear_audio_queue_and_reset_sound_buffer_list()
+
         while self.client.is_running and not self.client.is_audio_playing:
             time_stamp = int(time.time() * 1000 + self.delta)
             if self.is_correct_time_and_sound_buffer_is_full(time_stamp):
@@ -68,6 +76,15 @@ class HandleCorrectStartTimeThread(Thread):
 
             time.sleep(1/1000.0)
 
+    def clear_audio_queue_and_reset_sound_buffer_list(self):
+        if self.client.static_sound_buffer_list.current_buffer_index != -1:
+            time_until_audio_queue_is_empty = self.calculate_time_until_audio_queue_is_empty()
+
+            self.client.static_sound_buffer_list.current_buffer_index = -1
+            self.client.is_audio_playing = False
+
+            time.sleep(time_until_audio_queue_is_empty / 1000.0)
+
     def set_current_playable_buffer_index(self, time_stamp):
         real_sound_buffer_index = int((time_stamp - self.client.start_time*1000.0) /
                                       ClientListener.clientInformation.waiting_time)
@@ -75,12 +92,21 @@ class HandleCorrectStartTimeThread(Thread):
         self.client.static_sound_buffer_list.current_buffer_index = current_buffer_index
 
     def try_filling_audio_queue(self):
-        if ClientListener.static_sound_buffer_list.current_buffer_index < \
+        if ClientListener.static_sound_buffer_list.current_buffer_index + 5 < \
                 ClientListener.static_sound_buffer_list.end_buffer_index:
             for _ in xrange(ClientListener.static_sound_buffer_list.end_buffer_index -
                     ClientListener.static_sound_buffer_list.current_buffer_index - 5):
                 self.client.play_next_playable_buffer()
             self.client.is_audio_playing = True
+
+    def calculate_time_until_audio_queue_is_empty(self):
+        time_stamp = int(time.time() * 1000 + self.delta)
+        real_sound_buffer_index = int((time_stamp - self.client.start_time * 1000.0) /
+                                      ClientListener.clientInformation.waiting_time)
+        current_buffer_index = real_sound_buffer_index - ClientListener.clientInformation.full_sound_buffer_size
+        current_waiting_time = (self.client.static_sound_buffer_list.current_buffer_index -
+                                current_buffer_index) * ClientListener.clientInformation.waiting_time
+        return current_waiting_time
 
     def is_correct_time_and_sound_buffer_is_full(self, time_stamp):
         return len(self.client.static_sound_buffer_list.buffers) > \
@@ -144,10 +170,6 @@ class ClientListener (ClientBase, PCMPlay):
 
     def handle_new_sound_buffer(self, sound_buffer, sound_buffer_index):
         if sound_buffer:
-            #print("end:", ClientListener.static_sound_buffer_list.end_buffer_index)
-            #print("start:", ClientListener.static_sound_buffer_list.start_buffer_index)
-            #print("current:", ClientListener.static_sound_buffer_list.current_buffer_index)
-            #print()
             if not self.is_audio_playing:
                 self.calibrate_start_index(sound_buffer, sound_buffer_index)
             else:
