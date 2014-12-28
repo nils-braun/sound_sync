@@ -58,11 +58,7 @@ class App:
         self.button_stop.config(state=Tkinter.DISABLED)
         self.root.update()
 
-        while self.thread.client is None:
-            pass
-
-        # TODO
-        while self.thread.client.is_running and not self.thread.client.is_audio_playing:
+        while not self.thread.client.is_audio_playing and not self.thread.client.is_closed:
             pass
 
         if self.thread.client.is_running:

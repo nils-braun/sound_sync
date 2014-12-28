@@ -125,6 +125,7 @@ class ClientListener (ClientBase, PCMPlay):
     def __init__(self):
         self.is_running = False
         self.is_audio_playing = False
+        self.is_closed = False
         ClientBase.__init__(self)
         PCMPlay.__init__(self)
 
@@ -156,6 +157,7 @@ class ClientListener (ClientBase, PCMPlay):
         except ValueError:
             print("[Client] There is no client sending data to the server. Aborting.")
             self.is_running = False
+            self.is_closed = True
             exit()
 
     def handle_new_message_loop(self):
@@ -166,6 +168,7 @@ class ClientListener (ClientBase, PCMPlay):
         except ValueError:
             print("[Client] There are no buffers loaded into the server. Aborting.")
             self.is_running = False
+            self.is_closed = True
             exit()
 
     def handle_new_sound_buffer(self, sound_buffer, sound_buffer_index):
