@@ -4,10 +4,10 @@
 CPPFLAGS += -I..
 
 # Flags passed to the C++ compiler.
-CXXFLAGS += -g -Wall -Wextra -pthread -std=c++0x
+CXXFLAGS += -g -Wall -Wextra -pthread -std=c++0x -pg 
 
 # Library flags
-LDFLAGS += /usr/lib/libgtest.a /usr/lib/libgtest_main.a -lpthread
+LDFLAGS += /usr/lib/libgtest.a /usr/lib/libgtest_main.a -lpthread -lpugixml -pg
 
 # All tests produced by this Makefile.  Remember to add new tests you
 # created to the list.
@@ -26,4 +26,3 @@ clean :
 
 test : $(TEST_O) $(ALL_O)
 	$(CXX) -o $@ $^ $(LDFLAGS) 
-	rm *.o

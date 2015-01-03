@@ -12,3 +12,5 @@ SocketLookupException socketLookupException;
 ServerBindException serverBindException;
 ServerListenException serverListenException;
 ServerStartException serverStartException;
+MessageReceiveException messageReceiveException;
+ClientClosedException clientClosedException;

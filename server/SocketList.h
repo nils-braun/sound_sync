@@ -11,6 +11,8 @@
 #include <iterator>
 #include <vector>
 
+#include <memory>
+
 #include "Exceptions.h"
 #include "Socket.h"
 
@@ -40,7 +42,9 @@ public:
 		}
 	}
 
-	std::vector<Socket>::size_type size() { return(m_internalList.size()); }
+	std::vector<Socket>::size_type size() const { return(m_internalList.size()); }
+	std::vector<Socket>::const_iterator begin() const { return(m_internalList.begin()); }
+	std::vector<Socket>::const_iterator end() const { return(m_internalList.end()); }
 	std::vector<Socket>::iterator begin() { return(m_internalList.begin()); }
 	std::vector<Socket>::iterator end() { return(m_internalList.end()); }
 

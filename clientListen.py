@@ -11,6 +11,7 @@ import socket
 import time
 from threading import Thread, Timer
 from clientBase import ClientBase
+import xml.etree.ElementTree as ElementTree
 
 __author__ = "nilpferd1991"
 __version__ = "2.0.0"
@@ -147,9 +148,8 @@ class ClientListener (ClientBase, PCMPlay):
         self.client.connect((ClientListener.addressInformation.server_ip, ClientListener.addressInformation.port))
 
     def tell_server_receiver_identity(self):
-        self.client.sendall(b"receiver")
-        self.receive_ok()
-        self.send_ok()
+        element = ElementTree.Element("client", {"type": "receiver"})
+        self.client.sendall(ElementTree.tostring(element))
 
     def get_audio_information(self):
         try:

@@ -2,6 +2,7 @@
 This module implements the class ClientBase - a starting point for all client classes.
 """
 from informationBase import SocketBase
+import xml.etree.ElementTree as ElementTree
 
 __author__ = "nilpferd1991"
 __version__ = "2.0.0"
@@ -26,28 +27,15 @@ class ClientBase(SocketBase):
         """
         Receive the frame rate, the waiting time and the start time from the server.
         """
+        message = self.receive()
 
-        # First is frame rate in Hz
-        ClientBase.clientInformation.frame_rate = int(self.receive())
-        self.send_ok()
+        element = ElementTree.fromstring(message)
 
-        # Then waiting_time in ms
-        ClientBase.clientInformation.waiting_time = int(self.receive())
-        self.send_ok()
+        ClientBase.clientInformation.frame_rate = int(element.attrib["frameRate"])
+        ClientBase.clientInformation.waiting_time = int(element.attrib["waitingTime"])
+        self.start_time = int(element.attrib["startTime"])
 
-        # Then start_time in s
-        self.start_time = float(self.receive())
-        self.send_ok()
+        print(ClientBase.clientInformation.frame_rate, ClientBase.clientInformation.waiting_time, self.start_time)
 
         # set the buffer size with the new data
-        ClientBase.clientInformation.set_sound_buffer_size()
-
-    def send_values_to_server(self):
-        """
-        Send the frame rate and the waiting time to the server.
-        """
-
-        self.send_information(ClientBase.clientInformation.frame_rate)
-        self.send_information(ClientBase.clientInformation.waiting_time)
-
         ClientBase.clientInformation.set_sound_buffer_size()

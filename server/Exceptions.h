@@ -49,3 +49,15 @@ extern class ServerStartException : public SocketError {
 		return("Error while starting server: ");
 	}
 } serverStartException;
+
+extern class MessageReceiveException : public std::exception {
+	virtual const char* what() const throw() {
+		return("Error while receiving message.");
+	}
+} messageReceiveException;
+
+extern class ClientClosedException : public std::exception {
+	virtual const char* what() const throw() {
+		return("Error while receiving message.");
+	}
+} clientClosedException;

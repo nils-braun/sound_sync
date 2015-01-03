@@ -123,7 +123,7 @@ class RequestHandler(SocketServer.BaseRequestHandler, ServerBase):
             self.remove_sender()
 
     def mainloop_listener(self):
-        # A running listener waits for a message with to parts: First the current period number to calibrate
+        # A running listener waits for a message with two parts: First the current period number to calibrate
         # its own buffers list, than the buffer itself. We try to send it to him except the case
         # the listener is not there anymore. Then we release it and remove it from the serverInterface.
 

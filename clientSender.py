@@ -3,6 +3,7 @@
 from pcmHandler import PCMCapture
 import socket
 from clientBase import ClientBase
+import xml.etree.ElementTree as ElementTree
 
 __author__ = "nilpferd1991"
 __version__ = "2.0.0"
@@ -42,15 +43,16 @@ class ClientSender(ClientBase, PCMCapture):
                                                       int(self.get_attribute("waiting_time"))
 
     def tell_server_sender_identity(self):
-        self.client.sendall(b"sender")
-        self.receive_ok()
+        element = ElementTree.Element("client", {"type": "sender"})
+        ElementTree.SubElement(element, "options", {"waitingTime": str(self.clientInformation.waiting_time),
+                                                    "frameRate": str(self.clientInformation.frame_rate)})
+        self.client.sendall(ElementTree.tostring(element))
 
     def connect(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.connect((ClientSender.addressInformation.server_ip, ClientSender.addressInformation.port))
 
         self.tell_server_sender_identity()
-        self.send_values_to_server()
 
         self.initialize_pcm(ClientSender.clientInformation.frame_rate,
                             ClientSender.clientInformation.sound_buffer_size /

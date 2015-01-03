@@ -55,20 +55,15 @@ public:
 
 	void acceptFromServer(const Socket & server) {
 		socklen_t dummySize = sizeof(m_socketAddress);
-		int newClient = accept(server, reinterpret_cast<struct sockaddr*>(&m_socketAddress), &dummySize);
+		int newClient = accept(server.getInternalFileDescriptor(), reinterpret_cast<struct sockaddr*>(&m_socketAddress), &dummySize);
 		if(newClient == -1) {
-			std::cerr << "Error while accepting client from " << std::to_string(static_cast<int>(server)) <<
-					": " << strerror(errno) << std::endl;
+			std::cerr << "Error while accepting client:" << strerror(errno) << std::endl;
 			throw clientAcceptException;
 		}
 		else {
 			m_internalFileDescriptor = newClient;
 			m_socketType = SocketType::UndefinedClientType;
 		}
-	}
-
-	operator int() const {
-		return(m_internalFileDescriptor);
 	}
 
 	bool operator==(const Socket & rhs) const {
