@@ -5,7 +5,7 @@
  *      Author: nils
  */
 
-#include "../SocketList.h"
+#include "SocketList.h"
 #include <gtest/gtest.h>
 
 

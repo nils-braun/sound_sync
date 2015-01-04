@@ -6,6 +6,8 @@
  */
 
 #include "ServerBase.h"
+#include <memory>
+#include <array>
 
 void ServerBase::bindToPort() {
 	int option = 1;
@@ -39,8 +41,8 @@ std::string ServerBase::receiveMessage(const Socket & socket, const int bufferSi
 		throw messageReceiveException;
 }
 
-ServerBase::Buffer ServerBase::receiveBufferExact(const Socket & socket, const int bufferSize) {
-	char * buffer = new char[bufferSize];
+Buffer ServerBase::receiveBufferExact(const Socket & socket, const int bufferSize) {
+	Buffer::bufferContentType * buffer = new Buffer::bufferContentType[bufferSize];
 	int bytesReceivedSoFar = 0;
 
 	while(bytesReceivedSoFar < bufferSize) {
@@ -48,19 +50,27 @@ ServerBase::Buffer ServerBase::receiveBufferExact(const Socket & socket, const i
 		if(numberOfReadBytes > 0) {
 			bytesReceivedSoFar += numberOfReadBytes;
 		}
-		else if (numberOfReadBytes == 0)
+		else if (numberOfReadBytes == 0) {
+			delete[] buffer;
 			throw clientClosedException;
-		else
+		}
+		else {
+			delete[] buffer;
 			throw messageReceiveException;
+		}
 	}
 
-	return(ServerBase::Buffer(buffer, bufferSize));
+	return(Buffer(buffer, bufferSize, 0));
 }
 
 void ServerBase::sendMessage(const Socket & socket, const std::string & message) {
 	write(socket.getInternalFileDescriptor(), message.c_str(), message.size());
 }
 
-void ServerBase::sendBuffer(const Socket & socket, const ServerBase::Buffer & buffer) {
-	write(socket.getInternalFileDescriptor(), buffer.first, buffer.second);
+void ServerBase::sendBuffer(const Socket & socket, const Buffer & buffer) {
+	int bufferNumber = buffer.getBufferNumber();
+	char sendBuffer[buffer.getSize() + sizeof(bufferNumber)];
+	std::copy(reinterpret_cast<const char*>(&bufferNumber), reinterpret_cast<const char*>(&bufferNumber) + sizeof(bufferNumber), sendBuffer);
+	std::copy(buffer.getBuffer(), buffer.getBuffer() + buffer.getSize(), &sendBuffer[sizeof(bufferNumber)]);
+	write(socket.getInternalFileDescriptor(), sendBuffer, sizeof(sendBuffer));
 }

@@ -29,13 +29,15 @@ class ClientBase(SocketBase):
         """
         message = self.receive()
 
+        if message == "":
+            raise ValueError
+
         element = ElementTree.fromstring(message)
 
         ClientBase.clientInformation.frame_rate = int(element.attrib["frameRate"])
         ClientBase.clientInformation.waiting_time = int(element.attrib["waitingTime"])
+        ClientBase.clientInformation.sound_data_size = int(element.attrib["soundDataSize"])
         self.start_time = int(element.attrib["startTime"])
-
-        print(ClientBase.clientInformation.frame_rate, ClientBase.clientInformation.waiting_time, self.start_time)
 
         # set the buffer size with the new data
         ClientBase.clientInformation.set_sound_buffer_size()

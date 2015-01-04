@@ -29,7 +29,7 @@ public:
 
 public:
 	Socket(const int internalFileDescriptor) : m_socketType(SocketType::InvalidType),
-	m_socketAddress(), m_internalFileDescriptor(internalFileDescriptor) { }
+	m_socketAddress(), m_internalFileDescriptor(internalFileDescriptor), m_bufferIndex(0) { }
 
 	Socket() : Socket(0) { };
 
@@ -74,10 +74,19 @@ public:
 		close(m_internalFileDescriptor);
 	}
 
+	unsigned long int getBufferIndex() const {
+		return m_bufferIndex;
+	}
+
+	void setBufferIndex(unsigned long int bufferIndex) {
+		m_bufferIndex = bufferIndex;
+	}
+
 private:
 	SocketType m_socketType;
 	struct sockaddr_in m_socketAddress;
 	int m_internalFileDescriptor;
+	unsigned long int m_bufferIndex;
 };
 
 

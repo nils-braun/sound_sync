@@ -41,12 +41,15 @@ class ClientSender(ClientBase, PCMCapture):
         ClientSender.clientInformation.frame_rate = int(self.get_attribute("frame_rate"))
         ClientSender.clientInformation.waiting_time = ClientSender.clientInformation.multiple_buffer_factor * \
                                                       int(self.get_attribute("waiting_time"))
+        ClientSender.clientInformation.sound_data_size = float(self.get_attribute("sound_data_size"))
 
     def tell_server_sender_identity(self):
         element = ElementTree.Element("client", {"type": "sender"})
         ElementTree.SubElement(element, "options", {"waitingTime": str(self.clientInformation.waiting_time),
-                                                    "frameRate": str(self.clientInformation.frame_rate)})
+                                                    "frameRate": str(self.clientInformation.frame_rate),
+                                                    "soundDataSize": str(self.clientInformation.sound_data_size)})
         self.client.sendall(ElementTree.tostring(element))
+        self.clientInformation.set_sound_buffer_size()
 
     def connect(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

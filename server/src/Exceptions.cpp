@@ -14,3 +14,4 @@ ServerListenException serverListenException;
 ServerStartException serverStartException;
 MessageReceiveException messageReceiveException;
 ClientClosedException clientClosedException;
+IndexException indexException;

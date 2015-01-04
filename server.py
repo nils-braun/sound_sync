@@ -143,7 +143,6 @@ class RequestHandler(SocketServer.BaseRequestHandler, ServerBase):
         except SocketError:
             self.remove_listener()
 
-
     def remove_sender(self):
         print("[%s %s] Removing Sender" % self.client_address)
         RequestHandler.static_client_list.remove_sender()

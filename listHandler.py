@@ -56,7 +56,6 @@ class ClientListHandler(BufferListHandler):
         if not self.is_listener(listener_socket):
             self.listener_list[listener_socket] = self.start_buffer_index
 
-
     def is_listener(self, listener_socket):
         return listener_socket in self.listener_list
 

@@ -29,6 +29,7 @@ class ClientInformationBase(ReadFromConfig):
         self.information_buffer_size = 1024
         self.multiple_buffer_factor = 50
         self.full_sound_buffer_size = 10
+        self.sound_data_size = 0
 
     def set_sound_buffer_size(self):
         """
@@ -38,7 +39,7 @@ class ClientInformationBase(ReadFromConfig):
         :rtype: None
         """
 
-        self.sound_buffer_size = int(float(self.get_attribute("sound_data_size")) *
+        self.sound_buffer_size = int(float(self.sound_data_size) *
                                      self.waiting_time / 1000.0 * self.frame_rate)
 
 
@@ -73,27 +74,6 @@ class SocketBase():
             pointer += len(data)
 
         return tmp_buffer
-
-    def receive_information(self):
-        data = self.receive()
-        self.send_ok()
-        return data
-
-    def send_information(self, information):
-        self.send(str(information).encode())
-        self.receive_ok()
-
-    def send_ok(self):
-        """
-        Send the message "ok" to the server of any.
-        """
-        self.send("ok")
-
-    def receive_ok(self):
-        """
-        Receive a message without saving the message.
-        """
-        self.receive(SocketBase.clientInformation.information_buffer_size)
 
     def send(self, message):
         """

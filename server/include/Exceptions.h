@@ -61,3 +61,9 @@ extern class ClientClosedException : public std::exception {
 		return("Error while receiving message.");
 	}
 } clientClosedException;
+
+extern class IndexException : public std::exception {
+	virtual const char* what() const throw() {
+		return("Index not in range!");
+	}
+} indexException;

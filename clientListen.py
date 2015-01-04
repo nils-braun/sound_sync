@@ -162,10 +162,15 @@ class ClientListener (ClientBase, PCMPlay):
 
     def handle_new_message_loop(self):
         try:
-            new_sound_buffer_index = int(self.receive_index())
+            #new_sound_buffer_index = int(self.receive_index())
+            new_sound_buffer_index_buffer = self.receive(4)
+            new_sound_buffer_index = 0
+
+            for i in range(4):
+                new_sound_buffer_index = 2 * new_sound_buffer_index + ord(new_sound_buffer_index_buffer[3 - i])
             new_sound_buffer = self.receive_buffer_with_exact_length()
             self.handle_new_sound_buffer(new_sound_buffer, new_sound_buffer_index)
-        except ValueError:
+        except (ValueError, IndexError):
             print("[Client] There are no buffers loaded into the server. Aborting.")
             self.is_running = False
             self.is_closed = True
@@ -209,10 +214,6 @@ class ClientListener (ClientBase, PCMPlay):
     def exit_message_loop(self):
         print("[Client] Closing!")
         self.is_running = False
-
-    def receive_index(self):
-        new_buffer_index = self.receive_information()
-        return int(new_buffer_index)
 
 
 if __name__ == "__main__":
