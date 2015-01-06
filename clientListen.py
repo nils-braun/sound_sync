@@ -163,11 +163,12 @@ class ClientListener (ClientBase, PCMPlay):
     def handle_new_message_loop(self):
         try:
             #new_sound_buffer_index = int(self.receive_index())
-            new_sound_buffer_index_buffer = self.receive(4)
+            new_sound_buffer_index_buffer = self.receive(8)
             new_sound_buffer_index = 0
 
-            for i in range(4):
-                new_sound_buffer_index = 2 * new_sound_buffer_index + ord(new_sound_buffer_index_buffer[3 - i])
+            for i in range(8):
+                new_sound_buffer_index = 256*new_sound_buffer_index + ord(new_sound_buffer_index_buffer[7 - i])
+
             new_sound_buffer = self.receive_buffer_with_exact_length()
             self.handle_new_sound_buffer(new_sound_buffer, new_sound_buffer_index)
         except (ValueError, IndexError):
@@ -208,6 +209,7 @@ class ClientListener (ClientBase, PCMPlay):
         try:
             self.static_sound_buffer_list.add_buffer_with_index(sound_buffer, sound_buffer_index)
         except IndexError:
+            print(sound_buffer_index, self.static_sound_buffer_list.end_buffer_index + 1)
             print(" [Client] Got wrong buffer! What?")
             self.exit_message_loop()
 

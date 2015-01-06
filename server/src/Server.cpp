@@ -109,7 +109,6 @@ void Server::handleNewListener(Socket& client, const pugi::xml_node &) {
 	rootNode.append_attribute("frameRate").set_value(std::to_string(m_frameRate).c_str());
 	rootNode.append_attribute("waitingTime").set_value(std::to_string(m_waitingTime).c_str());
 	rootNode.append_attribute("soundDataSize").set_value(std::to_string(m_soundDataSize).c_str());
-	// TODO: Calculate correct start time!
 	rootNode.append_attribute("startTime").set_value(std::to_string(m_startTime).c_str());
 
 	std::stringstream stream;
@@ -134,6 +133,7 @@ void Server::handleNewSenderMessage(const Socket& client) {
 	catch(const ClientClosedException & e) {
 		std::cout << "[INFO] Closing sender." << std::endl;
 		m_senderIsConnected = false;
+		m_bufferList.clear();
 		killClient(client);
 	}
 }
@@ -153,8 +153,9 @@ void Server::sendNextBuffer() {
 
 void Server::handleNewListenerMessage(Socket& client) {
 	// TODO: Handle real message from listener!
-	std::cout << "[INFO] Closing listener." << std::endl;
-	killClient(client);
+	std::cout << "[INFO] Closing listener with buffer index: " << client.getBufferIndex() << std::endl;
+	m_socketList.removeSocket(client);
+	//TODO: Why is this not working? killClient(client);
 }
 
 void Server::handleNewInvalidMessage(Socket& client) {

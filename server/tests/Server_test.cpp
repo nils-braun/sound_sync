@@ -218,6 +218,7 @@ TEST_F(ServerTest, NoSender) {
 
 TEST_F(ServerTest, Transmission) {
 	SetUpEverything();
+	int buffer_size_for_buffer_index = 8;
 
 	ASSERT_EQ(m_testServer.size(), 3);
 
@@ -244,136 +245,89 @@ TEST_F(ServerTest, Transmission) {
 
 	ASSERT_EQ(m_testServer.size(), 2);
 
-	int testBufferIndex = 0;
-	char resultBuffer[bufferSize + sizeof(testBufferIndex)];
-	memset(resultBuffer, 99, bufferSize + sizeof(testBufferIndex));
-	int numberOfBytesRead = read(m_testListener, resultBuffer, bufferSize + sizeof(testBufferIndex));
+	char resultBuffer[bufferSize + buffer_size_for_buffer_index];
+	memset(resultBuffer, 99, bufferSize + buffer_size_for_buffer_index);
+	int numberOfBytesRead = read(m_testListener, resultBuffer, bufferSize + buffer_size_for_buffer_index);
 
-	ASSERT_EQ(numberOfBytesRead, bufferSize + sizeof(testBufferIndex));
+	ASSERT_EQ(numberOfBytesRead, bufferSize + buffer_size_for_buffer_index);
 	ASSERT_EQ(resultBuffer[0], '\x0');
 	ASSERT_EQ(resultBuffer[1], 0);
 	ASSERT_EQ(resultBuffer[2], 0);
 	ASSERT_EQ(resultBuffer[3], 0);
-	ASSERT_EQ(resultBuffer[4], 1);
+	ASSERT_EQ(resultBuffer[buffer_size_for_buffer_index], 1);
 	ASSERT_EQ(resultBuffer[8462], 1);
 
-	memset(resultBuffer, 99, bufferSize + sizeof(testBufferIndex));
-	numberOfBytesRead = read(m_testListener, resultBuffer, bufferSize + sizeof(testBufferIndex));
+	memset(resultBuffer, 99, bufferSize + buffer_size_for_buffer_index);
+	numberOfBytesRead = read(m_testListener, resultBuffer, bufferSize + buffer_size_for_buffer_index);
 
-	ASSERT_EQ(numberOfBytesRead, bufferSize + sizeof(testBufferIndex));
+	ASSERT_EQ(numberOfBytesRead, bufferSize + buffer_size_for_buffer_index);
 	ASSERT_EQ(resultBuffer[0], '\x1');
 	ASSERT_EQ(resultBuffer[1], 0);
 	ASSERT_EQ(resultBuffer[2], 0);
 	ASSERT_EQ(resultBuffer[3], 0);
-	ASSERT_EQ(resultBuffer[4], 1);
+	ASSERT_EQ(resultBuffer[buffer_size_for_buffer_index], 1);
 	ASSERT_EQ(resultBuffer[8462], 1);
 
-	memset(resultBuffer, 99, bufferSize + sizeof(testBufferIndex));
-	numberOfBytesRead = read(m_testListener, resultBuffer, bufferSize + sizeof(testBufferIndex));
+	memset(resultBuffer, 99, bufferSize + buffer_size_for_buffer_index);
+	numberOfBytesRead = read(m_testListener, resultBuffer, bufferSize + buffer_size_for_buffer_index);
 
-	ASSERT_EQ(numberOfBytesRead, bufferSize + sizeof(testBufferIndex));
+	ASSERT_EQ(numberOfBytesRead, bufferSize + buffer_size_for_buffer_index);
 	ASSERT_EQ(resultBuffer[0], '\x2');
 	ASSERT_EQ(resultBuffer[1], 0);
 	ASSERT_EQ(resultBuffer[2], 0);
 	ASSERT_EQ(resultBuffer[3], 0);
-	ASSERT_EQ(resultBuffer[4], 1);
+	ASSERT_EQ(resultBuffer[buffer_size_for_buffer_index], 1);
 	ASSERT_EQ(resultBuffer[8462], 1);
 
-	memset(resultBuffer, 99, bufferSize + sizeof(testBufferIndex));
+	memset(resultBuffer, 99, bufferSize + buffer_size_for_buffer_index);
 	for(int i = 3; i < 20; i++) {
-		numberOfBytesRead = read(m_testListener, resultBuffer, bufferSize + sizeof(testBufferIndex));
-		ASSERT_EQ(numberOfBytesRead, bufferSize + sizeof(testBufferIndex));
+		numberOfBytesRead = read(m_testListener, resultBuffer, bufferSize + buffer_size_for_buffer_index);
+		ASSERT_EQ(numberOfBytesRead, bufferSize + buffer_size_for_buffer_index);
 	}
 
 	ASSERT_EQ(resultBuffer[0], '\x13');
 	ASSERT_EQ(resultBuffer[1], 0);
 	ASSERT_EQ(resultBuffer[2], 0);
 	ASSERT_EQ(resultBuffer[3], 0);
-	ASSERT_EQ(resultBuffer[4], 1);
+	ASSERT_EQ(resultBuffer[buffer_size_for_buffer_index], 1);
 	ASSERT_EQ(resultBuffer[8462], 1);
 }
 
-TEST_F(ServerTest, TransmissionLateListener) {
+TEST_F(ServerTest, TransmissionMany) {
+	int buffer_size_for_buffer_index = 8;
 	SetUpClients();
 
 	sendMessage(m_testSender, "<client type='sender' name='testClient'><options frameRate='44100' waitingTime='500' soundDataSize='4.0'/></client>");
-
-	m_testServer.mainLoop();
-
-
-	ASSERT_EQ(m_testServer.size(), 3);
-
-	const int bufferSize = 88200;
-	char testBuffer[bufferSize];
-	memset(testBuffer, 1, bufferSize);
-
-	ASSERT_EQ(m_testServer.getSoundBufferSize(), bufferSize);
-
-	int numberOfBytesWritten = 0;
-
-	for(int i = 0; i < 20; i++) {
-		numberOfBytesWritten += write(m_testSender, testBuffer, bufferSize);
-	}
-	ASSERT_EQ(numberOfBytesWritten, 20*bufferSize);
-
-	for(int i = 0; i < 20; i++) {
-		m_testServer.mainLoop();
-	}
-
 	sendMessage(m_testListener, "<client type='receiver' name='testClient'/>");
 
 	m_testServer.mainLoop();
 
 	getMessage(m_testListener, 1024);
 
-	write(m_testSender, testBuffer, bufferSize);
-	m_testServer.mainLoop();
+	ASSERT_EQ(m_testServer.size(), 3);
 
-	int testBufferIndex = 0;
-	char resultBuffer[bufferSize + sizeof(testBufferIndex)];
-	memset(resultBuffer, 99, bufferSize + sizeof(testBufferIndex));
-	int numberOfBytesRead = read(m_testListener, resultBuffer, bufferSize + sizeof(testBufferIndex));
+	const int bufferSize = 88200;
+	unsigned char testBuffer[bufferSize];
+	unsigned char resultBuffer[bufferSize + buffer_size_for_buffer_index];
 
-	ASSERT_EQ(numberOfBytesRead, bufferSize + sizeof(testBufferIndex));
-	ASSERT_EQ(resultBuffer[0], '\xB');
-	ASSERT_EQ(resultBuffer[1], 0);
-	ASSERT_EQ(resultBuffer[2], 0);
-	ASSERT_EQ(resultBuffer[3], 0);
-	ASSERT_EQ(resultBuffer[4], 1);
-	ASSERT_EQ(resultBuffer[8462], 1);
+	ASSERT_EQ(m_testServer.getSoundBufferSize(), bufferSize);
 
-	memset(resultBuffer, 99, bufferSize + sizeof(testBufferIndex));
-	numberOfBytesRead = read(m_testListener, resultBuffer, bufferSize + sizeof(testBufferIndex));
+	for(int j = 0; j < 1025; j++) {
+		memset(testBuffer, 1, bufferSize);
+		memset(resultBuffer, 99, bufferSize + buffer_size_for_buffer_index);
 
-	ASSERT_EQ(numberOfBytesRead, bufferSize + sizeof(testBufferIndex));
-	ASSERT_EQ(resultBuffer[0], '\xC');
-	ASSERT_EQ(resultBuffer[1], 0);
-	ASSERT_EQ(resultBuffer[2], 0);
-	ASSERT_EQ(resultBuffer[3], 0);
-	ASSERT_EQ(resultBuffer[4], 1);
-	ASSERT_EQ(resultBuffer[8462], 1);
+		int numberOfBytesWritten = write(m_testSender, testBuffer, bufferSize);
+		ASSERT_EQ(numberOfBytesWritten, bufferSize);
 
-	memset(resultBuffer, 99, bufferSize + sizeof(testBufferIndex));
-	numberOfBytesRead = read(m_testListener, resultBuffer, bufferSize + sizeof(testBufferIndex));
+		m_testServer.mainLoop();
 
-	ASSERT_EQ(numberOfBytesRead, bufferSize + sizeof(testBufferIndex));
-	ASSERT_EQ(resultBuffer[0], '\xD');
-	ASSERT_EQ(resultBuffer[1], 0);
-	ASSERT_EQ(resultBuffer[2], 0);
-	ASSERT_EQ(resultBuffer[3], 0);
-	ASSERT_EQ(resultBuffer[4], 1);
-	ASSERT_EQ(resultBuffer[8462], 1);
-
-	memset(resultBuffer, 99, bufferSize + sizeof(testBufferIndex));
-	for(int i = 13; i < 20; i++) {
-		numberOfBytesRead = read(m_testListener, resultBuffer, bufferSize + sizeof(testBufferIndex));
-		ASSERT_EQ(numberOfBytesRead, bufferSize + sizeof(testBufferIndex));
+		int numberOfBytesRead = read(m_testListener, resultBuffer, bufferSize + buffer_size_for_buffer_index);
+		ASSERT_EQ(numberOfBytesRead, bufferSize + buffer_size_for_buffer_index);
+		ASSERT_EQ(resultBuffer[0], j % 256);
+		ASSERT_EQ(resultBuffer[1], j / 256);
+		ASSERT_EQ(resultBuffer[2], 0);
+		ASSERT_EQ(resultBuffer[3], 0);
+		ASSERT_EQ(resultBuffer[buffer_size_for_buffer_index], 1);
+		ASSERT_EQ(resultBuffer[8462], 1);
 	}
-
-	ASSERT_EQ(resultBuffer[0], '\x14');
-	ASSERT_EQ(resultBuffer[1], 0);
-	ASSERT_EQ(resultBuffer[2], 0);
-	ASSERT_EQ(resultBuffer[3], 0);
-	ASSERT_EQ(resultBuffer[4], 1);
-	ASSERT_EQ(resultBuffer[8462], 1);
 }

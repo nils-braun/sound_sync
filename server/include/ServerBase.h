@@ -14,6 +14,7 @@
 class ServerBase : public Socket {
 public:
 	static const int PORT = 50007; // TODO: Read from file!
+	static const int BUFFER_SIZE_OF_BUFFER_INDEX = 8;
 
 	ServerBase() : Socket(socket(PF_INET, SOCK_STREAM, 0)) {
 		bindToPort();
