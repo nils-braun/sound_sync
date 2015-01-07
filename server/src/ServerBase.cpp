@@ -72,5 +72,10 @@ void ServerBase::sendBuffer(const Socket & socket, const Buffer & buffer) {
 	Buffer::bufferContentType sendBuffer[buffer.getSize() + BUFFER_SIZE_OF_BUFFER_INDEX];
 	std::copy(reinterpret_cast<Buffer::bufferContentType*>(&bufferNumber), reinterpret_cast<Buffer::bufferContentType*>(&bufferNumber) + BUFFER_SIZE_OF_BUFFER_INDEX, sendBuffer);
 	std::copy(buffer.getBuffer(), buffer.getBuffer() + buffer.getSize(), &sendBuffer[BUFFER_SIZE_OF_BUFFER_INDEX]);
-	write(socket.getInternalFileDescriptor(), sendBuffer, buffer.getSize() + BUFFER_SIZE_OF_BUFFER_INDEX);
+	int numberOfBytesWritten = 0;
+	int numberOfBytesTotal = buffer.getSize() + BUFFER_SIZE_OF_BUFFER_INDEX;
+	while(numberOfBytesWritten < numberOfBytesTotal) {
+		numberOfBytesWritten += write(socket.getInternalFileDescriptor(), &sendBuffer[numberOfBytesWritten], numberOfBytesTotal - numberOfBytesWritten
+);
+	}
 }
