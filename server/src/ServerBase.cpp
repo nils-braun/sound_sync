@@ -63,10 +63,6 @@ Buffer ServerBase::receiveBufferExact(const Socket & socket, const int bufferSiz
 	return(Buffer(buffer, bufferSize, 0));
 }
 
-void ServerBase::sendMessage(const Socket & socket, const std::string & message) {
-	write(socket.getInternalFileDescriptor(), message.c_str(), message.size());
-}
-
 void ServerBase::sendBuffer(const Socket & socket, const Buffer & buffer) {
 	Buffer::bufferIndexType bufferNumber = buffer.getBufferNumber();
 	Buffer::bufferContentType sendBuffer[buffer.getSize() + BUFFER_SIZE_OF_BUFFER_INDEX];
@@ -79,3 +75,8 @@ void ServerBase::sendBuffer(const Socket & socket, const Buffer & buffer) {
 );
 	}
 }
+
+void ServerBase::sendMessage(const Socket & socket, const std::string & message) {
+       write(socket.getInternalFileDescriptor(), message.c_str(), message.size());
+}
+

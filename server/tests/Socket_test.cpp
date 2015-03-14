@@ -31,8 +31,6 @@ public:
 
 		m_testClient = socket(PF_INET, SOCK_STREAM, 0);
 		ASSERT_NE(connect(m_testClient, reinterpret_cast<struct sockaddr*>(&serverAddress), sizeof(serverAddress)), -1);
-
-		m_testSocket.acceptFromServer(m_testServer);
 	}
 
 	void TearDown() {
@@ -42,11 +40,11 @@ public:
 
 	int m_testServer;
 	int m_testClient;
-
-	Socket m_testSocket;
 };
 
 TEST_F(SocketTest, AcceptFromServer) {
+	Socket testSocket = Socket::acceptFromServer(m_testServer);
+
 	struct sockaddr_in serverAddress;
 	serverAddress.sin_addr.s_addr = INADDR_LOOPBACK;
 	serverAddress.sin_port = 0;
@@ -55,14 +53,18 @@ TEST_F(SocketTest, AcceptFromServer) {
 	socklen_t dummyLength = sizeof(serverAddress);
 	getsockname(m_testClient, reinterpret_cast<struct sockaddr*>(&serverAddress), &dummyLength);
 
-	EXPECT_EQ(m_testSocket.getSocketIPAddress().s_addr, serverAddress.sin_addr.s_addr);
-	EXPECT_EQ(m_testSocket.getSocketIPPort(), serverAddress.sin_port);
-	EXPECT_EQ(m_testSocket.getSocketType(), Socket::SocketType::UndefinedClientType);
+	EXPECT_EQ(testSocket.getSocketIPAddress().s_addr, serverAddress.sin_addr.s_addr);
+	EXPECT_EQ(testSocket.getSocketIPPort(), serverAddress.sin_port);
+	EXPECT_EQ(testSocket.getSocketType(), Socket::SocketType::UndefinedClientType);
 }
 
 TEST_F(SocketTest, SocketType) {
-	m_testSocket.setSocketType(Socket::SocketType::ListenerType);
+	Socket testSocket = Socket::acceptFromServer(m_testServer);
 
-	EXPECT_EQ(m_testSocket.getSocketType(), Socket::SocketType::ListenerType);
+	EXPECT_EQ(testSocket.getSocketType(), Socket::SocketType::UndefinedClientType);
+
+	testSocket.setSocketType(Socket::SocketType::ListenerType);
+
+	EXPECT_EQ(testSocket.getSocketType(), Socket::SocketType::ListenerType);
 }
 

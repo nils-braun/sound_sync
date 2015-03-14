@@ -22,10 +22,17 @@ public:
 
 	void SetUp() override {
 		echoOff();
+
+		struct sockaddr_in * serverAddress = new struct sockaddr_in;
+		serverAddress->sin_addr.s_addr = INADDR_ANY;
+		serverAddress->sin_port = htons(50007);
+		serverAddress->sin_family = AF_INET;
+		m_serverAddress = reinterpret_cast<struct sockaddr*>(serverAddress);
 	}
 
 	void TearDown() override {
 		echoOn();
+		delete reinterpret_cast<struct sockaddr_in*>(m_serverAddress);
 	}
 
 	void echoOff() {
@@ -42,20 +49,11 @@ public:
 	}
 
 	void SetUpClients() {
-		struct sockaddr_in serverAddress;
-		serverAddress.sin_addr.s_addr = INADDR_ANY;
-		serverAddress.sin_port = htons(50007);
-		serverAddress.sin_family = AF_INET;
-
-		m_testSender = socket(PF_INET, SOCK_STREAM, 0);
-		m_testListener = socket(PF_INET, SOCK_STREAM, 0);
-		m_testUndefined = socket(PF_INET, SOCK_STREAM, 0);
-
 		m_testServer.startListeningSteppwise();
 
-		ASSERT_NE(connect(m_testSender, reinterpret_cast<struct sockaddr*>(&serverAddress), sizeof(serverAddress)), -1);
-		ASSERT_NE(connect(m_testListener, reinterpret_cast<struct sockaddr*>(&serverAddress), sizeof(serverAddress)), -1);
-		ASSERT_NE(connect(m_testUndefined, reinterpret_cast<struct sockaddr*>(&serverAddress), sizeof(serverAddress)), -1);
+		connectToServer(m_testSender);
+		connectToServer(m_testListener);
+		connectToServer(m_testUndefined);
 
 		m_testServer.mainLoop();
 		m_testServer.mainLoop();
@@ -85,47 +83,54 @@ public:
 		return(std::string(buffer).substr(0, numberOfBytesRead));
 	}
 
+	void connectToServer(int & int_testClient) {
+		int_testClient = socket(PF_INET, SOCK_STREAM, 0);
+		int connectionExitCode = connect(int_testClient, m_serverAddress, sizeof(*m_serverAddress));
+		ASSERT_NE(connectionExitCode, -1);
+	}
+
 	Server m_testServer;
 	int m_testSender;
 	int m_testListener;
 	int m_testUndefined;
+
+private:
+	struct sockaddr * m_serverAddress;
 };
 
 TEST_F(ServerTest, Listening) {
 
+	// Start listening for one client
 	m_testServer.startListeningSteppwise();
 
-	int int_testClient = socket(PF_INET, SOCK_STREAM, 0);
-	struct sockaddr_in serverAddress;
-	serverAddress.sin_addr.s_addr = INADDR_ANY;
-	serverAddress.sin_port = htons(50007);
-	serverAddress.sin_family = AF_INET;
-	ASSERT_NE(connect(int_testClient, reinterpret_cast<struct sockaddr*>(&serverAddress), sizeof(serverAddress)), -1);
+	// Setup test client and connect to server
+	int int_testClient;
+	connectToServer(int_testClient);
 
-	Socket testClient;
+	// Receive connection from the connected client
 	ASSERT_NO_THROW(m_testServer.mainLoop());
-	close(int_testClient);
-
 	EXPECT_EQ(m_testServer.size(), 1);
 
+	close(int_testClient);
 }
 
-TEST_F(ServerTest, ListeningMany) {
-
+TEST_F(ServerTest, ListeningMany)
+{
 	m_testServer.startListeningSteppwise();
 
-	int int_testClient[10];
-	struct sockaddr_in serverAddress;
-	serverAddress.sin_addr.s_addr = INADDR_ANY;
-	serverAddress.sin_port = htons(50007);
-	serverAddress.sin_family = AF_INET;
+	unsigned int numberOfTestClients = 5;
 
-	for(int i = 0; i < 5; ++i) {
-		int_testClient[i] = socket(PF_INET, SOCK_STREAM, 0);
-		ASSERT_NE(connect(int_testClient[i], reinterpret_cast<struct sockaddr*>(&serverAddress), sizeof(serverAddress)), -1);
+	// Setup test clients
+	std::vector<int> int_testClients;
+	int_testClients.resize(numberOfTestClients);
+
+	// Connect to server
+	for(int int_testClient : int_testClients) {
+		connectToServer(int_testClient);
 	}
 
-	for(int i = 0; i < 5; ++i) {
+	// Receive connection from the connected client
+	for(unsigned int counter = 0; counter < int_testClients.size(); counter++) {
 		ASSERT_NO_THROW(m_testServer.mainLoop());
 	}
 
