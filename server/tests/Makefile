@@ -16,7 +16,9 @@ TEST_O = $(patsubst %.cpp, src/%.o, $(TEST_CPP))
 MAIN_FILES = ../main.cpp ../test_client.cpp
 ALL_O = $(patsubst ../src/%.cpp, src/%.o, $(filter-out $(MAIN_FILES), $(wildcard ../src/*.cpp)))
 
-all : test
+all : folder test
+
+folder:
 	mkdir src
 
 valgrind: test

@@ -13,7 +13,10 @@ ALL_O = $(patsubst src/%.cpp, Server/src/%.o, $(filter-out $(MAIN_FILES), $(wild
 MAIN_O = $(patsubst %.cpp, Server/%.o, $(MAIN_FILES))
 MAIN = Server/server
 
-all : $(MAIN)
+all : folder $(MAIN)
+
+folder:
+	mkdir -p Server/src
 
 clean :
 	rm -f $(ALL_O) $(MAIN_O) $(MAIN)
