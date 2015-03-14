@@ -16,7 +16,7 @@ For the two python scripts you will need python2.7 and the python package *pytho
 For compiling the C++ programm **server** you will need the library *pugixml* (see http://pugixml.org/). As the tests in server/tests rely on the google testing framework, you will also need the headers and libs for that (remember to install them probably if using ubuntu: [see here](http://askubuntu.com/questions/145887/why-no-library-files-installed-for-google-test))
 
 
-running the programm - the short way
+running the programm
 ------------------------------------
 
 You need three computers to act as the three parts: the server, the sender, the listener (this is not exactly correct: the three parts yan be played by single computer also and you can have as many listener as you like. But we keep it simple here).
@@ -40,14 +40,10 @@ cp sound-sync.conf /etc/sound-sync.conf # You may need root for this
 ./clientSender.py
 ```
 For sending the sound data to the server start your favourite music player (something like totem or your browser for youtube or spotify). Then send the music data to the Alsa Loopback Adapter. To start the loopback adapter (if you do not have one) load the kernel module snd-aloop with `modprobe snd-aloop`.
-
 For example you can use pulseaudio:
 pavucontrol -> first tab -> search for the music playing program -> click on the button on the right and choose Also Looback.
-
 Or gstreamer by changing the gstreamer-properties to use the loopback from alsa.
-
 Or jack.
-
 Or your .asoundrc to send all data to the loopback.
 
 * On the listener download the files, copy the settings file and change the settings accordingly (see above). Then start the listener and enjoy.
@@ -59,29 +55,15 @@ cp sound-sync.conf /etc/sound-sync.conf # You may need root for this
 ./clientListen.py # or ./clientListenWindow.py
 ```
 
-running the program - the long way
-----------------------------------
+Notes
+-----
 
-
-We need a minimum of three programs to implement this messaging protocol. The needed config options can be set in 
-*/etc/sound-sync.conf*. A default file can be found under *sound-sync.conf* in this repository.
-
-* First we need a server to handle all the requests. For this run **server** on a computer of your 
-choice. For me even a Raspberry Pi does the job perfectly well. Please change the ip address in */etc/sound-sync.conf* accordingly!
-* Then we need a client to send the audio data to the server. This sender can run on any computer you like. 
-It is implemented in **clientSender.py**. The script collects the audio data from your ALSA loopback adapter. If you do not 
-have one, start it by loading the corresponding alsa-module (search the internet if you do not know how. A starting 
-point would be `modprobe snd-aloop` or adding snd-aloop to */etc/modules* or a file in */etc/modules.d/*). 
-To send the data from other programs (like your favourite music player or your web browser) use gstreamer, pulseaudio or
-jack - dependent on your audio server. For pulseaudio for example open **pavucontrol** and send the audio output from the apps 
-to Alsa Loopback.
-* Then we need as many listeners as you like. Start **clientListener.py** for a terminal application or 
-**clientListenerWindow.py** for a small GUI to start the listener on any computer. It connects to the server (have you 
-changed the ip accordingly in */etc/sound-sync.conf*?) and starts playing to the default alsa device. If you do not know which 
-device this is, you probably do not have to worry about that.
-
-Everything should run fine now. A short pause in the beginning is normal. The listener "reboots" automatically 
-after 10 minutes. There will be a short break while playing. This is needed to resync again.
+* The needed config options can be set in */etc/sound-sync.conf*. A default file can be found under *sound-sync.conf* in this repository. In the moment, the server uses no settings file - so the port is set to 50007 all the time. The entries for the sound settings (like channels, frame_rate etc.) should be good in most of the cases. Do not change them (also, not all of them are implemented correctly).
+* You can use every device you like: laptop, computer, raspberry, tablet. As long as it runs some sort of linux. For the server, wo do not need audio.
+* You can listen to your own music while sending by executing **clientListen.py** on the same computer.
+* To load the alsa loopback module you can use `modprobe snd-aloop` or add to */etc/modules*. Search the internet if you do not know how.
+* A short pause in the beginning is normal. During this uptime, the client syncs with the sender. 
+* The listener "reboots" automatically after 10 minutes. There will be a short break while playing. This is needed to resync again.
 
 how it works
 ------------
