@@ -30,7 +30,34 @@ cd ..
 make
 ./Server/server
 ```
+For compilation you will need *pugixml* and for the tests the google testing framework.
+* On the sender download the files, copy the settings file and change the settings accordingly. Then start the listener and send data to the server
+```
+git clone https://github.com/nilpferd1991/sound-sync
+cd sound-sync/server
+vim sound-sync.conf		# Change the ip to the ip address of the server. Leave the rest as it is.
+cp sound-sync.conf /etc/sound-sync.conf # You may need root for this
+./clientSender.py
+```
+For sending the sound data to the server start your favourite music player (something like totem or your browser for youtube or spotify). Then send the music data to the Alsa Loopback Adapter. To start the loopback adapter (if you do not have one) load the kernel module snd-aloop with `modprobe snd-aloop`.
 
+For example you can use pulseaudio:
+pavucontrol -> first tab -> search for the music playing program -> click on the button on the right and choose Also Looback.
+
+Or gstreamer by changing the gstreamer-properties to use the loopback from alsa.
+
+Or jack.
+
+Or your .asoundrc to send all data to the loopback.
+
+* On the listener download the files, copy the settings file and change the settings accordingly (see above). Then start the listener and enjoy.
+```
+git clone https://github.com/nilpferd1991/sound-sync
+cd sound-sync/server
+vim sound-sync.conf		# Change the ip to the ip address of the server. Leave the rest as it is.
+cp sound-sync.conf /etc/sound-sync.conf # You may need root for this
+./clientListen.py # or ./clientListenWindow.py
+```
 
 running the program - the long way
 ----------------------------------
