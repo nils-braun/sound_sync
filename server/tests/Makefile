@@ -17,6 +17,7 @@ MAIN_FILES = ../main.cpp ../test_client.cpp
 ALL_O = $(patsubst ../src/%.cpp, src/%.o, $(filter-out $(MAIN_FILES), $(wildcard ../src/*.cpp)))
 
 all : test
+	mkdir src
 
 valgrind: test
 	valgrind --tool=memcheck --leak-check=full ./test 
