@@ -1,5 +1,6 @@
 sound-sync
 ==========
+(see also my [blog](http://nilpro.blogspot.de/))
 
 Many computer setup at home include more than one computer nowadays - like laptops, smartphones, raspberries etc. With small effort it is possible to access all the media from all computers, for example by running a raspberry as a NAS. 
 But for a real multimedia home setup one feature lacks: to play the same music in the same time on every machine without glitches, pauses... 
