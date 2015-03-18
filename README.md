@@ -14,6 +14,7 @@ Requirements
 
 For the two python scripts you will need python2.7 and the python package *python-alsaaudio*. And *python-tk* for running the GUI.
 For compiling the C++ programm **server** you will need the library *pugixml* (see http://pugixml.org/). As the tests in server/tests rely on the google testing framework, you will also need the headers and libs for that (remember to install them probably if using ubuntu: [see here](http://askubuntu.com/questions/145887/why-no-library-files-installed-for-google-test))
+For a proper execution of the scripts you need your clients system time (the server does not matter) to be in sync. You can achieve this easily by using a ntpd or simething simular. Also assure that your devices do not need a certain amount to play audio. You will not need a realtime kernel or jack for this - but do not expect any miracles on very very old hardware.
 
 
 running the programm
