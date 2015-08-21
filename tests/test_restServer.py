@@ -24,3 +24,18 @@ class TestRestServer(ServerTestCase):
         body = urllib.urlencode(parameter)
         response = self.fetch("/clients/foo/1", method="POST", body=body)
         self.assertError(response, 501)
+
+
+        response = self.fetch("/channels/add")
+        channel_hash = self.assertResponse(response)
+        parameters = {"buffer": ""}
+        body = urllib.urlencode(parameters)
+        self.fetch('/channels/' + channel_hash + '/buffers/add', method="POST", body=body)
+
+        response = self.fetch("/channels/" + channel_hash + "/buffers/foo/0")
+        self.assertError(response, 501)
+
+        parameter = {"test": "test"}
+        body = urllib.urlencode(parameter)
+        response = self.fetch("/channels/" + channel_hash + "/buffers/1", method="POST", body=body)
+        self.assertError(response, 501)

@@ -4,7 +4,7 @@ from sound_sync.buffer_list import BufferList
 
 NOT_SUPPORTED_ERROR_CODE = 501
 KEY_ERROR_CODE = 502
-BUFFER_ERROR_CODE = 502
+BUFFER_ERROR_CODE = 503
 
 class ErrorHandler(RequestHandler):
     def get(self):
@@ -18,15 +18,16 @@ class BufferHandler(RequestHandler):
         self.channel_list = channel_list
 
     def get(self, channel_hash, action, buffer_number):
-        if channel_hash not in self.channel_list:
+        if channel_hash not in self.buffer_list:
             self.send_error(KEY_ERROR_CODE)
-
         if action == "get":
+            buffer_number = int(buffer_number)
             try:
                 correct_buffer_list = self.buffer_list[channel_hash]
+
                 buffer_content = correct_buffer_list.get_buffer_by_buffer_index(buffer_number)
-                self.write(buffer_content.encode_json())
-            except KeyError:
+                self.write(buffer_content)
+            except IndexError:
                 self.send_error(BUFFER_ERROR_CODE)
 
         else:
@@ -36,14 +37,14 @@ class BufferHandler(RequestHandler):
         if channel_hash not in self.channel_list:
             self.send_error(KEY_ERROR_CODE)
 
-        if action == "add_buffer":
+        if action == "add":
 
             if channel_hash not in self.buffer_list:
                 self.buffer_list.update({channel_hash: BufferList()})
 
             buffer_content = self.get_argument("buffer")
             next_buffer_number = self.buffer_list[channel_hash].add_buffer(buffer_content)
-            self.write(next_buffer_number)
+            self.write(str(next_buffer_number))
 
         else:
             self.send_error(NOT_SUPPORTED_ERROR_CODE)
@@ -60,13 +61,11 @@ class ListHandler(RequestHandler):
 
     def get(self, action, list_hash=None):
         if action == "add":
-            new_hash = int(random.getrandbits(10))
+            new_hash = str(random.getrandbits(10))
             self.item_list.update({new_hash: self.item_type(new_hash)})
 
             self.write(str(new_hash))
         elif action == "delete":
-            list_hash = int(list_hash)
-
             if list_hash in self.item_list:
                 del self.item_list[list_hash]
                 self.write("")
@@ -80,8 +79,6 @@ class ListHandler(RequestHandler):
 
     def post(self, action, list_hash):
         if action == "set":
-            list_hash = int(list_hash)
-
             if list_hash in self.item_list:
                 list_item = self.item_list[list_hash]
 

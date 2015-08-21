@@ -1,5 +1,6 @@
 from sound_sync.buffer_list import BufferList
 
+
 class ClientBufferListHandler(BufferList):
     def __init__(self):
         self.current_buffer_index = -1

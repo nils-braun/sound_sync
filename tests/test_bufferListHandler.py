@@ -1,60 +1,51 @@
-from unittest import TestCase
-
-from sound_sync.buffer_list import BufferList
-
-
-__author__ = 'nils'
+import json
+import urllib
+from tests.server_test_case import ServerTestCase
 
 
-class TestBufferListHandler(TestCase):
+class TestBufferListFromServer(ServerTestCase):
+    def test_get_buffer(self):
+
+        response = self.fetch('/channels/' + "000" + '/buffers/get/' + str(0))
+        self.assertError(response, 502)
+
+        response = self.fetch('/channels/add')
+        channel_hash = self.assertResponse(response)
+
+        response = self.fetch('/channels/' + channel_hash + '/buffers/get/' + str(0))
+        self.assertError(response, 502)
+
+        parameters = {"buffer": "This is my test buffer"}
+        body = urllib.urlencode(parameters)
+        response = self.fetch('/channels/' + channel_hash + '/buffers/add', method="POST", body=body)
+        self.assertResponse(response, "0")
+
+        response = self.fetch('/channels/' + channel_hash + '/buffers/add', method="POST", body=body)
+        self.assertResponse(response, "1")
+
+        response = self.fetch('/channels/' + channel_hash + '/buffers/add', method="POST", body=body)
+        self.assertResponse(response, "2")
+
+        response = self.fetch('/channels/' + channel_hash + '/buffers/get/' + str(0))
+        self.assertResponse(response, "This is my test buffer")
+
+        response = self.fetch('/channels/' + channel_hash + '/buffers/get/' + str(2))
+        self.assertResponse(response, "This is my test buffer")
+
+        response = self.fetch('/channels/' + channel_hash + '/buffers/get/' + str(5))
+        self.assertError(response, 503)
+
     def test_add_buffer(self):
-        buffer_list_handler = BufferList(max_buffer_length=4)
+        parameters = {"buffer": "This is my test buffer"}
+        body = urllib.urlencode(parameters)
 
-        buffer_list_handler.add_buffer("test0")
-        buffer_list_handler.add_buffer("test1")
-        buffer_list_handler.add_buffer("test2")
-        buffer_list_handler.add_buffer("test3")
+        response = self.fetch('/channels/' + '000' + '/buffers/add', method="POST", body=body)
+        self.assertError(response, 502)
 
-        self.assertEqual(buffer_list_handler.start_buffer_index, 0)
-        self.assertEqual(buffer_list_handler.end_buffer_index, 3)
-        self.assertEqual(len(buffer_list_handler.buffers), 4)
+        response = self.fetch('/channels/add')
+        channel_hash = self.assertResponse(response)
+        response = self.fetch('/channels/' + channel_hash + '/buffers/add', method="POST", body=body)
+        self.assertResponse(response, "0")
 
-        buffer_list_handler.add_buffer("test4")
-
-        self.assertEqual(buffer_list_handler.start_buffer_index, 1)
-        self.assertEqual(buffer_list_handler.end_buffer_index, 4)
-        self.assertEqual(len(buffer_list_handler.buffers), 4)
-
-        buffer_list_handler.add_buffer("test4")
-
-        self.assertEqual(buffer_list_handler.start_buffer_index, 2)
-        self.assertEqual(buffer_list_handler.end_buffer_index, 5)
-        self.assertEqual(len(buffer_list_handler.buffers), 4)
-
-    def test_is_empty(self):
-        buffer_list_handler = BufferList()
-
-        self.assertTrue(buffer_list_handler.is_empty())
-
-        buffer_list_handler.add_buffer("test")
-
-        self.assertFalse(buffer_list_handler.is_empty())
-
-    def test_get_buffer_by_buffer_index(self):
-        buffer_list_handler = BufferList(max_buffer_length=4)
-
-        buffer_list_handler.add_buffer("test0")
-        buffer_list_handler.add_buffer("test1")
-        buffer_list_handler.add_buffer("test2")
-        buffer_list_handler.add_buffer("test3")
-
-        self.assertEqual(buffer_list_handler.get_buffer_by_buffer_index(0), "test0")
-        self.assertEqual(buffer_list_handler.get_buffer_by_buffer_index(1), "test1")
-        self.assertEqual(buffer_list_handler.get_buffer_by_buffer_index(2), "test2")
-        self.assertEqual(buffer_list_handler.get_buffer_by_buffer_index(3), "test3")
-
-        buffer_list_handler.add_buffer("test4")
-        self.assertEqual(buffer_list_handler.get_buffer_by_buffer_index(4), "test4")
-
-        self.assertRaises(IndexError, buffer_list_handler.get_buffer_by_buffer_index, 0)
-        self.assertRaises(IndexError, buffer_list_handler.get_buffer_by_buffer_index, 5)
+        response = self.fetch('/channels/' + channel_hash + '/buffers/add', method="POST", body=body)
+        self.assertResponse(response, "1")

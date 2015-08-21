@@ -22,6 +22,6 @@ class RestServer:
             url(r"/channels/(\w+)/(\d+)$", ListHandler, channel_initializer),
             url(r"/clients/(\w+)$", ListHandler, client_initializer),
             url(r"/clients/(\w+)/(\d+)$", ListHandler, client_initializer),
-            url(r"/buffers/(\w+)/(\d+)$", BufferHandler, buffer_initializer),
-            url(r"/buffers/(\w+)/(\d+)/(\d+)$", BufferHandler, buffer_initializer)
+            url(r"/channels/(\d+)/buffers/(\w+)$", BufferHandler, buffer_initializer),
+            url(r"/channels/(\d+)/buffers/(\w+)/(\d+)$", BufferHandler, buffer_initializer)
         ])

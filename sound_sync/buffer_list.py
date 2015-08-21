@@ -38,7 +38,7 @@ class BufferList:
 
         mutex.release()
 
-        return self.start_buffer_index + len(self.buffers)
+        return self.start_buffer_index + len(self.buffers) - 1
 
     def is_empty(self):
         """

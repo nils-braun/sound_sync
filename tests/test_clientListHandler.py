@@ -2,8 +2,6 @@ import json
 import urllib
 from tests.server_test_case import ServerTestCase
 
-__author__ = 'nils'
-
 
 class TestClientListFromServer(ServerTestCase):
     def test_get_clients(self):
