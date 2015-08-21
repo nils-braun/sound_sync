@@ -1,108 +1,85 @@
-from unittest import TestCase
+import json
+import urllib
+from tests.server_test_case import ServerTestCase
 
-from listHandler import ClientListHandler, EmptyException, IndexToLowException, IndexToHighException
-
-__author__ = 'nilpferd'
+__author__ = 'nils'
 
 
-class TestClientListHandler(TestCase):
+class TestClientListFromServer(ServerTestCase):
+    def test_get_clients(self):
+        response = self.fetch('/clients/get')
+        self.assertResponse(response, "{}")
 
-    def initialize_list(self):
-        self.client_list = ClientListHandler()
-        self.test_socket = "test socket"
-        self.test_socket_2 = "test socket 2"
-        self.test_buffer = "test buffer"
+    def test_set_clients_properties(self):
+        response = self.fetch('/clients/add')
+        item_hash = self.assertResponse(response)
 
-    def initialize_listener(self):
-        self.client_list.add_listener(self.test_socket)
+        parameters = {"name": "My New Name", "ip_address": "111.111.222.333"}
+        body = urllib.urlencode(parameters)
 
-    def initialize_sender(self):
-        self.client_list.add_sender(self.test_socket)
+        response = self.fetch('/clients/set/' + str(item_hash), method="POST", body=body)
+        self.assertResponse(response, "")
 
-    def test_add_sender(self):
-        self.initialize_list()
-        self.initialize_sender()
+        response = self.fetch('/clients/set/' + str(item_hash + "1"), method="POST", body=body)
+        self.assertError(response, 502)
 
-        self.assertTrue(self.client_list.is_sender(self.test_socket))
-        self.assertFalse(self.client_list.no_sender())
-        self.assertFalse(self.client_list.is_listener(self.test_socket))
+        response = self.fetch('/clients/get')
+        response = self.assertResponse(response)
+        response_dict = json.loads(response)
+        added_channel = response_dict[item_hash]
 
-    def test_add_listener(self):
-        self.initialize_list()
-        self.initialize_listener()
+        self.assertEqual(added_channel["name"], "My New Name")
+        self.assertEqual(added_channel["item_hash"], item_hash)
+        self.assertEqual(added_channel["ip_address"], "111.111.222.333")
 
-        self.client_list.add_buffer("test")
+    def test_add_clients(self):
+        response = self.fetch('/clients/add')
+        item_hash = self.assertResponse(response)
 
-        self.assertTrue(self.client_list.is_listener(self.test_socket))
-        #self.assertEqual(0, self.client_list.get_buffer_index(self.test_socket))
-        self.assertFalse(self.client_list.is_sender(self.test_socket))
-        self.assertTrue(self.client_list.no_sender())
+        response = self.fetch('/clients/get')
+        response = self.assertResponse(response)
+        response_dict = json.loads(response)
 
-    def test_add_buffer(self):
-        self.initialize_list()
+        self.assertIn(item_hash, response_dict)
+        self.assertEqual(len(response_dict), 1)
 
-        self.assertTrue(self.client_list.is_empty())
+        added_client = response_dict[item_hash]
 
-        self.client_list.add_buffer(self.test_buffer)
-        self.assertFalse(self.client_list.is_empty())
-        self.assertTrue(self.test_buffer in self.client_list.buffers)
-        self.assertEqual(1, len(self.client_list.buffers))
-        self.assertEqual(0, self.client_list.start_buffer_index)
-        self.assertEqual(0, self.client_list.end_buffer_index)
+        self.assertEqual(type(added_client), dict)
+        self.assertIn("login_time", added_client)
+        self.assertIn("name", added_client)
+        self.assertEqual(added_client["name"], "")
 
-        for _ in xrange(8):
-            self.client_list.add_buffer(self.test_buffer)
+        self.assertIn("item_hash", added_client)
+        self.assertEqual(added_client["item_hash"], item_hash)
 
-        self.assertEqual(9, len(self.client_list.buffers))
-        self.assertEqual(0, self.client_list.start_buffer_index)
-        self.assertEqual(8, self.client_list.end_buffer_index)
+        self.assertIn("ip_address", added_client)
+        self.assertEqual(added_client["ip_address"], "None")
 
-        for _ in xrange(101):
-            self.client_list.add_buffer(self.test_buffer)
+        self.assertEqual(len(added_client), 4)
 
-        self.assertFalse(self.client_list.is_empty())
-        self.assertEqual(50, len(self.client_list.buffers))
-        self.assertEqual(60, self.client_list.start_buffer_index)
-        self.assertEqual(109, self.client_list.end_buffer_index)
+        response = self.fetch('/clients/add')
+        item_hash = self.assertResponse(response)
 
-    def test_get_buffer_index(self):
-        self.initialize_list()
-        self.initialize_listener()
+        response = self.fetch('/clients/get')
+        response = self.assertResponse(response)
+        response_dict = json.loads(response)
 
-        self.client_list.add_buffer("test")
+        self.assertIn(item_hash, response_dict)
+        self.assertEqual(len(response_dict), 2)
 
-        #self.assertEqual(0, self.client_list.get_buffer_index(self.test_socket))
+    def test_delete_clients(self):
+        response = self.fetch('/clients/add')
+        item_hash = self.assertResponse(response)
 
-    def test_get_buffer_by_buffer_index(self):
-        self.initialize_list()
+        response = self.fetch('/clients/delete/' + item_hash)
+        self.assertResponse(response, "")
 
-        self.assertRaises(IndexError, self.client_list.get_buffer_by_buffer_index, 20)
+        response = self.fetch('/clients/get')
+        response = self.assertResponse(response)
+        response_dict = json.loads(response)
 
-        for i in xrange(200):
-            self.client_list.add_buffer(i)
+        self.assertEqual(len(response_dict), 0)
 
-        self.assertRaises(IndexError, self.client_list.get_buffer_by_buffer_index, 10)
-        self.assertRaises(IndexError, self.client_list.get_buffer_by_buffer_index, 200)
-        #self.assertRaises(IndexError, self.client_list.get_buffer_by_buffer_index, 149)
-
-        self.assertEqual(199, self.client_list.get_buffer_by_buffer_index(199))
-        self.assertEqual(190, self.client_list.get_buffer_by_buffer_index(190))
-
-    def test_remove_sender(self):
-        self.initialize_list()
-        self.initialize_sender()
-
-        self.client_list.remove_sender()
-
-        self.assertTrue(self.client_list.no_sender())
-        self.assertFalse(self.client_list.is_sender(self.test_socket))
-
-    def test_remove_listener(self):
-        self.initialize_list()
-        self.initialize_listener()
-
-        self.client_list.remove_listener(self.test_socket)
-        self.assertFalse(self.client_list.is_listener(self.test_socket))
-
-        self.client_list.remove_listener(self.test_socket_2)
-        self.assertFalse(self.client_list.is_listener(self.test_socket_2))
+        response = self.fetch('/clients/delete/' + item_hash)
+        self.assertError(response, 502)

@@ -1,10 +1,10 @@
 from collections import deque
 from multiprocessing import Lock
 
-__author__ = 'nilpferd'
+__author__ = 'nils'
 
 
-class BufferListHandler:
+class BufferList:
     """
     Class for a typical ring buffer handling the sound buffer storage
     on the server or on the listener clients.
@@ -25,7 +25,7 @@ class BufferListHandler:
         """
         Add a buffer to the list.
         :param sound_buffer T: The buffer to add
-        :return: None
+        :return: The number of the added buffer
         """
         mutex = Lock()
         mutex.acquire()
@@ -37,6 +37,8 @@ class BufferListHandler:
             self.start_buffer_index += 1
 
         mutex.release()
+
+        return self.start_buffer_index + len(self.buffers)
 
     def is_empty(self):
         """

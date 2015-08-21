@@ -1,5 +1,6 @@
 import random
 from tornado.web import RequestHandler
+from sound_sync.buffer_list import BufferList
 
 NOT_SUPPORTED_ERROR_CODE = 501
 KEY_ERROR_CODE = 502
@@ -23,7 +24,7 @@ class BufferHandler(RequestHandler):
         if action == "get":
             try:
                 correct_buffer_list = self.buffer_list[channel_hash]
-                buffer_content = correct_buffer_list.get(buffer_number)
+                buffer_content = correct_buffer_list.get_buffer_by_buffer_index(buffer_number)
                 self.write(buffer_content.encode_json())
             except KeyError:
                 self.send_error(BUFFER_ERROR_CODE)
@@ -35,9 +36,13 @@ class BufferHandler(RequestHandler):
         if channel_hash not in self.channel_list:
             self.send_error(KEY_ERROR_CODE)
 
-        if action == "add":
+        if action == "add_buffer":
+
+            if channel_hash not in self.buffer_list:
+                self.buffer_list.update({channel_hash: BufferList()})
+
             buffer_content = self.get_argument("buffer")
-            next_buffer_number = self.buffer_list[channel_hash].add(buffer_content)
+            next_buffer_number = self.buffer_list[channel_hash].add_buffer(buffer_content)
             self.write(next_buffer_number)
 
         else:

@@ -1,12 +1,14 @@
 from unittest import TestCase
-from sound_sync.bufferListHandler import BufferListHandler
+
+from sound_sync.buffer_list import BufferList
+
 
 __author__ = 'nils'
 
 
 class TestBufferListHandler(TestCase):
     def test_add_buffer(self):
-        buffer_list_handler = BufferListHandler(max_buffer_length=4)
+        buffer_list_handler = BufferList(max_buffer_length=4)
 
         buffer_list_handler.add_buffer("test0")
         buffer_list_handler.add_buffer("test1")
@@ -30,7 +32,7 @@ class TestBufferListHandler(TestCase):
         self.assertEqual(len(buffer_list_handler.buffers), 4)
 
     def test_is_empty(self):
-        buffer_list_handler = BufferListHandler()
+        buffer_list_handler = BufferList()
 
         self.assertTrue(buffer_list_handler.is_empty())
 
@@ -39,7 +41,7 @@ class TestBufferListHandler(TestCase):
         self.assertFalse(buffer_list_handler.is_empty())
 
     def test_get_buffer_by_buffer_index(self):
-        buffer_list_handler = BufferListHandler(max_buffer_length=4)
+        buffer_list_handler = BufferList(max_buffer_length=4)
 
         buffer_list_handler.add_buffer("test0")
         buffer_list_handler.add_buffer("test1")
