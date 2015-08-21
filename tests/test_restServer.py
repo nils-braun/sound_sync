@@ -36,7 +36,7 @@ class TestChannelListFromServer(ServerTestCase):
         self.assertResponse(response, "")
 
         response = self.fetch('/channels/set/' + str(item_hash + "1"), method="POST", body=body)
-        self.assertError(response)
+        self.assertError(response, 502)
 
         response = self.fetch('/channels/get')
         response = self.assertResponse(response)
@@ -63,6 +63,7 @@ class TestChannelListFromServer(ServerTestCase):
 
         self.assertEqual(type(added_channel), dict)
         self.assertIn("start_time", added_channel)
+
         self.assertIn("name", added_channel)
         self.assertEqual(added_channel["name"], "")
 
@@ -75,7 +76,22 @@ class TestChannelListFromServer(ServerTestCase):
         self.assertIn("now_playing", added_channel)
         self.assertEqual(added_channel["now_playing"], "")
 
-        self.assertEqual(len(added_channel), 5)
+        self.assertIn("channels", added_channel)
+        self.assertEqual(int(added_channel["channels"]), 2)
+
+        self.assertIn("frame_rate", added_channel)
+        self.assertEqual(int(added_channel["frame_rate"]), 44100)
+
+        self.assertIn("waiting_time", added_channel)
+        self.assertEqual(int(added_channel["waiting_time"]), 10)
+
+        self.assertIn("sound_data_size", added_channel)
+        self.assertEqual(int(added_channel["sound_data_size"]), 4)
+
+        self.assertIn("added_delay", added_channel)
+        self.assertEqual(float(added_channel["added_delay"]), 0.0)
+
+        self.assertEqual(len(added_channel), 10)
 
         response = self.fetch('/channels/add')
         item_hash = self.assertResponse(response)
@@ -101,7 +117,7 @@ class TestChannelListFromServer(ServerTestCase):
         self.assertEqual(len(response_dict), 0)
 
         response = self.fetch('/channels/delete/' + item_hash)
-        self.assertError(response)
+        self.assertError(response, 502)
 
 
 class TestClientListFromServer(ServerTestCase):
@@ -120,7 +136,7 @@ class TestClientListFromServer(ServerTestCase):
         self.assertResponse(response, "")
 
         response = self.fetch('/clients/set/' + str(item_hash + "1"), method="POST", body=body)
-        self.assertError(response)
+        self.assertError(response, 502)
 
         response = self.fetch('/clients/get')
         response = self.assertResponse(response)
@@ -181,27 +197,27 @@ class TestClientListFromServer(ServerTestCase):
         self.assertEqual(len(response_dict), 0)
 
         response = self.fetch('/clients/delete/' + item_hash)
-        self.assertError(response)
+        self.assertError(response, 502)
 
 
 class TestRestServer(ServerTestCase):
     def test_main(self):
         response = self.fetch('/')
-        self.assertError(response)
+        self.assertError(response, 501)
 
     def test_unused_action(self):
         response = self.fetch("/channels/foo")
-        self.assertError(response)
+        self.assertError(response, 501)
 
         parameter = {"test": "test"}
         body = urllib.urlencode(parameter)
         response = self.fetch("/channels/foo/1", method="POST", body=body)
-        self.assertError(response, 500)
+        self.assertError(response, 501)
 
         response = self.fetch("/clients/foo")
-        self.assertError(response)
+        self.assertError(response, 501)
 
         parameter = {"test": "test"}
         body = urllib.urlencode(parameter)
         response = self.fetch("/clients/foo/1", method="POST", body=body)
-        self.assertError(response, 500)
+        self.assertError(response, 501)
