@@ -1,66 +1,19 @@
-from tornado.ioloop import IOLoop
-from tornado.web import RequestHandler, Application, url
-import random
+from tornado.web import Application, url
 
-
-class Client:
-    def __init__(self):
-        pass
-
-class Channel:
-    def __init__(self):
-        pass
-
-
-class ListHandler(RequestHandler):
-    def __init__(self, application, request, **kwargs):
-        super(ListHandler, self).__init__(application, request, **kwargs)
-
-        self.list = dict()
-
-    def initialize(self, type):
-        self.type = type
-
-    def get(self, action, list_hash=None):
-        if action == "add":
-            new_hash = random.getrandbits(20)
-            self.list.update({new_hash: self.type()})
-
-            print self.list
-
-            self.write(str(new_hash))
-        elif action == "delete":
-            if list_hash in self.list:
-                del self.list[list_hash]
-            else:
-                self.send_error()
-        elif action == "get":
-            self.write(self.list)
-
-        else:
-            self.send_error()
-
-    def post(self, action, list_hash):
-        if action == "set":
-            pass
-
-        else:
-            self.send_error()
-
-
-class ErrorHandler(RequestHandler):
-    def get(self):
-        self.send_error()
-
+from sound_sync.rest_server.handler import ErrorHandler, ListHandler
+from sound_sync.rest_server.server_items import Channel, Client
 
 class RestServer:
     def __init__(self):
-        pass
+        self.client_list = dict()
+        self.channel_list = dict()
 
     def get_app(self):
         return Application([
             url(r"/", ErrorHandler),
-            url(r"/channels/(\w+)$", ListHandler, {"type": Channel}), # get, add, delete
-            url(r"/clients/(\w+)$", ListHandler, {"type": Client}), # get, add, delete
+            url(r"/channels/(\w+)$", ListHandler, {"item_type": Channel, "item_list": self.channel_list}),
+            url(r"/channels/(\w+)/(\d+)$", ListHandler, {"item_type": Channel, "item_list": self.channel_list}),
+            url(r"/clients/(\w+)$", ListHandler, {"item_type": Client, "item_list": self.client_list}),
+            url(r"/clients/(\w+)/(\d+)$", ListHandler, {"item_type": Client, "item_list": self.client_list}),
             #url(r"/buffer/(\d+)/(\w+)$", BufferHandler) #
         ])
