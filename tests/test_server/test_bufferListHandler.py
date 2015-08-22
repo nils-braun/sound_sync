@@ -1,6 +1,6 @@
-import json
 import urllib
-from tests.server_test_case import ServerTestCase
+
+from tests.test_server.server_test_case import ServerTestCase
 
 
 class TestBufferListFromServer(ServerTestCase):
