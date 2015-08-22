@@ -19,7 +19,6 @@ class BufferList:
         self.max_buffer_length = max_buffer_length
         self.buffers = deque()
         self.start_buffer_index = 0
-        self.end_buffer_index = -1
 
     def add_buffer(self, sound_buffer):
         """
@@ -30,7 +29,6 @@ class BufferList:
         mutex = Lock()
         mutex.acquire()
         self.buffers.append(sound_buffer)
-        self.end_buffer_index += 1
 
         if len(self.buffers) > self.max_buffer_length:
             self.buffers.popleft()
@@ -59,3 +57,9 @@ class BufferList:
             raise IndexError
         else:
             return self.buffers[list_index]
+
+    def __len__(self):
+        """
+        :return: Return the last buffer index
+        """
+        return self.start_buffer_index + len(self.buffers) - 1

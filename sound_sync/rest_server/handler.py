@@ -8,7 +8,7 @@ BUFFER_ERROR_CODE = 503
 
 class ErrorHandler(RequestHandler):
     def get(self):
-        self.send_error(NOT_SUPPORTED_ERROR_CODE)
+        return self.send_error(NOT_SUPPORTED_ERROR_CODE)
 
 
 class BufferHandler(RequestHandler):
@@ -17,25 +17,32 @@ class BufferHandler(RequestHandler):
         self.buffer_list = buffer_list
         self.channel_list = channel_list
 
-    def get(self, channel_hash, action, buffer_number):
-        if channel_hash not in self.buffer_list:
-            self.send_error(KEY_ERROR_CODE)
+    def get(self, channel_hash, action, buffer_number=None):
+        if channel_hash not in self.channel_list:
+            return self.send_error(KEY_ERROR_CODE)
         if action == "get":
             buffer_number = int(buffer_number)
             try:
                 correct_buffer_list = self.buffer_list[channel_hash]
 
                 buffer_content = correct_buffer_list.get_buffer_by_buffer_index(buffer_number)
-                self.write(buffer_content)
-            except IndexError:
-                self.send_error(BUFFER_ERROR_CODE)
+                return self.write(buffer_content)
+            except (IndexError, KeyError):
+                return self.send_error(BUFFER_ERROR_CODE)
+
+        elif action == "len":
+            try:
+                correct_buffer_list = self.buffer_list[channel_hash]
+                return self.write(str(len(correct_buffer_list)))
+            except (IndexError, KeyError):
+                return self.write(str(0))
 
         else:
-            self.send_error(NOT_SUPPORTED_ERROR_CODE)
+            return self.send_error(NOT_SUPPORTED_ERROR_CODE)
 
     def post(self, channel_hash, action):
         if channel_hash not in self.channel_list:
-            self.send_error(KEY_ERROR_CODE)
+            return self.send_error(KEY_ERROR_CODE)
 
         if action == "add":
 
@@ -44,10 +51,10 @@ class BufferHandler(RequestHandler):
 
             buffer_content = self.get_argument("buffer")
             next_buffer_number = self.buffer_list[channel_hash].add_buffer(buffer_content)
-            self.write(str(next_buffer_number))
+            return self.write(str(next_buffer_number))
 
         else:
-            self.send_error(NOT_SUPPORTED_ERROR_CODE)
+            return self.send_error(NOT_SUPPORTED_ERROR_CODE)
 
 
 class ListHandler(RequestHandler):
@@ -64,18 +71,19 @@ class ListHandler(RequestHandler):
             new_hash = str(random.getrandbits(10))
             self.item_list.update({new_hash: self.item_type(new_hash)})
 
-            self.write(str(new_hash))
+            return self.write(str(new_hash))
         elif action == "delete":
             if list_hash in self.item_list:
                 del self.item_list[list_hash]
-                self.write("")
+                return self.write("")
             else:
-                self.send_error(KEY_ERROR_CODE)
+                return self.send_error(KEY_ERROR_CODE)
         elif action == "get":
-            self.write({item_hash: list_item.encode_json() for item_hash, list_item in self.item_list.iteritems()})
+            return self.write({item_hash: list_item.encode_json()
+                               for item_hash, list_item in self.item_list.iteritems()})
 
         else:
-            self.send_error(NOT_SUPPORTED_ERROR_CODE)
+            return self.send_error(NOT_SUPPORTED_ERROR_CODE)
 
     def post(self, action, list_hash):
         if action == "set":
@@ -87,7 +95,7 @@ class ListHandler(RequestHandler):
 
                     setattr(list_item, parameter_name, parameter_value)
             else:
-                self.send_error(KEY_ERROR_CODE)
+                return self.send_error(KEY_ERROR_CODE)
 
         else:
-            self.send_error(NOT_SUPPORTED_ERROR_CODE)
+            return self.send_error(NOT_SUPPORTED_ERROR_CODE)

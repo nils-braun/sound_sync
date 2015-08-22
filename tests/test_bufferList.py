@@ -13,19 +13,22 @@ class TestBufferListHandler(TestCase):
         self.assertEqual(buffer_list_handler.add_buffer("test3"), 3)
 
         self.assertEqual(buffer_list_handler.start_buffer_index, 0)
-        self.assertEqual(buffer_list_handler.end_buffer_index, 3)
+        self.assertEqual(len(buffer_list_handler), 3)
         self.assertEqual(len(buffer_list_handler.buffers), 4)
 
         self.assertEqual(buffer_list_handler.add_buffer("test4"), 4)
 
         self.assertEqual(buffer_list_handler.start_buffer_index, 1)
-        self.assertEqual(buffer_list_handler.end_buffer_index, 4)
+        self.assertEqual(len(buffer_list_handler), 4)
         self.assertEqual(len(buffer_list_handler.buffers), 4)
 
         self.assertEqual(buffer_list_handler.add_buffer("test5"), 5)
+        self.assertEqual(buffer_list_handler.add_buffer("test6"), 6)
+        self.assertEqual(buffer_list_handler.add_buffer("test7"), 7)
+        self.assertEqual(buffer_list_handler.add_buffer("test8"), 8)
 
-        self.assertEqual(buffer_list_handler.start_buffer_index, 2)
-        self.assertEqual(buffer_list_handler.end_buffer_index, 5)
+        self.assertEqual(buffer_list_handler.start_buffer_index, 5)
+        self.assertEqual(len(buffer_list_handler), 8)
         self.assertEqual(len(buffer_list_handler.buffers), 4)
 
     def test_is_empty(self):
