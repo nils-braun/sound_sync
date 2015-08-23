@@ -49,7 +49,7 @@ class BufferHandler(RequestHandler):
             if channel_hash not in self.buffer_list:
                 self.buffer_list.update({channel_hash: BufferList()})
 
-            buffer_content = self.get_argument("buffer")
+            buffer_content = self.request.arguments.get("buffer")
             next_buffer_number = self.buffer_list[channel_hash].add_buffer(buffer_content)
             return self.write(str(next_buffer_number))
 

@@ -1,6 +1,6 @@
 import datetime
 
-from sound_sync.rest_server.json import JSONPickleable
+from sound_sync.rest_server.json_pickable import JSONPickleable
 
 
 class Channel(JSONPickleable):
@@ -32,16 +32,16 @@ class Channel(JSONPickleable):
         self.channels = "2"
 
         #: The used frame rate
-        self.frame_rate =  "44100"
+        self.frame_rate = "44100"
 
         #: The used waiting time (FIXME: What is that?)
         self.waiting_time = "10"
 
-        #: The data size of the sound buffers (4 = 16 bit)
-        self.sound_data_size = "4"
-
         #: The added delay of the channel
         self.added_delay = "0"
+
+        #: The used buffer size
+        self.buffer_size = 128*4*2
 
 
 

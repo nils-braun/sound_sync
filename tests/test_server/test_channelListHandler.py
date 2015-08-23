@@ -70,8 +70,8 @@ class TestChannelListFromServer(ServerTestCase):
         self.assertIn("waiting_time", added_channel)
         self.assertEqual(int(added_channel["waiting_time"]), 10)
 
-        self.assertIn("sound_data_size", added_channel)
-        self.assertEqual(int(added_channel["sound_data_size"]), 4)
+        self.assertIn("buffer_size", added_channel)
+        self.assertEqual(int(added_channel["buffer_size"]), 128)
 
         self.assertIn("added_delay", added_channel)
         self.assertEqual(float(added_channel["added_delay"]), 0.0)

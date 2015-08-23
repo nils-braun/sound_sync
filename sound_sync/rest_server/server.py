@@ -1,3 +1,5 @@
+from tornado.httpserver import HTTPServer
+from tornado.ioloop import IOLoop
 from tornado.web import Application, url
 
 from sound_sync.rest_server.handler import ErrorHandler, ListHandler, BufferHandler
@@ -25,3 +27,12 @@ class RestServer:
             url(r"/channels/(\d+)/buffers/(\w+)$", BufferHandler, buffer_initializer),
             url(r"/channels/(\d+)/buffers/(\w+)/(\d+)$", BufferHandler, buffer_initializer)
         ])
+
+    def start(self):
+        http_server = HTTPServer(self.get_app())
+        http_server.listen(8888)
+        IOLoop.current().start()
+
+if __name__ == "__main__":
+    server = RestServer()
+    server.start()

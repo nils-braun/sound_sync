@@ -1,6 +1,3 @@
-__author__ = 'nils'
-
-
 class JSONPickleable:
     def __init__(self):
         pass

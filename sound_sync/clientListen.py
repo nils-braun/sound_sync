@@ -5,13 +5,15 @@ This module implements the listener client.
 """
 
 from __future__ import print_function
-from pcmHandler import PCMPlay
-from listHandler import ClientBufferListHandler
 import socket
 import time
 from threading import Thread, Timer
-from clientBase import ClientBase
 import xml.etree.ElementTree as ElementTree
+
+from pcmHandler import PCMPlay
+from listHandler import ClientBufferListHandler
+from clientBase import ClientBase
+
 
 __author__ = "nilpferd1991"
 __version__ = "2.0.0"

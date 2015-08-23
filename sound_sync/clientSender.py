@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
-from pcmHandler import PCMCapture
 import socket
-from clientBase import ClientBase
 import xml.etree.ElementTree as ElementTree
+
+from pcmHandler import PCMCapture
+from clientBase import ClientBase
+
 
 __author__ = "nilpferd1991"
 __version__ = "2.0.0"
