@@ -3,6 +3,7 @@ class SoundDevice:
         self.buffer_size = None
         self.channels = None
         self.frame_rate = None
+        self.factor = None
 
     def initialize(self):
         pass

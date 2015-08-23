@@ -79,6 +79,7 @@ class Sender:
         self.recorder.buffer_size = channel_information["buffer_size"]
         self.recorder.frame_rate = channel_information["frame_rate"]
         self.recorder.channels = channel_information["channels"]
+        self.recorder.factor = channel_information["factor"]
 
     def set_name_and_description_of_channel(self, http_client):
         parameters = {"name": self.name,

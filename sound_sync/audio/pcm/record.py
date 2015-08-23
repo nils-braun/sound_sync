@@ -40,5 +40,10 @@ class PCMRecorder(SoundRecorder):
         if self.pcm is None:
             raise ValueError("Recorder needs to be initialized first")
 
-        length, sound_buffer = self.pcm.read()
+        length = 0
+        sound_buffer = r""
+        for i in xrange(int(self.factor)):
+            current_length, current_sound_buffer = self.pcm.read()
+            length += current_length
+            sound_buffer += current_sound_buffer
         return sound_buffer, length

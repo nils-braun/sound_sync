@@ -41,7 +41,10 @@ class Channel(JSONPickleable):
         self.added_delay = "0"
 
         #: The used buffer size
-        self.buffer_size = 128*4*2
+        self.buffer_size = 1024
+
+        #: The factor how often the buffer is fetched before returning the get function
+        self.factor = 10
 
 
 
