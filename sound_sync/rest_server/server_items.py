@@ -34,7 +34,7 @@ class Channel(JSONPickleable):
         #: The used frame rate
         self.frame_rate = "44100"
 
-        #: The used waiting time (FIXME: What is that?)
+        #: The used waiting time
         self.waiting_time = "10"
 
         #: The added delay of the channel
@@ -45,6 +45,11 @@ class Channel(JSONPickleable):
 
         #: The factor how often the buffer is fetched before returning the get function
         self.factor = 10
+
+        #: The buffer_handler server we are handling
+
+    def stop(self):
+        pass
 
 
 
@@ -69,3 +74,6 @@ class Client(JSONPickleable):
 
         #: The item has of the client in the client list
         self.item_hash = item_hash
+
+    def stop(self):
+        pass

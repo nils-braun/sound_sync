@@ -71,12 +71,15 @@ class TestChannelListFromServer(ServerTestCase):
         self.assertEqual(int(added_channel["waiting_time"]), 10)
 
         self.assertIn("buffer_size", added_channel)
-        self.assertEqual(int(added_channel["buffer_size"]), 128)
+        self.assertEqual(int(added_channel["buffer_size"]), 1024)
 
         self.assertIn("added_delay", added_channel)
         self.assertEqual(float(added_channel["added_delay"]), 0.0)
 
-        self.assertEqual(len(added_channel), 10)
+        self.assertIn("factor", added_channel)
+        self.assertEqual(float(added_channel["factor"]), 10)
+
+        self.assertEqual(len(added_channel), 11)
 
         response = self.fetch('/channels/add')
         item_hash = self.assertResponse(response)

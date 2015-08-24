@@ -17,13 +17,14 @@ class TestPCMRecorder(TestCase):
         recorder.buffer_size = 2
         recorder.frame_rate = 3
         recorder.channels = 4
+        recorder.factor = 5
         recorder.initialize()
         return recorder
 
     def test_initialize(self):
         recorder = self.init_sound_recorder()
 
-        self.alsaaudio.PCM.assert_called_with(type=372435, device="hw:Loopback,0,1")
+        self.alsaaudio.PCM.assert_called_with(type=372435, device="hw:Loopback,1,0")
 
         recorder.pcm.setchannels.assert_called_with(4)
         recorder.pcm.setrate.assert_called_with(3)
@@ -58,9 +59,12 @@ class TestPCMRecorder(TestCase):
         recorder.pcm.close.assert_called_with()
 
     def test_get(self):
+        recorder = PCMRecorder()
+        self.assertRaises(ValueError, recorder.get)
+
         recorder = self.init_sound_recorder()
         recorder.pcm.read = lambda: (8234234, "This is a buffer")  # length, buffer
 
         sound_buffer, length = recorder.get()
-        self.assertEqual(sound_buffer, "This is a buffer")
-        self.assertEqual(length, 8234234)
+        self.assertEqual(sound_buffer, "This is a buffer"*5)
+        self.assertEqual(length, 8234234*5)

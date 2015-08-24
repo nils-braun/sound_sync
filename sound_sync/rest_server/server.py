@@ -2,7 +2,7 @@ from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 from tornado.web import Application, url
 
-from sound_sync.rest_server.handler import ErrorHandler, ListHandler, BufferHandler
+from sound_sync.rest_server.handler import ErrorHandler, ListHandler
 from sound_sync.rest_server.server_items import Channel, Client
 
 
@@ -16,23 +16,18 @@ class RestServer:
 
         channel_initializer = {"item_type": Channel, "item_list": self.channel_list}
         client_initializer = {"item_type": Client, "item_list": self.client_list}
-        buffer_initializer = {"buffer_list": self.buffer_list, "channel_list": self.channel_list}
 
         return Application([
             url(r"/", ErrorHandler),
             url(r"/channels/(\w+)$", ListHandler, channel_initializer),
             url(r"/channels/(\w+)/(\d+)$", ListHandler, channel_initializer),
             url(r"/clients/(\w+)$", ListHandler, client_initializer),
-            url(r"/clients/(\w+)/(\d+)$", ListHandler, client_initializer),
-            url(r"/channels/(\d+)/buffers/(\w+)$", BufferHandler, buffer_initializer),
-            url(r"/channels/(\d+)/buffers/(\w+)/(\d+)$", BufferHandler, buffer_initializer)
+            url(r"/clients/(\w+)/(\d+)$", ListHandler, client_initializer)
         ])
-
-    def start(self):
-        http_server = HTTPServer(self.get_app())
-        http_server.listen(8888)
-        IOLoop.current().start()
 
 if __name__ == "__main__":
     server = RestServer()
-    server.start()
+    http_server = HTTPServer(server.get_app())
+    http_server.bind(8888)
+    http_server.start()
+    IOLoop.current().start()
