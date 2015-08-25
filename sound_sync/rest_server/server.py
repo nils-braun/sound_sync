@@ -10,7 +10,6 @@ class RestServer:
     def __init__(self):
         self.client_list = dict()
         self.channel_list = dict()
-        self.buffer_list = dict()
 
     def get_app(self):
 

@@ -1,7 +1,19 @@
+import atexit
 import datetime
+import os
+import socket
+from subprocess import Popen
 
 from sound_sync.rest_server.json_pickable import JSONPickleable
+from multiprocessing import Pool, Process
 
+
+def get_free_port():
+    s = socket.socket()
+    s.bind(('', 0))
+    port = s.getsockname()[1]
+    s.close()
+    return port
 
 class Channel(JSONPickleable):
     """
@@ -47,10 +59,19 @@ class Channel(JSONPickleable):
         self.factor = 10
 
         #: The buffer_handler server we are handling
+        self.handler_port = get_free_port()
+
+        #: The handler process
+        self._process = None
+
+        self.start_buffer_handler()
 
     def stop(self):
-        pass
+        self._process.kill()
 
+    def start_buffer_handler(self):
+        self._process = Popen(["./buffer_server/build/buffer_server", str(self.handler_port)])
+        atexit.register(self.stop)
 
 
 class Client(JSONPickleable):

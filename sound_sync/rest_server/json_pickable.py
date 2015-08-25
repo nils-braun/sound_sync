@@ -3,4 +3,5 @@ class JSONPickleable:
         pass
 
     def encode_json(self):
-        return {parameter_name: str(parameter_value) for parameter_name, parameter_value in vars(self).iteritems()}
+        return {parameter_name: str(parameter_value) for parameter_name, parameter_value in vars(self).iteritems()
+                if not parameter_name.startswith("_")}

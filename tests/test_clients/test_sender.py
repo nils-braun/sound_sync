@@ -115,7 +115,33 @@ class TestSender(TestCase):
         except:
             self.fail()
 
-    def test_main_loop(self):
+    @patch("sound_sync.clients.sender.httpclient")
+    def test_main_loop(self, http_client_patch):
         sender = self.init_sender()
 
         self.assertRaises(AssertionError, sender.main_loop)
+
+        sender.channel_hash = "345"
+
+        self.number_intervals = 0
+
+        def mock_get():
+            if self.number_intervals < 5:
+                self.number_intervals += 1
+                return ("Buffer", 100)
+            else:
+                raise AssertionError
+
+        sender.recorder.get = mock_get
+        mocking_client = MagicMock()
+        http_client_patch.HTTPClient = lambda: mocking_client
+
+        try:
+            sender.main_loop()
+        except AssertionError:
+            # This is intended
+            pass
+
+        mocking_client.fetch.assert_called_with('http://ThisIsTheHost:16347/channels/345/buffers/add',
+                                                method="POST", body="buffer=Buffer")
+

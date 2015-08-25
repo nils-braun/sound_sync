@@ -1,4 +1,5 @@
 import json
+import socket
 import urllib
 
 from tests.test_server.server_test_case import ServerTestCase
@@ -79,7 +80,16 @@ class TestChannelListFromServer(ServerTestCase):
         self.assertIn("factor", added_channel)
         self.assertEqual(float(added_channel["factor"]), 10)
 
-        self.assertEqual(len(added_channel), 11)
+        self.assertIn("handler_port", added_channel)
+
+        # Test if the handler_port is really free
+        s = socket.socket()
+        try:
+            s.bind(("", int(added_channel["handler_port"])))
+        except socket.error:
+            self.fail()
+
+        self.assertEqual(len(added_channel), 12)
 
         response = self.fetch('/channels/add')
         item_hash = self.assertResponse(response)

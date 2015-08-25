@@ -6,7 +6,8 @@ __author__ = 'nils'
 
 class ServerTestCase(AsyncHTTPTestCase):
     def get_app(self):
-        return RestServer().get_app()
+        self.restServer = RestServer()
+        return self.restServer.get_app()
 
     def assertError(self, response, error_code=500):
         self.assertEqual(response.code, error_code)
