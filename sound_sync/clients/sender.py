@@ -1,7 +1,6 @@
 import json
 import urllib
 from tornado import httpclient
-import argparse
 
 
 class Sender:
@@ -88,6 +87,8 @@ class Sender:
 
 
 if __name__ == "__main__":
+    import argparse
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--hostname",
                         default="192.168.178.100",
@@ -98,19 +99,19 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--port",
                         default=8888,
                         type=int,
-                        help="Port of the management socket on the management server.",
+                        help="Port of the management socket on the management server. Default 8888.",
                         dest="manager_port")
 
     parser.add_argument("-n", "--name",
                         default="Untitled",
                         type=str,
-                        help="Name of this channel in the channel list.",
+                        help="Name of this channel in the channel list. Default Untitled.",
                         dest="name")
 
     parser.add_argument("-d", "--description",
                         default="No Description",
                         type=str,
-                        help="Description of this channel in the channel list.",
+                        help="Description of this channel in the channel list. Default No Description.",
                         dest="description")
 
     args = parser.parse_args()
