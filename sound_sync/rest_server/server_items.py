@@ -1,11 +1,9 @@
 import atexit
 import datetime
-import os
 import socket
 from subprocess import Popen
 
 from sound_sync.rest_server.json_pickable import JSONPickleable
-from multiprocessing import Pool, Process
 
 
 def get_free_port():

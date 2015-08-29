@@ -1,20 +1,22 @@
 import json
 import urllib
 from tornado import httpclient
-from sound_sync.audio.pcm.record import PCMRecorder
+import argparse
 
 
 class Sender:
     def __init__(self):
+        from sound_sync.audio.pcm.record import PCMRecorder
+
         self.http_client = httpclient.AsyncHTTPClient()
-        self.host = "192.168.178.100"
-        self.manager_port = 8888
+        self.host = None
+        self.manager_port = None
         self.handler_port = None
         self.channel_hash = None
         self.recorder = PCMRecorder()
 
-        self.name = ""
-        self.description = ""
+        self.name = None
+        self.description = None
 
     def initialize(self):
         if self.channel_hash is not None:
@@ -23,7 +25,7 @@ class Sender:
         http_client = httpclient.HTTPClient()
 
         self.add_channel_to_server(http_client)
-        self.get_sound_settings(http_client)
+        self.get_settings(http_client)
         self.set_name_and_description_of_channel(http_client)
         self.recorder.initialize()
 
@@ -67,7 +69,7 @@ class Sender:
         http_client.fetch(self.manager_string + "/channels/delete/" + self.channel_hash)
         self.channel_hash = None
 
-    def get_sound_settings(self, http_client):
+    def get_settings(self, http_client):
         response = http_client.fetch(self.manager_string + "/channels/get")
         response_dict = json.loads(response.body)
 
@@ -86,9 +88,38 @@ class Sender:
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-i", "--hostname",
+                        default="192.168.178.100",
+                        type=str,
+                        help="Hostname of the management server.",
+                        dest="hostname")
+
+    parser.add_argument("-p", "--port",
+                        default=8888,
+                        type=int,
+                        help="Port of the management socket on the management server.",
+                        dest="manager_port")
+
+    parser.add_argument("-n", "--name",
+                        default="Untitled",
+                        type=str,
+                        help="Name of this channel in the channel list.",
+                        dest="name")
+
+    parser.add_argument("-d", "--description",
+                        default="No Description",
+                        type=str,
+                        help="Description of this channel in the channel list.",
+                        dest="description")
+
+    args = parser.parse_args()
+
     sender = Sender()
-    sender.name = "Name"
-    sender.description = "Description"
+    sender.host = args.hostname
+    sender.manager_port = args.manager_port
+    sender.name = args.name
+    sender.description = args.description
     sender.initialize()
 
     try:
