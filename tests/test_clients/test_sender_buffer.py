@@ -7,7 +7,7 @@ from tests.test_server.server_test_case import ServerTestCase
 class TestBufferSender(ServerTestCase):
     def setUp(self):
         ServerTestCase.setUp(self)
-        alsa_patcher = patch("sound_sync.audio.pcm.record.alsaaudio")
+        alsa_patcher = patch("sound_sync.audio.pcm.device.alsaaudio")
         alsaaudio = alsa_patcher.start()
         alsaaudio.cards = lambda: ["TestCard", "Loopback", "Bla"]
 

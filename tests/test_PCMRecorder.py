@@ -5,7 +5,7 @@ from mock.mock import patch
 
 class TestPCMRecorder(TestCase):
     def setUp(self):
-        patcher = patch("sound_sync.audio.pcm.record.alsaaudio")
+        patcher = patch("sound_sync.audio.pcm.device.alsaaudio")
         self.alsaaudio = patcher.start()
         self.addCleanup(patcher.stop)
 

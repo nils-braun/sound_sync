@@ -53,7 +53,7 @@ class Sender:
             sound_buffer, length = self.recorder.get()
             parameters = {"buffer": sound_buffer}
             body = urllib.urlencode(parameters)
-            http_client.fetch(self.manager_string + '/channels/' + self.channel_hash + '/buffers/add',
+            http_client.fetch(self.handler_string + '/add',
                               method="POST", body=body)
 
     def terminate(self):

@@ -17,9 +17,9 @@ class PCMDevice(SoundDevice):
             pcm_type = alsaaudio.PCM_PLAYBACK
 
         if not blocking:
-            self.pcm = alsaaudio.PCM(card=card_name, type=pcm_type, mode=alsaaudio.PCM_NONBLOCKING)
+            self.pcm = alsaaudio.PCM(device=card_name, type=pcm_type, mode=alsaaudio.PCM_NONBLOCKING)
         else:
-            self.pcm = alsaaudio.PCM(card=card_name, type=pcm_type)
+            self.pcm = alsaaudio.PCM(device=card_name, type=pcm_type)
 
         self.pcm.setchannels(int(self.channels))
         self.pcm.setrate(int(self.frame_rate))
