@@ -39,3 +39,16 @@ class PCMDevice(SoundDevice):
     def terminate(self):
         if self.pcm:
             self.pcm.close()
+
+    def get(self):
+        if self.pcm is None:
+            raise ValueError("Device needs to be initialized first")
+
+        current_length, current_sound_buffer = self.pcm.read()
+        return current_length, current_sound_buffer
+
+    def put(self, sound_buffer):
+        if self.pcm is None:
+            raise ValueError("Device needs to be initialized first")
+
+        self.pcm.write(bytes(sound_buffer))

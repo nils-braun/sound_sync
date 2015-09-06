@@ -60,6 +60,7 @@ class TestPCMRecorder(TestCase):
 
     def test_get(self):
         recorder = PCMRecorder()
+        recorder.factor = 4
         self.assertRaises(ValueError, recorder.get)
 
         recorder = self.init_sound_recorder()
