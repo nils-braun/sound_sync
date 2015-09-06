@@ -33,8 +33,6 @@ public:
     const void add(const std::string & buffer) {
         m_list.push_back(buffer);
 
-        std::cout << buffer << std::endl;
-
         if(m_list.size() > maximumListIndex) {
             m_list.pop_front();
         }
