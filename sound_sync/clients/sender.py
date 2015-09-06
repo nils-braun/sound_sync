@@ -91,7 +91,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--hostname",
-                        default="192.168.178.100",
+                        default="localhost",
                         type=str,
                         help="Hostname of the management server.",
                         dest="hostname")

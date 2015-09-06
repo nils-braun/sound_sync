@@ -50,6 +50,7 @@ class TestSender(TestCase):
         http_client_patch.HTTPError = AssertionError
 
         sender.terminate()
+        # noinspection PyUnresolvedReferences
         sender.remove_channel_from_server.assert_called_with(4734)
 
     @patch("sound_sync.clients.sender.httpclient")
@@ -96,6 +97,7 @@ class TestSender(TestCase):
         sender.recorder = MagicMock()
 
         sender.initialize()
+        # noinspection PyUnresolvedReferences
         sender.recorder.initialize.assert_called_with()
 
         self.assertEqual(int(sender.recorder.buffer_size), 1024)
@@ -104,16 +106,11 @@ class TestSender(TestCase):
         self.assertEqual(int(sender.recorder.factor), 10)
         self.assertEqual(int(sender.handler_port), 237)
 
-
     def test_initialize_twice(self):
         sender = self.init_sender()
 
         sender.channel_hash = "8364"
-
-        try:
-            sender.initialize()
-        except:
-            self.fail()
+        sender.initialize()
 
     @patch("sound_sync.clients.sender.httpclient")
     def test_main_loop(self, http_client_patch):
@@ -122,15 +119,16 @@ class TestSender(TestCase):
         self.assertRaises(AssertionError, sender.main_loop)
 
         sender.channel_hash = "345"
+        sender.handler_port = 547647
 
         self.number_intervals = 0
 
         def mock_get():
             if self.number_intervals < 5:
                 self.number_intervals += 1
-                return ("Buffer", 100)
+                return "Buffer", 100
             else:
-                raise AssertionError
+                raise NotImplementedError
 
         sender.recorder.get = mock_get
         mocking_client = MagicMock()
@@ -138,10 +136,10 @@ class TestSender(TestCase):
 
         try:
             sender.main_loop()
-        except AssertionError:
+        except NotImplementedError:
             # This is intended
             pass
 
-        mocking_client.fetch.assert_called_with('http://ThisIsTheHost:16347/channels/345/buffers/add',
+        mocking_client.fetch.assert_called_with('http://ThisIsTheHost:547647/add',
                                                 method="POST", body="buffer=Buffer")
 
