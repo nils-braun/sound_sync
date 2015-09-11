@@ -17,7 +17,7 @@ class Channel(JSONPickleable):
     """
     Data structure for the channels
     """
-    def __init__(self, item_hash):
+    def __init__(self, item_hash, request):
         """
         Initialize with a given hash
         """
@@ -76,7 +76,7 @@ class Client(JSONPickleable):
     """
     Data structure for the clients
     """
-    def __init__(self, item_hash):
+    def __init__(self, item_hash, request):
         """
         Initialize with a given hash
         """
@@ -86,7 +86,7 @@ class Client(JSONPickleable):
         self.login_time = datetime.datetime.now()
 
         #: The ip address of the client
-        self.ip_address = None
+        self.ip_address = request.headers["Host"]
 
         #: The name of the client
         self.name = ""

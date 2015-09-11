@@ -53,7 +53,7 @@ class TestClientListFromServer(ServerTestCase):
         self.assertEqual(added_client["item_hash"], item_hash)
 
         self.assertIn("ip_address", added_client)
-        self.assertEqual(added_client["ip_address"], "None")
+        self.assertTrue(added_client["ip_address"].startswith("localhost"))
 
         self.assertEqual(len(added_client), 4)
 

@@ -9,6 +9,7 @@ public:
 
     void get(std::string buffer_number_as_string);
     void add();
+    void start();
 
     static cppcms::service & create_server(const int port_number);
 };

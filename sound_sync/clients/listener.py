@@ -1,7 +1,15 @@
+from collections import deque
 import json
 import urllib
 from tornado import httpclient
+import argparse
+import time
 
+
+class SoundBufferList:
+    def __init__(self):
+        self.start_index = 0
+        self.deque = deque()
 
 class Listener:
     def __init__(self):
@@ -53,6 +61,19 @@ class Listener:
 
         http_client = httpclient.HTTPClient()
 
+        response = http_client.fetch(self.handler_string + '/start')
+        start_index = int(response.body)
+        index = start_index
+
+        while True:
+            try:
+                response = http_client.fetch(self.handler_string + '/get/' + str(index))
+                index += 1
+                print index
+            except httpclient.HTTPError:
+                time.sleep(self.player.get_waiting_time() / 5.0)
+
+
         # TODO
 
         #while True:
@@ -67,7 +88,6 @@ class Listener:
             return
 
         http_client = httpclient.HTTPClient()
-
         self.remove_client_from_server(http_client)
 
     def remove_client_from_server(self, http_client):
@@ -94,39 +114,31 @@ class Listener:
         response_dict = json.loads(response.body)
 
         for channel_hash, channel in response_dict.iteritems():
-            print channel
+            print "{item_hash}:\t{name} ({now_playing})\n\t{description}".format(**channel)
 
     def set_name_and_address_of_client(self, http_client):
-        # TODO
-        ip_address = "None"
-        parameters = {"name": self.name,
-                      "ip_address": ip_address}
+        parameters = {"name": self.name}
         body = urllib.urlencode(parameters)
         http_client.fetch(self.manager_string + "/clients/set/" + self.client_hash, body=body, method="POST")
 
 
-if __name__ == "__main__":
-    import argparse
-    
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--hostname",
-                        default="192.168.178.100",
+                        default="localhost",
                         type=str,
                         help="Hostname of the management server.",
                         dest="hostname")
-
     parser.add_argument("-p", "--port",
                         default=8888,
                         type=int,
                         help="Port of the management socket on the management server. Default 8888.",
                         dest="manager_port")
-
     parser.add_argument("-c", "--channel_hash",
                         default=None,
                         type=str,
                         help="Hash of the channel to listen to. If not given, list all channels. ",
                         dest="channel_hash")
-
     parser.add_argument("-n", "--name",
                         default="Untitled",
                         type=str,
@@ -134,7 +146,6 @@ if __name__ == "__main__":
                         dest="name")
 
     args = parser.parse_args()
-
     listener = Listener()
     listener.host = args.hostname
     listener.manager_port = args.manager_port
@@ -151,3 +162,7 @@ if __name__ == "__main__":
 
     else:
         listener.list_channels()
+
+
+if __name__ == "__main__":
+    main()

@@ -22,7 +22,7 @@ class ListHandler(RequestHandler):
     def get(self, action, list_hash=None):
         if action == "add":
             new_hash = str(random.getrandbits(10))
-            self.item_list.update({new_hash: self.item_type(new_hash)})
+            self.item_list.update({new_hash: self.item_type(new_hash, self.request)})
 
             return self.write(str(new_hash))
         elif action == "delete":

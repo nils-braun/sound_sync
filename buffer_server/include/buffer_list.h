@@ -35,7 +35,12 @@ public:
 
         if(m_list.size() > maximumListIndex) {
             m_list.pop_front();
+            m_startIndex++;
         }
+    }
+
+    const BufferNumber getStartIndex() const {
+        return m_startIndex;
     }
 
 private:

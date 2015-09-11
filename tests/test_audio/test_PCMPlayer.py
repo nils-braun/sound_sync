@@ -13,7 +13,7 @@ class TestPCMPlayer(TestCase):
         player = PCMPlay()
         self.alsaaudio.PCM_PLAYBACK = 372435
         self.alsaaudio.PCM_FORMAT_S16_LE = 21654
-        self.alsaaudio.PCM_NONBLOCKING = 21354
+        self.alsaaudio.PCM_NONBLOCK = 21354
         player.buffer_size = 2
         player.frame_rate = 3
         player.channels = 4

@@ -46,3 +46,5 @@ docs/_rst/*
 docs/_build/*
 cover/*
 MANIFEST
+buffer_server/build
+externals

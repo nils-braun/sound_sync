@@ -11,6 +11,8 @@
 handler::handler(cppcms::service &srv) : cppcms::application(srv)  {
     dispatcher().assign("/get/(\\d+)", &handler::get, this, 1);
     mapper().assign("get","/get/{1}");
+    dispatcher().assign("/start", &handler::start, this);
+    mapper().assign("start","/start");
     dispatcher().assign("/add", &handler::add, this);
     mapper().assign("add","/add");
 }
@@ -45,4 +47,9 @@ void handler::add() {
     if(buffer != "") {
         BufferList::getInstance().add(buffer);
     }
+}
+
+void handler::start() {
+    const BufferList::BufferNumber startIndex = BufferList::getInstance().getStartIndex();
+    response().out() << static_cast<unsigned long int>(startIndex);
 }
