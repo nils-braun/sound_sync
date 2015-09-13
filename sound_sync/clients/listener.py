@@ -1,15 +1,11 @@
-from collections import deque
 import json
 import urllib
-from tornado import httpclient
 import argparse
 import time
 
+from tornado import httpclient
+from sound_sync.sound_buffer_list import SoundBufferList
 
-class SoundBufferList:
-    def __init__(self):
-        self.start_index = 0
-        self.deque = deque()
 
 class Listener:
     def __init__(self):
@@ -22,6 +18,8 @@ class Listener:
         self.channel_hash = None
         self.client_hash = None
         self.player = PCMPlay()
+
+        self.incoming_buffer_list = SoundBufferList(100)
 
         self.name = None
         self.description = None
@@ -63,25 +61,19 @@ class Listener:
 
         response = http_client.fetch(self.handler_string + '/start')
         start_index = int(response.body)
-        index = start_index
+        self.incoming_buffer_list.set_start_index(start_index)
 
         while True:
             try:
-                response = http_client.fetch(self.handler_string + '/get/' + str(index))
-                index += 1
-                print index
+                response = http_client.fetch(self.handler_string + '/get/' +
+                                             str(self.incoming_buffer_list.next_free_index))
+                self.incoming_buffer_list.add_buffer(response)
             except httpclient.HTTPError:
                 time.sleep(self.player.get_waiting_time() / 5.0)
 
 
-        # TODO
+        # TODO, Play + wait for time thread
 
-        #while True:
-        #    sound_buffer, length = self.recorder.get()
-        #    parameters = {"buffer": sound_buffer}
-        #    body = urllib.urlencode(parameters)
-        #    http_client.fetch(self.manager_string + '/channels/' + self.channel_hash + '/buffers/add',
-        #                      method="POST", body=body)
 
     def terminate(self):
         if self.client_hash is None:
