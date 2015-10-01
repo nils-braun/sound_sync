@@ -1,4 +1,5 @@
 #pragma once
+#include <boost/python.hpp>
 
 #include <cppcms/application.h>
 #include <cppcms/service.h>
@@ -13,3 +14,12 @@ public:
 
     static cppcms::service & create_server(const int port_number);
 };
+
+void start(int port_number) {
+    handler::create_server(port_number).run();
+}
+
+BOOST_PYTHON_MODULE(buffer_server)
+{
+  boost::python::def("start", start);
+}

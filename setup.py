@@ -9,13 +9,17 @@
 """
 
 import sys
-from setuptools import setup
+from setuptools import setup, Extension
 
 
 def setup_package():
     needs_pytest = {'pytest', 'test', 'ptr'}.intersection(sys.argv)
     pytest_runner = ['pytest-runner'] if needs_pytest else []
     setup(setup_requires=['six', 'pyscaffold>=2.3rc1,<2.4a0'] + pytest_runner,
+          ext_modules=[Extension('sound_sync/buffer_server', 
+                                 ['buffer_server/src/handler.cpp'], 
+                                 libraries=['boost_python', 'boost_system', 'cppcms'], 
+                                 extra_compile_args=["-std=c++11"])],
           tests_require=['pytest_cov', 'pytest'],
           use_pyscaffold=True)
 
