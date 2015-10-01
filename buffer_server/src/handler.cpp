@@ -6,7 +6,6 @@
 #include <cppcms/http_request.h>
 #include <cppcms/url_dispatcher.h>
 #include <cppcms/url_mapper.h>
-#include "../include/buffer_list.h"
 
 handler::handler(cppcms::service &srv) : cppcms::application(srv)  {
     dispatcher().assign("/get/(\\d+)", &handler::get, this, 1);
@@ -17,7 +16,7 @@ handler::handler(cppcms::service &srv) : cppcms::application(srv)  {
     mapper().assign("add","/add");
 }
 
-cppcms::service & handler::create_server(const int port_number) {
+void start(const int port_number) {
     cppcms::json::value api_string;
     api_string.str("http");
 
@@ -29,13 +28,12 @@ cppcms::service & handler::create_server(const int port_number) {
 
     static cppcms::service srv(settings_dict);
     srv.applications_pool().mount(cppcms::applications_factory<handler>());
-
-    return srv;
+    srv.run();
 }
 
 void handler::get(std::string buffer_number_as_string) {
     try {
-        std::string buffer = BufferList::getInstance().get(buffer_number_as_string);
+        std::string buffer = m_bufferList.get(buffer_number_as_string);
         response().out() << buffer;
     } catch (const std::exception & e) {
         response().make_error_response(502, e.what());
@@ -45,11 +43,11 @@ void handler::get(std::string buffer_number_as_string) {
 void handler::add() {
     const std::string & buffer = request().post("buffer");
     if(buffer != "") {
-        BufferList::getInstance().add(buffer);
+        m_bufferList.add(buffer);
     }
 }
 
 void handler::start() {
-    const BufferList::BufferNumber startIndex = BufferList::getInstance().getStartIndex();
+    const BufferList::BufferNumber startIndex = m_bufferList.getStartIndex();
     response().out() << static_cast<unsigned long int>(startIndex);
 }

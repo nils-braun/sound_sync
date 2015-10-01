@@ -4,6 +4,8 @@
 #include <cppcms/application.h>
 #include <cppcms/service.h>
 
+#include "../include/buffer_list.h"
+
 class handler : public cppcms::application {
 public:
     handler(cppcms::service &srv);
@@ -12,12 +14,11 @@ public:
     void add();
     void start();
 
-    static cppcms::service & create_server(const int port_number);
+private:
+    BufferList m_bufferList;
 };
 
-void start(int port_number) {
-    handler::create_server(port_number).run();
-}
+void start(int port_number);
 
 BOOST_PYTHON_MODULE(buffer_server)
 {
