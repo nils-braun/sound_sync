@@ -4,6 +4,7 @@ import argparse
 import time
 
 from tornado import httpclient
+
 from sound_sync.sound_buffer_list import SoundBufferList
 
 
@@ -18,6 +19,8 @@ class Listener:
         self.channel_hash = None
         self.client_hash = None
         self.player = PCMPlay()
+
+        self.full_buffer_size = None
 
         self.incoming_buffer_list = SoundBufferList(100)
 
@@ -67,8 +70,9 @@ class Listener:
             try:
                 response = http_client.fetch(self.handler_string + '/get/' +
                                              str(self.incoming_buffer_list.next_free_index))
-                self.incoming_buffer_list.add_buffer(response)
+                self.incoming_buffer_list.add_buffer(response.body)
             except httpclient.HTTPError:
+                print "wait"
                 time.sleep(self.player.get_waiting_time() / 5.0)
 
 
@@ -98,7 +102,10 @@ class Listener:
         self.player.frame_rate = channel_information["frame_rate"]
         self.player.channels = channel_information["channels"]
         self.player.factor = channel_information["factor"]
+        self.player.added_delay = channel_information["added_delay"]
+        self.player.start_time = channel_information["start_time"]
         self.handler_port = channel_information["handler_port"]
+        self.full_buffer_size = channel_information["full_buffer_size"]
 
     def list_channels(self):
         http_client = httpclient.HTTPClient()
