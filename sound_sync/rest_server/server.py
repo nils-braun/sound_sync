@@ -6,6 +6,8 @@ from sound_sync.rest_server.server_items import Channel, Client
 from tornado.web import Application, url
 
 
+# TODO: Add a heartbeat
+
 class RestServer:
     def __init__(self):
         self.client_list = dict()

@@ -1,7 +1,7 @@
 import atexit
 import datetime
 import socket
-from subprocess import Popen
+from sound_sync.rest_server.buffer_server_process import BufferServerProcess
 
 from sound_sync.rest_server.json_pickable import JSONPickleable
 
@@ -56,21 +56,20 @@ class Channel(JSONPickleable):
         #: The factor how often the buffer is fetched before returning the get function
         self.factor = 10
 
+        #: The size of a full buffer before playing
+        self.full_buffer_size = 10
+
         #: The buffer_handler server we are handling
         self.handler_port = get_free_port()
 
         #: The handler process
-        self._process = None
+        self._process = BufferServerProcess(self.handler_port)
+        self._process.start()
 
-        self.start_buffer_handler()
-
-    def stop(self):
-        self._process.kill()
-
-    def start_buffer_handler(self):
-        self._process = Popen(["./buffer_server/build/buffer_server", str(self.handler_port)])
         atexit.register(self.stop)
 
+    def stop(self):
+        self._process.terminate()
 
 class Client(JSONPickleable):
     """
