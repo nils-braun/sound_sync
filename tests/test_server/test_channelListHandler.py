@@ -82,6 +82,9 @@ class TestChannelListFromServer(ServerTestCase):
 
         self.assertIn("handler_port", added_channel)
 
+        self.assertIn("full_buffer_size", added_channel)
+        self.assertEqual(float(added_channel["full_buffer_size"]), 10)
+
         # Test if the handler_port is really free
         s = socket.socket()
         try:
@@ -89,7 +92,7 @@ class TestChannelListFromServer(ServerTestCase):
         except socket.error:
             self.fail()
 
-        self.assertEqual(len(added_channel), 12)
+        self.assertEqual(len(added_channel), 13)
 
         response = self.fetch('/channels/add')
         item_hash = self.assertResponse(response)
