@@ -1,6 +1,4 @@
 #pragma once
-#include <boost/python.hpp>
-
 #include <deque>
 #include <string>
 
@@ -27,12 +25,3 @@ private:
     BufferNumber m_startIndex = 0;
     static constexpr BufferNumber maximumListIndex = 100;
 };
-
-
-BOOST_PYTHON_MODULE(buffer_list)
-{
-    boost::python::class_<BufferList>("BufferList")
-        .def("get", &BufferList::get)
-        .def("getStartIndex", &BufferList::getStartIndex)
-        .def("add", &BufferList::add);
-}

@@ -1,8 +1,7 @@
 #pragma once
-#include <boost/python.hpp>
-
 #include <cppcms/application.h>
 #include <cppcms/service.h>
+#include <memory>
 
 #include "../include/buffer_list.h"
 
@@ -12,15 +11,18 @@ public:
 
     void get(std::string buffer_number_as_string);
     void add();
-    void start();
+    void getStart();
 
 private:
     BufferList m_bufferList;
 };
 
-void start(int port_number);
+class server {
+public:
+    server(int port_number);
+    void start();
+    void stop();
 
-BOOST_PYTHON_MODULE(buffer_server)
-{
-  boost::python::def("start", start);
-}
+private:
+    std::shared_ptr<cppcms::service> m_server;
+};
