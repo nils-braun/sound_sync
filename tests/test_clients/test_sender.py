@@ -73,7 +73,7 @@ class TestSender(TestCase):
                     return MockResponse("""
                                         {"8456":
                                             {"name": "",
-                                             "item_hash": "8456",
+                                             "channel_hash": "8456",
                                              "start_time": "2015-08-24 22:23:49.928645",
                                              "description": "",
                                              "now_playing": "",

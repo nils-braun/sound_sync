@@ -3,19 +3,21 @@ from tornado import httpclient
 import argparse
 import json
 from sound_sync.audio.pcm.record import PCMRecorder
+from sound_sync.rest_server.server_items.server_items import Channel
 
-class Sender:
-    def __init__(self):
 
-        self.http_client = httpclient.AsyncHTTPClient()
-        self.host = None
-        self.manager_port = None
-        self.handler_port = None
-        self.channel_hash = None
+class Sender(Channel):
+    def __init__(self, host=None, manager_port=None):
+        Channel.__init__(self)
+
+        #: The address of the manager host
+        self.host = host
+
+        #: The port of the manager host
+        self.manager_port = manager_port
+
+        #: The recorder used for recording the sound data
         self.recorder = PCMRecorder()
-
-        self.name = None
-        self.description = None
 
     def initialize(self):
         if self.channel_hash is not None:
@@ -109,9 +111,7 @@ def main():
                         help="Description of this channel in the channel list. Default No Description.",
                         dest="description")
     args = parser.parse_args()
-    sender = Sender()
-    sender.host = args.hostname
-    sender.manager_port = args.manager_port
+    sender = Sender(args.host, args.manager_port)
     sender.name = args.name
     sender.description = args.description
     sender.initialize()

@@ -113,7 +113,7 @@ class Listener:
         response_dict = json.loads(response.body)
 
         for channel_hash, channel in response_dict.iteritems():
-            print "{item_hash}:\t{name} ({now_playing})\n\t{description}".format(**channel)
+            print "{channel_hash}:\t{name} ({now_playing})\n\t{description}".format(**channel)
 
     def set_name_and_address_of_client(self, http_client):
         parameters = {"name": self.name}

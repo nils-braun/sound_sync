@@ -9,12 +9,13 @@
 """
 
 import sys
+import os
 from setuptools import setup, Extension
 
 
 def setup_package():
     buffer_server_ext = Extension('sound_sync/buffer_server', 
-                                  ['buffer_server/src/python.cpp', 'buffer_server/src/handler.cpp', 'buffer_server/src/buffer_list.cpp'], 
+                                  map(lambda filename: os.path.join("buffer_server/src/", filename), ['python.cpp', 'handler.cpp', 'buffer_list.cpp', 'server.cpp']), 
                                   libraries=['boost_python', 'boost_system', 'cppcms'], 
                                   extra_compile_args=["-std=c++11"])
 

@@ -30,7 +30,7 @@ class TestChannelListFromServer(ServerTestCase):
         added_channel = response_dict[item_hash]
 
         self.assertEqual(added_channel["name"], "My New Name")
-        self.assertEqual(added_channel["item_hash"], item_hash)
+        self.assertEqual(added_channel["channel_hash"], item_hash)
         self.assertEqual(added_channel["description"], "This is a description. It <strong>even</strong>" +
                          "have some html tags.")
 
@@ -53,8 +53,8 @@ class TestChannelListFromServer(ServerTestCase):
         self.assertIn("name", added_channel)
         self.assertEqual(added_channel["name"], "")
 
-        self.assertIn("item_hash", added_channel)
-        self.assertEqual(added_channel["item_hash"], item_hash)
+        self.assertIn("channel_hash", added_channel)
+        self.assertEqual(added_channel["channel_hash"], item_hash)
 
         self.assertIn("description", added_channel)
         self.assertEqual(added_channel["description"], "")

@@ -14,14 +14,23 @@ class BufferList {
 public:
     typedef std::deque<std::string>::size_type BufferNumber;
 
-    std::string get(const std::string & buffer_number_as_string) const;
-    void add(const std::string & buffer);
+    BufferList(const BufferNumber maximumListIndex = 100) : m_maximumListIndex(maximumListIndex) { }
+
+    std::string getBuffer(const std::string & bufferNumberAsString) const;
+    void addBuffer(const std::string & buffer);
     const BufferNumber getStartIndex() const;
+    void setStartIndex(const BufferNumber startIndex) {
+        m_startIndex = startIndex;
+    }
+
+    const BufferNumber getNextFreeIndex() const {
+        return m_startIndex + m_list.size();
+    }
 
 private:
-    const BufferNumber calculate_list_index(const BufferNumber buffer_number) const;
+    const BufferNumber calculateListIndex(const BufferNumber bufferNumber) const;
 
     std::deque<std::string> m_list = {};
     BufferNumber m_startIndex = 0;
-    static constexpr BufferNumber maximumListIndex = 100;
+    BufferNumber m_maximumListIndex;
 };

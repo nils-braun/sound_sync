@@ -1,9 +1,10 @@
 import atexit
 import datetime
 import socket
-from sound_sync.rest_server.buffer_server_process import BufferServerProcess
+from sound_sync.audio.sound_device import SoundDevice
 
-from sound_sync.rest_server.json_pickable import JSONPickleable
+from sound_sync.rest_server.server_items.buffer_server_process import BufferServerProcess
+from sound_sync.rest_server.server_items.json_pickable import JSONPickleable
 
 
 def get_free_port():
@@ -13,18 +14,17 @@ def get_free_port():
     s.close()
     return port
 
-class Channel(JSONPickleable):
+
+class Channel(JSONPickleable, SoundDevice):
     """
     Data structure for the channels
     """
-    def __init__(self, item_hash, request):
+    def __init__(self, item_hash=None, request=None):
         """
         Initialize with a given hash
         """
         JSONPickleable.__init__(self)
-
-        #: The starting time of the channel as a common reference
-        self.start_time = datetime.datetime.now()
+        SoundDevice.__init__(self)
 
         #: The name of the channel
         self.name = ""
@@ -36,42 +36,41 @@ class Channel(JSONPickleable):
         self.now_playing = ""
 
         #: The item has of the channel in the channel list
-        self.item_hash = item_hash
-
-        #: The number of speaker channels
-        self.channels = "2"
-
-        #: The used frame rate
-        self.frame_rate = "44100"
-
-        #: The used waiting time
-        self.waiting_time = "10"
-
-        #: The added delay of the channel
-        self.added_delay = "0"
-
-        #: The used buffer size
-        self.buffer_size = 1024
-
-        #: The factor how often the buffer is fetched before returning the get function
-        self.factor = 10
+        self.channel_hash = item_hash
 
         #: The size of a full buffer before playing
         self.full_buffer_size = 10
 
         #: The buffer_handler server we are handling
+        self.handler_port = None
+
+
+class ChannelItem(Channel):
+    """
+    Data structure for channels handled by the server (with a added background process)
+    """
+    def __init__(self, item_hash, request):
+        Channel.__init__(self, item_hash, request)
+
         self.handler_port = get_free_port()
 
         #: The handler process
+        self._process = None
+
+        self.start_process()
+
+    def start_process(self):
+        """ Start the buffer server as a background process """
         self._process = BufferServerProcess(self.handler_port)
         self._process.start()
-
         atexit.register(self.stop)
 
     def stop(self):
+        """ Stop the background server """
         self._process.terminate()
 
-class Client(JSONPickleable):
+
+class ClientItem(JSONPickleable):
     """
     Data structure for the clients
     """
@@ -94,4 +93,5 @@ class Client(JSONPickleable):
         self.item_hash = item_hash
 
     def stop(self):
+        """ Unused """
         pass
