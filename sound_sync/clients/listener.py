@@ -1,53 +1,44 @@
-import json
 import urllib
 import argparse
-import time
+import json
 
 from tornado import httpclient
 
-from sound_sync.sound_buffer_list import SoundBufferList
+from sound_sync.clients.base import SoundSyncConnectedProgram
+from sound_sync.rest_server.server_items.json_pickable import JSONPickleable
+from sound_sync.audio.pcm.play import PCMPlay
+from sound_sync.rest_server.server_items.server_items import Client
 
 
-class Listener:
-    def __init__(self):
-        from sound_sync.audio.pcm.play import PCMPlay
+class Listener(Client, SoundSyncConnectedProgram):
+    def __init__(self, channel_hash=None, host=None, manager_port=None):
+        Client.__init__(self)
+        SoundSyncConnectedProgram.__init__(host, manager_port)
 
-        self.http_client = httpclient.AsyncHTTPClient()
-        self.host = None
-        self.manager_port = None
-        self.handler_port = None
-        self.channel_hash = None
-        self.client_hash = None
+        #: The channel hash of the channel we want to listen to
+        self.channel_hash = channel_hash
+
+        #: The recorder used for recording the sound data
         self.player = PCMPlay()
 
-        self.full_buffer_size = None
-
-        self.incoming_buffer_list = SoundBufferList(100)
-
-        self.name = None
-        self.description = None
+        #: The channel we are listening to
+        self._connected_channel = None
 
     def initialize(self):
         if self.client_hash is not None:
             return
 
-        if self.channel_hash is None:
-            raise ValueError("You have to set the hash of the channel you want to listen to.")
-
         http_client = httpclient.HTTPClient()
 
         self.add_client_to_server(http_client)
+        self.get_channel_from_server(http_client)
         self.get_settings(http_client)
-        self.set_name_and_address_of_client(http_client)
+        self.set_name_and_description_of_channel(http_client)
         self.player.initialize()
 
     @property
-    def manager_string(self):
-        return "http://" + str(self.host) + ":" + str(self.manager_port)
-
-    @property
     def handler_string(self):
-        if self.handler_port is None:
+        if self._connected_channel is not None and self._connected_channel.handler_port is None:
             raise ValueError()
 
         return "http://" + str(self.host) + ":" + str(self.handler_port)
@@ -56,66 +47,39 @@ class Listener:
         response = http_client.fetch(self.manager_string + "/clients/add")
         self.client_hash = response.body
 
-    def main_loop(self):
-        if self.client_hash is None:
-            raise AssertionError("Listener needs to be initialized first")
+    #def main_loop(self):
+    #    if self.channel_hash is None:
+    #        raise AssertionError("Sender needs to be initialized first")#
 
-        http_client = httpclient.HTTPClient()
+    #    http_client = httpclient.HTTPClient()
 
-        response = http_client.fetch(self.handler_string + '/start')
-        start_index = int(response.body)
-        self.incoming_buffer_list.set_start_index(start_index)
-
-        while True:
-            try:
-                response = http_client.fetch(self.handler_string + '/get/' +
-                                             str(self.incoming_buffer_list.next_free_index))
-                self.incoming_buffer_list.add_buffer(response.body)
-            except httpclient.HTTPError:
-                print "wait"
-                time.sleep(self.player.get_waiting_time() / 5.0)
-
-
-        # TODO, Play + wait for time thread
-
+    #    while True:
+    #        sound_buffer, length = self.recorder.get()
+    #        parameters = {"buffer": sound_buffer}
+    #        body = urllib.urlencode(parameters)
+    #        http_client.fetch(self.handler_string + '/add',
+    #                         method="POST", body=body)
 
     def terminate(self):
-        if self.client_hash is None:
+        if self.channel_hash is None:
             return
 
         http_client = httpclient.HTTPClient()
         self.remove_client_from_server(http_client)
 
     def remove_client_from_server(self, http_client):
-        http_client.fetch(self.manager_string + "/clients/delete/" + self.client_hash)
-        self.client_hash = None
+        http_client.fetch(self.manager_string + "/clients/delete/" + self.channel_hash)
+        self.channel_hash = None
 
     def get_settings(self, http_client):
         response = http_client.fetch(self.manager_string + "/channels/get")
         response_dict = json.loads(response.body)
 
-        if self.channel_hash not in response_dict:
-            raise KeyError("The channel_hash you selected is not registered on the server.")
-
         channel_information = response_dict[self.channel_hash]
-        self.player.buffer_size = channel_information["buffer_size"]
-        self.player.frame_rate = channel_information["frame_rate"]
-        self.player.channels = channel_information["channels"]
-        self.player.factor = channel_information["factor"]
-        self.player.added_delay = channel_information["added_delay"]
-        self.player.start_time = channel_information["start_time"]
-        self.handler_port = channel_information["handler_port"]
-        self.full_buffer_size = channel_information["full_buffer_size"]
+        JSONPickleable.fill_with_json(self.player, channel_information)
+        JSONPickleable.fill_with_json(self._connected_channel, channel_information)
 
-    def list_channels(self):
-        http_client = httpclient.HTTPClient()
-        response = http_client.fetch(self.manager_string + "/channels/get")
-        response_dict = json.loads(response.body)
-
-        for channel_hash, channel in response_dict.iteritems():
-            print "{channel_hash}:\t{name} ({now_playing})\n\t{description}".format(**channel)
-
-    def set_name_and_address_of_client(self, http_client):
+    def set_name_of_client(self, http_client):
         parameters = {"name": self.name}
         body = urllib.urlencode(parameters)
         http_client.fetch(self.manager_string + "/clients/set/" + self.client_hash, body=body, method="POST")
@@ -133,34 +97,25 @@ def main():
                         type=int,
                         help="Port of the management socket on the management server. Default 8888.",
                         dest="manager_port")
-    parser.add_argument("-c", "--channel_hash",
-                        default=None,
-                        type=str,
-                        help="Hash of the channel to listen to. If not given, list all channels. ",
-                        dest="channel_hash")
     parser.add_argument("-n", "--name",
                         default="Untitled",
                         type=str,
-                        help="Name of this client in the client list. Default Untitled.",
+                        help="Name of this channel in the channel list. Default Untitled.",
                         dest="name")
-
+    parser.add_argument("-c", "--channel_hash",
+                        default=None,
+                        type=str,
+                        help="Channel hash to listen to.",
+                        dest="channel_hash")
     args = parser.parse_args()
-    listener = Listener()
-    listener.host = args.hostname
-    listener.manager_port = args.manager_port
+    listener = Listener(args.channel_hash, args.host, args.manager_port)
     listener.name = args.name
-
-    if args.channel_hash is not None:
-        listener.channel_hash = args.channel_hash
-        listener.initialize()
-
-        try:
-            listener.main_loop()
-        finally:
-            listener.terminate()
-
-    else:
-        listener.list_channels()
+    listener.description = args.description
+    listener.initialize()
+    try:
+        listener.main_loop()
+    finally:
+        listener.terminate()
 
 
 if __name__ == "__main__":

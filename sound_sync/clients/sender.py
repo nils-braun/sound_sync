@@ -1,20 +1,18 @@
 import urllib
-from tornado import httpclient
 import argparse
-import json
+
+from tornado import httpclient
+
 from sound_sync.audio.pcm.record import PCMRecorder
+from sound_sync.clients.base import SoundSyncConnectedProgram
+from sound_sync.rest_server.server_items.json_pickable import JSONPickleable
 from sound_sync.rest_server.server_items.server_items import Channel
 
 
-class Sender(Channel):
+class Sender(Channel, SoundSyncConnectedProgram):
     def __init__(self, host=None, manager_port=None):
         Channel.__init__(self)
-
-        #: The address of the manager host
-        self.host = host
-
-        #: The port of the manager host
-        self.manager_port = manager_port
+        SoundSyncConnectedProgram.__init__(self, host, manager_port)
 
         #: The recorder used for recording the sound data
         self.recorder = PCMRecorder()
@@ -23,16 +21,34 @@ class Sender(Channel):
         if self.channel_hash is not None:
             return
 
-        http_client = httpclient.HTTPClient()
-
-        self.add_channel_to_server(http_client)
-        self.get_settings(http_client)
-        self.set_name_and_description_of_channel(http_client)
+        self.channel_hash = self.add_channel_to_server()
+        self.get_settings()
+        self.set_name_and_description_of_channel(self.name, self.description, self.channel_hash)
         self.recorder.initialize()
 
-    @property
-    def manager_string(self):
-        return "http://" + str(self.host) + ":" + str(self.manager_port)
+    def main_loop(self):
+        if self.channel_hash is None:
+            raise AssertionError("Sender needs to be initialized first")
+
+        while True:
+            sound_buffer, length = self.recorder.get()
+            parameters = {"buffer": sound_buffer}
+            body = urllib.urlencode(parameters)
+            self.http_client.fetch(self.handler_string + '/add',
+                                   method="POST", body=body)
+
+    def terminate(self):
+        if self.channel_hash is None:
+            return
+
+        self.remove_channel_from_server(self.channel_hash)
+        self.channel_hash = None
+
+    def get_settings(self):
+        channel_information = self.get_channel_information(self.channel_hash)
+
+        JSONPickleable.fill_with_json(self.recorder, channel_information)
+        self.handler_port = channel_information["handler_port"]
 
     @property
     def handler_string(self):
@@ -40,52 +56,6 @@ class Sender(Channel):
             raise ValueError()
 
         return "http://" + str(self.host) + ":" + str(self.handler_port)
-
-    def add_channel_to_server(self, http_client):
-        response = http_client.fetch(self.manager_string + "/channels/add")
-        self.channel_hash = response.body
-
-    def main_loop(self):
-        if self.channel_hash is None:
-            raise AssertionError("Sender needs to be initialized first")
-
-        http_client = httpclient.HTTPClient()
-
-        while True:
-            sound_buffer, length = self.recorder.get()
-            parameters = {"buffer": sound_buffer}
-            body = urllib.urlencode(parameters)
-            http_client.fetch(self.handler_string + '/add',
-                              method="POST", body=body)
-
-    def terminate(self):
-        if self.channel_hash is None:
-            return
-
-        http_client = httpclient.HTTPClient()
-
-        self.remove_channel_from_server(http_client)
-
-    def remove_channel_from_server(self, http_client):
-        http_client.fetch(self.manager_string + "/channels/delete/" + self.channel_hash)
-        self.channel_hash = None
-
-    def get_settings(self, http_client):
-        response = http_client.fetch(self.manager_string + "/channels/get")
-        response_dict = json.loads(response.body)
-
-        channel_information = response_dict[self.channel_hash]
-        self.recorder.buffer_size = channel_information["buffer_size"]
-        self.recorder.frame_rate = channel_information["frame_rate"]
-        self.recorder.channels = channel_information["channels"]
-        self.recorder.factor = channel_information["factor"]
-        self.handler_port = channel_information["handler_port"]
-
-    def set_name_and_description_of_channel(self, http_client):
-        parameters = {"name": self.name,
-                      "description": self.description}
-        body = urllib.urlencode(parameters)
-        http_client.fetch(self.manager_string + "/channels/set/" + self.channel_hash, body=body, method="POST")
 
 
 def main():

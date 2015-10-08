@@ -15,7 +15,7 @@ def get_free_port():
     return port
 
 
-class Channel(JSONPickleable, SoundDevice):
+class Channel(JSONPickleable):
     """
     Data structure for the channels
     """
@@ -24,7 +24,6 @@ class Channel(JSONPickleable, SoundDevice):
         Initialize with a given hash
         """
         JSONPickleable.__init__(self)
-        SoundDevice.__init__(self)
 
         #: The name of the channel
         self.name = ""
@@ -45,12 +44,13 @@ class Channel(JSONPickleable, SoundDevice):
         self.handler_port = None
 
 
-class ChannelItem(Channel):
+class ChannelItem(Channel, SoundDevice):
     """
-    Data structure for channels handled by the server (with a added background process)
+    Data structure for channels handled by the server (with a added background process and sound information)
     """
     def __init__(self, item_hash, request):
         Channel.__init__(self, item_hash, request)
+        SoundDevice.__init__(self)
 
         self.handler_port = get_free_port()
 
@@ -70,27 +70,35 @@ class ChannelItem(Channel):
         self._process.terminate()
 
 
-class ClientItem(JSONPickleable):
+class Client(JSONPickleable):
     """
     Data structure for the clients
     """
-    def __init__(self, item_hash, request):
+    def __init__(self, item_hash=None, request=None):
         """
         Initialize with a given hash
         """
         JSONPickleable.__init__(self)
+
+        #: The name of the client
+        self.name = ""
+
+        #: The item has of the client in the client list
+        self.client_hash = item_hash
+
+
+class ClientItem(Client):
+    """
+    Data structure for the clients handled by the server (with added meta information)
+    """
+    def __init__(self, item_hash, request):
+        Client.__init__(self, item_hash, request)
 
         #: The time of first login of the client
         self.login_time = datetime.datetime.now()
 
         #: The ip address of the client
         self.ip_address = request.headers["Host"]
-
-        #: The name of the client
-        self.name = ""
-
-        #: The item has of the client in the client list
-        self.item_hash = item_hash
 
     def stop(self):
         """ Unused """

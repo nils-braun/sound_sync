@@ -15,3 +15,9 @@ class JSONPickleable:
         """
         return {parameter_name: str(parameter_value) for parameter_name, parameter_value in vars(self).iteritems()
                 if not parameter_name.startswith("_")}
+
+    @staticmethod
+    def fill_with_json(instance, json_dict):
+        for parameter_name in vars(instance):
+            if parameter_name in json_dict:
+                setattr(instance, parameter_name, json_dict[parameter_name])

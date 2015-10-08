@@ -1,4 +1,5 @@
 from unittest import TestCase
+from sound_sync.audio.sound_device import SoundDevice
 from sound_sync.clients.sender import Sender
 from mock.mock import MagicMock, patch
 
@@ -28,14 +29,16 @@ class TestSender(TestCase):
         sender = self.init_sender()
         sender.channel_hash = "12345"
 
-        http_client = MagicMock()
+        sender.http_client = MagicMock()
 
-        sender.remove_channel_from_server(http_client)
-        http_client.fetch.assert_called_with("http://ThisIsTheHost:16347/channels/delete/12345")
-        self.assertEqual(sender.channel_hash, None)
+        sender.remove_channel_from_server(sender.channel_hash)
+        sender.http_client.fetch.assert_called_with("http://ThisIsTheHost:16347/channels/delete/12345")
 
-    @patch("sound_sync.clients.sender.httpclient")
+    @patch("sound_sync.clients.base.httpclient")
     def test_terminate(self, http_client_patch):
+        http_client_patch.HTTPClient = lambda: 4734
+        http_client_patch.HTTPError = AssertionError
+
         sender = self.init_sender()
         sender.remove_channel_from_server = MagicMock()
 
@@ -45,15 +48,13 @@ class TestSender(TestCase):
             self.fail()
 
         sender.channel_hash = "896"
-        http_client_patch.HTTPClient = lambda: 4734
         sender.remove_channel_from_server = MagicMock()
-        http_client_patch.HTTPError = AssertionError
 
         sender.terminate()
         # noinspection PyUnresolvedReferences
-        sender.remove_channel_from_server.assert_called_with(4734)
+        sender.remove_channel_from_server.assert_called_with("896")
 
-    @patch("sound_sync.clients.sender.httpclient")
+    @patch("sound_sync.clients.base.httpclient")
     def test_initialize(self, http_client_patch):
 
         class MockResponse:
@@ -94,7 +95,8 @@ class TestSender(TestCase):
 
         http_client_patch.HTTPClient = MockClient
         sender = self.init_sender()
-        sender.recorder = MagicMock()
+        sender.recorder = SoundDevice()
+        sender.recorder.initialize = MagicMock()
 
         sender.initialize()
         # noinspection PyUnresolvedReferences
@@ -112,8 +114,11 @@ class TestSender(TestCase):
         sender.channel_hash = "8364"
         sender.initialize()
 
-    @patch("sound_sync.clients.sender.httpclient")
+    @patch("sound_sync.clients.base.httpclient")
     def test_main_loop(self, http_client_patch):
+        mocking_client = MagicMock()
+        http_client_patch.HTTPClient = lambda: mocking_client
+
         sender = self.init_sender()
 
         self.assertRaises(AssertionError, sender.main_loop)
@@ -131,8 +136,7 @@ class TestSender(TestCase):
                 raise NotImplementedError
 
         sender.recorder.get = mock_get
-        mocking_client = MagicMock()
-        http_client_patch.HTTPClient = lambda: mocking_client
+
 
         try:
             sender.main_loop()

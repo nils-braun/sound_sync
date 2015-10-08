@@ -33,7 +33,7 @@ class TestBufferSender(ServerTestCase):
 
         self.mocking_client.fetch = fetch_mock
 
-        http_client_patcher = patch("sound_sync.clients.sender.httpclient")
+        http_client_patcher = patch("sound_sync.clients.base.httpclient")
         http_client = http_client_patcher.start()
         http_client.HTTPClient = lambda: self.mocking_client
         self.addCleanup(http_client_patcher.stop)
@@ -65,7 +65,7 @@ class TestBufferSender(ServerTestCase):
 
         self.assertNotEqual(sender.handler_port, sender2.handler_port)
         # Wait until buffer process has started!
-        time.sleep(0.1)
+        time.sleep(0.3)
 
         try:
             sender.main_loop()

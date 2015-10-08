@@ -28,7 +28,7 @@ class TestClientListFromServer(ServerTestCase):
         added_channel = response_dict[item_hash]
 
         self.assertEqual(added_channel["name"], "My New Name")
-        self.assertEqual(added_channel["item_hash"], item_hash)
+        self.assertEqual(added_channel["client_hash"], item_hash)
         self.assertEqual(added_channel["ip_address"], "111.111.222.333")
 
     def test_add_clients(self):
@@ -49,8 +49,8 @@ class TestClientListFromServer(ServerTestCase):
         self.assertIn("name", added_client)
         self.assertEqual(added_client["name"], "")
 
-        self.assertIn("item_hash", added_client)
-        self.assertEqual(added_client["item_hash"], item_hash)
+        self.assertIn("client_hash", added_client)
+        self.assertEqual(added_client["client_hash"], item_hash)
 
         self.assertIn("ip_address", added_client)
         self.assertTrue(added_client["ip_address"].startswith("localhost"))
