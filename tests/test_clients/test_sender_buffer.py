@@ -1,3 +1,4 @@
+import json
 import time
 from tornado import httpclient
 from sound_sync.clients.sender import Sender
@@ -47,6 +48,7 @@ class TestBufferSender(ServerTestCase):
 
     def test_buffer_sending(self):
         sender = self.init_sender()
+        sender2 = self.init_sender()
 
         def mock_get():
             if self.number_intervals < 5:
@@ -56,8 +58,12 @@ class TestBufferSender(ServerTestCase):
                 raise NotImplementedError
 
         sender.recorder.get = mock_get
+        sender2.recorder.get = mock_get
 
         sender.initialize()
+        sender2.initialize()
+
+        self.assertNotEqual(sender.handler_port, sender2.handler_port)
         # Wait until buffer process has started!
         time.sleep(0.1)
 
@@ -69,11 +75,35 @@ class TestBufferSender(ServerTestCase):
 
         self.assertEqual(self.number_intervals, 5)
         self.assertEqual(len(self.send_buffer_list), 5)
-        self.assertEqual(self.send_buffer_list[0], "buffer=Buffer")
-        self.assertEqual(self.send_buffer_list[1], "buffer=Buffer")
-        self.assertEqual(self.send_buffer_list[2], "buffer=Buffer")
-        self.assertEqual(self.send_buffer_list[3], "buffer=Buffer")
-        self.assertEqual(self.send_buffer_list[4], "buffer=Buffer")
+        for buffer_item in self.send_buffer_list:
+            self.assertEqual(buffer_item, "buffer=Buffer")
+
+        try:
+            sender2.main_loop()
+        except NotImplementedError:
+            # Is intended
+            pass
+
+        self.assertEqual(self.number_intervals, 5)
+        self.assertEqual(len(self.send_buffer_list), 5)
+        for buffer_item in self.send_buffer_list:
+            self.assertEqual(buffer_item, "buffer=Buffer")
+
+        response = self.fetch('/channels/get')
+        response = self.assertResponse(response)
+        response_dict = json.loads(response)
+        self.assertEqual(len(response_dict), 2)
+        self.assertIn(sender.channel_hash, response_dict)
+        self.assertIn(sender2.channel_hash, response_dict)
+
+        sender.terminate()
+        sender2.terminate()
+
+        response = self.fetch('/channels/get')
+        response = self.assertResponse(response)
+        response_dict = json.loads(response)
+        self.assertEqual(len(response_dict), 0)
+
 
 
 

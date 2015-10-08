@@ -13,3 +13,12 @@ class TestSoundDevice(TestCase):
         sound_device.frame_rate = 20
 
         self.assertEqual(sound_device.get_waiting_time(), 1000)
+
+    def test_standard_settings(self):
+        sound_device = SoundDevice()
+
+        self.assertEqual(sound_device.added_delay, "0")
+        self.assertEqual(sound_device.channels, "2")
+        self.assertEqual(sound_device.frame_rate, "44100")
+        self.assertEqual(sound_device.buffer_size, 1024)
+        self.assertEqual(sound_device.factor, 10)
