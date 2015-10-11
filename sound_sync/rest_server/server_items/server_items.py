@@ -47,12 +47,15 @@ class Channel(JSONPickleable):
 class ChannelItem(Channel, SoundDevice):
     """
     Data structure for channels handled by the server (with a added background process and sound information)
+    Note: ClientPrograms (as the sender or the listener) use only the Channel datastructure, not the ChannelClient
+    as they add a SoundDevice by themselves and do not need the handler process
     """
     def __init__(self, item_hash, request):
         Channel.__init__(self, item_hash, request)
         SoundDevice.__init__(self)
 
         self.handler_port = get_free_port()
+        self.start_time = datetime.datetime.now()
 
         #: The handler process
         self._process = None

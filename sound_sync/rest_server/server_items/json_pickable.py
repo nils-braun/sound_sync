@@ -18,6 +18,13 @@ class JSONPickleable:
 
     @staticmethod
     def fill_with_json(instance, json_dict):
-        for parameter_name in vars(instance):
-            if parameter_name in json_dict:
-                setattr(instance, parameter_name, json_dict[parameter_name])
+        """
+        Fill a non-empty object with the information provided in the dict and set all attributes in the instance
+        to their corresponding values in the dict.
+        :param instance: A non-zero instance of an arbitrary object
+        :param json_dict: A dictionary with keys with the same names as the attributes of the instance
+        """
+        if instance:
+            for parameter_name in vars(instance):
+                if parameter_name in json_dict:
+                    setattr(instance, parameter_name, json_dict[parameter_name])

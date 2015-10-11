@@ -24,3 +24,8 @@ class TestJSONPickleable(TestCase):
         self.assertEqual(test_object.a, "A")
         self.assertEqual(test_object.b, "B")
         self.assertEqual(test_object.c, None)
+
+    def test_do_not_fill_empty_objects(self):
+
+        json_dict = {"a": "A", "b": "B", "d": "D"}
+        JSONPickleable.fill_with_json(None, json_dict)

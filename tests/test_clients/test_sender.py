@@ -32,6 +32,7 @@ class TestSender(TestCase):
         sender.http_client = MagicMock()
 
         sender.remove_channel_from_server(sender.channel_hash)
+        # noinspection PyUnresolvedReferences
         sender.http_client.fetch.assert_called_with("http://ThisIsTheHost:16347/channels/delete/12345")
 
     @patch("sound_sync.clients.base.httpclient")
@@ -75,7 +76,6 @@ class TestSender(TestCase):
                                         {"8456":
                                             {"name": "",
                                              "channel_hash": "8456",
-                                             "start_time": "2015-08-24 22:23:49.928645",
                                              "description": "",
                                              "now_playing": "",
                                              "channels": "2",

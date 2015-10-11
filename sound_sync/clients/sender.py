@@ -1,18 +1,16 @@
 import urllib
 import argparse
 
-from tornado import httpclient
-
 from sound_sync.audio.pcm.record import PCMRecorder
-from sound_sync.clients.base import SoundSyncConnectedProgram
+from sound_sync.clients.base import SoundSyncConnector
 from sound_sync.rest_server.server_items.json_pickable import JSONPickleable
 from sound_sync.rest_server.server_items.server_items import Channel
 
 
-class Sender(Channel, SoundSyncConnectedProgram):
+class Sender(Channel, SoundSyncConnector):
     def __init__(self, host=None, manager_port=None):
         Channel.__init__(self)
-        SoundSyncConnectedProgram.__init__(self, host, manager_port)
+        SoundSyncConnector.__init__(self, host, manager_port)
 
         #: The recorder used for recording the sound data
         self.recorder = PCMRecorder()
@@ -24,6 +22,7 @@ class Sender(Channel, SoundSyncConnectedProgram):
         self.channel_hash = self.add_channel_to_server()
         self.get_settings()
         self.set_name_and_description_of_channel(self.name, self.description, self.channel_hash)
+
         self.recorder.initialize()
 
     def main_loop(self):
