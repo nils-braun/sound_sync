@@ -1,65 +1,17 @@
 import argparse
-
-from sound_sync.clients.base import SoundSyncConnector
-from sound_sync.rest_server.server_items.json_pickable import JSONPickleable
+from sound_sync.clients.base import BaseListener
 from sound_sync.audio.pcm.play import PCMPlay
-from sound_sync.rest_server.server_items.server_items import Client, Channel
+
+class ConsoleProgram:
+    def __init__(self):
+        pass
 
 
-class Listener(Client, SoundSyncConnector):
+class Listener(BaseListener, ConsoleProgram):
     def __init__(self, channel_hash=None, host=None, manager_port=None):
-        Client.__init__(self)
-        SoundSyncConnector.__init__(self, host, manager_port)
-
-        #: The channel hash of the channel we want to listen to
-        self.channel_hash = channel_hash
-
-        #: The recorder used for recording the sound data
+        BaseListener.__init__(self, channel_hash, host, manager_port)
+        ConsoleProgram.__init__(self)
         self.player = PCMPlay()
-
-        #: The channel we are listening to
-        self._connected_channel = None
-
-    def initialize(self):
-        if self.client_hash is not None:
-            return
-
-        self.client_hash = self.add_client_to_server()
-        self.get_settings()
-        self.set_name_of_client(self.name, self.client_hash)
-
-        self.player.initialize()
-
-    @property
-    def handler_string(self):
-        if self._connected_channel is None or self._connected_channel.handler_port is None:
-            raise ValueError()
-
-        return "http://" + str(self.host) + ":" + str(self._connected_channel.handler_port)
-
-    def main_loop(self):
-        if self.client_hash is None:
-            raise AssertionError("Listener needs to be initialized first")
-
-        # Receive as many packages as possible (to have a good starting point)
-
-        # Start the thread to put sound buffers in the audio queue
-
-        # Receive information from the buffer server if possible
-
-    def terminate(self):
-        if self.client_hash is None:
-            return
-
-        self.remove_client_from_server(self.client_hash)
-        self.client_hash = None
-
-    def get_settings(self):
-        channel_information = self.get_channel_information(self.channel_hash)
-
-        JSONPickleable.fill_with_json(self.player, channel_information)
-        self._connected_channel = Channel()
-        JSONPickleable.fill_with_json(self._connected_channel, channel_information)
 
 
 def main():
@@ -87,7 +39,6 @@ def main():
     args = parser.parse_args()
     listener = Listener(args.channel_hash, args.host, args.manager_port)
     listener.name = args.name
-    listener.description = args.description
     listener.initialize()
     try:
         listener.main_loop()
