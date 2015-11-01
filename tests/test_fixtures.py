@@ -3,8 +3,6 @@ from mock import patch, MagicMock
 from tornado.testing import AsyncHTTPTestCase
 from sound_sync.rest_server.server import RestServer
 
-__author__ = 'nils'
-
 
 class TimingTestCase(TestCase):
     def setUp(self):

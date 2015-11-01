@@ -33,15 +33,15 @@ class TestBufferSender(ServerTestCase):
 
         self.mocking_client.fetch = fetch_mock
 
-        http_client_patcher = patch("sound_sync.clients.base.httpclient")
+        http_client_patcher = patch("sound_sync.clients.connection.httpclient")
         http_client = http_client_patcher.start()
         http_client.HTTPClient = lambda: self.mocking_client
         self.addCleanup(http_client_patcher.stop)
 
     def init_sender(self):
         sender = Sender()
-        sender.host = "ThisIsTheHost"
-        sender.manager_port = 16347
+        sender.connection.host = "ThisIsTheHost"
+        sender.connection.manager_port = 16347
         sender.name = "TheName"
         sender.description = "TheDescription"
         return sender

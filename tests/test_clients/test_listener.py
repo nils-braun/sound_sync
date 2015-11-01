@@ -7,19 +7,19 @@ from tests.test_fixtures import TimingTestCase
 class TestListener(TimingTestCase):
     def init_listener(self):
         listener = Listener()
-        listener.host = "ThisIsTheHost"
-        listener.manager_port = 16347
+        listener.connection.host = "ThisIsTheHost"
+        listener.connection.manager_port = 16347
         listener.name = "TheName"
         listener.description = "TheDescription"
         return listener
 
     def test_manager_string(self):
         listener = self.init_listener()
-        self.assertEqual(listener.manager_string, "http://ThisIsTheHost:16347")
+        self.assertEqual(listener.connection.manager_string, "http://ThisIsTheHost:16347")
 
     def test_handler_string(self):
         listener = Listener()
-        listener.host = "ThisIsTheHost"
+        listener.connection.host = "ThisIsTheHost"
         self.assertRaises(ValueError, getattr, listener, "handler_string")
 
         listener._connected_channel = MagicMock()
@@ -31,19 +31,19 @@ class TestListener(TimingTestCase):
         listener = self.init_listener()
         listener.client_hash = "12345"
 
-        listener.http_client = MagicMock()
+        listener.connection.http_client = MagicMock()
 
-        listener.remove_client_from_server(listener.client_hash)
+        listener.connection.remove_client_from_server(listener.client_hash)
         # noinspection PyUnresolvedReferences
-        listener.http_client.fetch.assert_called_with("http://ThisIsTheHost:16347/clients/delete/12345")
+        listener.connection.http_client.fetch.assert_called_with("http://ThisIsTheHost:16347/clients/delete/12345")
 
-    @patch("sound_sync.clients.base.httpclient")
+    @patch("sound_sync.clients.connection.httpclient")
     def test_terminate(self, http_client_patch):
         http_client_patch.HTTPClient = lambda: 4734
         http_client_patch.HTTPError = AssertionError
 
         listener = self.init_listener()
-        listener.remove_client_from_server = MagicMock()
+        listener.connection.remove_client_from_server = MagicMock()
 
         try:
             listener.terminate()
@@ -51,13 +51,13 @@ class TestListener(TimingTestCase):
             self.fail()
 
         listener.client_hash = "896"
-        listener.remove_client_from_server = MagicMock()
+        listener.connection.remove_client_from_server = MagicMock()
 
         listener.terminate()
         # noinspection PyUnresolvedReferences
-        listener.remove_client_from_server.assert_called_with("896")
+        listener.connection.remove_client_from_server.assert_called_with("896")
 
-    @patch("sound_sync.clients.base.httpclient")
+    @patch("sound_sync.clients.connection.httpclient")
     def test_initialize(self, http_client_patch):
 
         class MockResponse:
@@ -137,7 +137,7 @@ class TestListener(TimingTestCase):
         listener.client_hash = "8364"
         listener.initialize()
 
-    @patch("sound_sync.clients.base.httpclient")
+    @patch("sound_sync.clients.connection.httpclient")
     def test_main_loop(self, http_client_patch):
         mocking_client = MagicMock()
         http_client_patch.HTTPClient = lambda: mocking_client
