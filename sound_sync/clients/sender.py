@@ -1,60 +1,12 @@
-import urllib
 import argparse
-
+from sound_sync.clients.base import BaseSender
 from sound_sync.audio.pcm.record import PCMRecorder
-from sound_sync.clients.base import SoundSyncConnector
-from sound_sync.rest_server.server_items.json_pickable import JSONPickleable
-from sound_sync.rest_server.server_items.server_items import Channel
 
 
-class Sender(Channel, SoundSyncConnector):
+class Sender(BaseSender):
     def __init__(self, host=None, manager_port=None):
-        Channel.__init__(self)
-        SoundSyncConnector.__init__(self, host, manager_port)
-
-        #: The recorder used for recording the sound data
+        BaseSender.__init__(self, host, manager_port)
         self.recorder = PCMRecorder()
-
-    def initialize(self):
-        if self.channel_hash is not None:
-            return
-
-        self.channel_hash = self.add_channel_to_server()
-        self.get_settings()
-        self.set_name_and_description_of_channel(self.name, self.description, self.channel_hash)
-
-        self.recorder.initialize()
-
-    def main_loop(self):
-        if self.channel_hash is None:
-            raise AssertionError("Sender needs to be initialized first")
-
-        while True:
-            sound_buffer, length = self.recorder.get()
-            parameters = {"buffer": sound_buffer}
-            body = urllib.urlencode(parameters)
-            self.http_client.fetch(self.handler_string + '/add',
-                                   method="POST", body=body)
-
-    def terminate(self):
-        if self.channel_hash is None:
-            return
-
-        self.remove_channel_from_server(self.channel_hash)
-        self.channel_hash = None
-
-    def get_settings(self):
-        channel_information = self.get_channel_information(self.channel_hash)
-
-        JSONPickleable.fill_with_json(self.recorder, channel_information)
-        self.handler_port = channel_information["handler_port"]
-
-    @property
-    def handler_string(self):
-        if self.handler_port is None:
-            raise ValueError()
-
-        return "http://" + str(self.host) + ":" + str(self.handler_port)
 
 
 def main():
