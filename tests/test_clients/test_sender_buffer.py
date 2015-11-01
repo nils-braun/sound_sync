@@ -3,7 +3,7 @@ import time
 from tornado import httpclient
 from sound_sync.clients.sender import Sender
 from mock.mock import MagicMock, patch
-from tests.test_server.server_test_case import ServerTestCase
+from tests.test_fixtures import ServerTestCase
 
 
 class TestBufferSender(ServerTestCase):

@@ -1,4 +1,7 @@
 import argparse
+import time
+import datetime
+from sound_sync.timing.waitForTimeProcess import Timer
 
 from sound_sync.clients.base import SoundSyncConnector
 from sound_sync.rest_server.server_items.json_pickable import JSONPickleable
@@ -44,8 +47,24 @@ class Listener(Client, SoundSyncConnector):
         # Receive as many packages as possible (to have a good starting point)
 
         # Start the thread to put sound buffers in the audio queue
+        time_thread = Timer()
 
         # Receive information from the buffer server if possible
+
+    def calculate_next_starting_time_and_buffer(self):
+        current_time = datetime.datetime.now()
+        start_time = self.player.start_time
+
+        waiting_time = self.player.get_waiting_time()
+
+        if current_time < start_time:
+            raise ValueError("Can not use start times in the future")
+
+        time_delta = current_time - start_time
+        number_of_passed_clocks = int(time_delta.total_seconds() % waiting_time)
+        next_time = start_time + number_of_passed_clocks * waiting_time
+
+        return next_time, number_of_passed_clocks
 
     def terminate(self):
         if self.client_hash is None:

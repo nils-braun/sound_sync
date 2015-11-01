@@ -1,3 +1,4 @@
+from datetime import datetime
 from multiprocessing import Process
 import time
 
@@ -11,7 +12,7 @@ class Timer(Process):
         """
         Initialize the timer process
         :param start_time_to_wait_for: the time in seconds after the Epoch
-        :param time_interval: the time in seconds to add aftter each call
+        :param time_interval: the time in seconds to add after each call
         :param target_function: the function to call. Can not return anything.
         """
         self.start_time_to_wait_for = start_time_to_wait_for
@@ -25,7 +26,7 @@ class Timer(Process):
         start_time_to_wait_for = self.start_time_to_wait_for
         time_interval = self.time_interval
 
-        current_time = time.time()
+        current_time = datetime.now()
 
         if current_time > start_time_to_wait_for:
             raise ValueError("Can not handle a start time in the past.")
@@ -33,11 +34,11 @@ class Timer(Process):
         time_to_wait_for = start_time_to_wait_for
 
         while self._should_run:
-            current_time = time.time()
+            current_time = datetime.now()
             if current_time >= time_to_wait_for:
                 self.target_function()
                 time_to_wait_for += time_interval
-                current_time = time.time()
+                current_time = datetime.now()
 
                 if current_time > time_to_wait_for:
                     raise RuntimeError("Called function lasted longer than a time interval.")

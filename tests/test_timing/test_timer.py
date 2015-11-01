@@ -1,28 +1,12 @@
-from unittest import TestCase
-from mock import patch, MagicMock
+from mock import MagicMock
 
 from sound_sync.timing.waitForTimeProcess import Timer
+from tests.test_fixtures import TimingTestCase
 
 
-
-class TestTimer(TestCase):
-    def setUp(self):
-        self.time = 0
-
-        patcher = patch("sound_sync.timing.waitForTimeProcess.time")
-        self.time = patcher.start()
-        self.addCleanup(patcher.stop)
-
-        self.time_mockup = MagicMock(side_effect=xrange(20))
-
-    def get_current_time(self):
-        current_time_list = list(self.time_mockup.side_effect)
-        current_time = current_time_list[0] - 1
-        self.time_mockup.side_effect = current_time_list
-        return current_time
-
+class TestTimer(TimingTestCase):
     def test_fail_for_past_values(self):
-        self.time.time = MagicMock(return_value=1E11)
+        self.datetime_mock.datetime.now = MagicMock(return_value=1E10)
 
         start_time = 1E10
         time_interval = 10
@@ -31,7 +15,7 @@ class TestTimer(TestCase):
         self.assertRaises(ValueError, timer.run)
 
     def test_run(self):
-        self.time.time = self.time_mockup
+        self.datetime_mock.now = self.time_list_mock_function
 
         start_time = 2
         time_interval = 4
@@ -56,13 +40,13 @@ class TestTimer(TestCase):
             elif current_time in [4, 8]:
                 self.assertEqual(time_delta, 1)
 
-        self.time.sleep = sleep_function
+        self.time_mock.sleep = sleep_function
 
         timer.run()
 
     def test_too_long_function(self):
 
-        self.time.time = self.time_mockup
+        self.datetime_mock.now = self.time_list_mock_function
 
         start_time = 4
         time_interval = 2
@@ -70,7 +54,7 @@ class TestTimer(TestCase):
 
         def callable_function():
             self.assertEqual(self.get_current_time(), 4)
-            self.time_mockup.side_effect = [7]
+            self.time_list_mock_function.side_effect = [7]
 
         timer.target_function = callable_function
 
@@ -85,8 +69,7 @@ class TestTimer(TestCase):
             elif current_time in [3]:
                 self.assertEqual(time_delta, 0.5)
 
-
-        self.time.sleep = sleep_function
+        self.time_mock.sleep = sleep_function
 
         self.assertRaises(RuntimeError, timer.run)
 

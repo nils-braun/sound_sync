@@ -1,6 +1,6 @@
 import urllib
 
-from tests.test_server.server_test_case import ServerTestCase
+from tests.test_fixtures import ServerTestCase
 
 
 class TestRestServer(ServerTestCase):

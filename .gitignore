@@ -48,3 +48,6 @@ cover/*
 MANIFEST
 buffer_server/build
 externals
+
+
+.coverage*
