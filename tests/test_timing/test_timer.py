@@ -5,14 +5,20 @@ from tests.test_fixtures import TimingTestCase
 
 
 class TestTimer(TimingTestCase):
-    def test_fail_for_past_values(self):
-        self.datetime_mock.datetime.now = MagicMock(return_value=1E10)
+    def test_fail_or_not_fail_for_past_values(self):
+        self.time_mock.sleep = None
 
         start_time = 1E10
         time_interval = 10
         timer = Timer(start_time, time_interval, None)
 
-        self.assertRaises(ValueError, timer.run)
+        # Call the sleep function, because the time is in the future
+        self.datetime_mock.now = MagicMock(return_value=1E8)
+        self.assertRaisesRegexp(TypeError, "'NoneType' object is not callable", timer.run)
+
+        # Fail, because the time is in the past
+        self.datetime_mock.now = MagicMock(return_value=1E11)
+        self.assertRaisesRegexp(ValueError, "Can not handle a start time in the past.", timer.run)
 
     def test_run(self):
         self.datetime_mock.now = self.time_list_mock_function
