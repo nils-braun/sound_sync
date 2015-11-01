@@ -1,6 +1,5 @@
-from datetime import datetime
 from multiprocessing import Process
-import time
+from sound_sync.timing.time_utils import get_current_date, sleep
 
 
 class Timer(Process):
@@ -26,7 +25,7 @@ class Timer(Process):
         start_time_to_wait_for = self.start_time_to_wait_for
         time_interval = self.time_interval
 
-        current_time = datetime.now()
+        current_time = get_current_date()
 
         if current_time > start_time_to_wait_for:
             raise ValueError("Can not handle a start time in the past.")
@@ -34,17 +33,17 @@ class Timer(Process):
         time_to_wait_for = start_time_to_wait_for
 
         while self._should_run:
-            current_time = datetime.now()
+            current_time = get_current_date()
             if current_time >= time_to_wait_for:
                 self.target_function()
                 time_to_wait_for += time_interval
-                current_time = datetime.now()
+                current_time = get_current_date()
 
                 if current_time > time_to_wait_for:
                     raise RuntimeError("Called function lasted longer than a time interval.")
 
             time_delta = time_to_wait_for - current_time
-            time.sleep(time_delta / 2.0)
+            sleep(time_delta / 2.0)
 
     def stop(self):
         self._should_run = False

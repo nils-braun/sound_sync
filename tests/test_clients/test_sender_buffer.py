@@ -1,8 +1,8 @@
 import json
-import time
 from tornado import httpclient
 from sound_sync.clients.sender import Sender
 from mock.mock import MagicMock, patch
+from sound_sync.timing.time_utils import sleep
 from tests.test_fixtures import ServerTestCase
 
 
@@ -65,7 +65,7 @@ class TestBufferSender(ServerTestCase):
 
         self.assertNotEqual(sender.handler_port, sender2.handler_port)
         # Wait until buffer process has started!
-        time.sleep(0.3)
+        sleep(0.3)
 
         try:
             sender.main_loop()

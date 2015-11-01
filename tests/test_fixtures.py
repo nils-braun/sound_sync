@@ -10,11 +10,11 @@ class TimingTestCase(TestCase):
     def setUp(self):
         self.time_mock = 0
 
-        patcher = patch("sound_sync.timing.waitForTimeProcess.datetime")
+        patcher = patch("sound_sync.timing.time_utils.datetime")
         self.datetime_mock = patcher.start()
         self.addCleanup(patcher.stop)
 
-        patcher = patch("sound_sync.timing.waitForTimeProcess.time")
+        patcher = patch("sound_sync.timing.time_utils.time")
         self.time_mock = patcher.start()
         self.addCleanup(patcher.stop)
 

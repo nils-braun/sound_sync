@@ -1,9 +1,11 @@
-import datetime
 import json
 import urllib
+
 from tornado import httpclient
+
 from sound_sync.rest_server.server_items.json_pickable import JSONPickleable
 from sound_sync.rest_server.server_items.server_items import Client, Channel
+from sound_sync.timing.time_utils import get_current_date, waiting_time_to_datetime
 
 
 class SoundSyncConnector:
@@ -116,7 +118,7 @@ class BaseListener(Client, SoundSyncConnector):
         # Receive information from the buffer server if possible
 
     def calculate_next_starting_time_and_buffer(self):
-        current_time = datetime.datetime.now()
+        current_time = get_current_date()
         start_time = self.player.start_time
 
         waiting_time = self.player.get_waiting_time()
@@ -126,7 +128,7 @@ class BaseListener(Client, SoundSyncConnector):
 
         time_delta = current_time - start_time
         number_of_passed_clocks = int(time_delta.total_seconds() % waiting_time)
-        next_time = start_time + number_of_passed_clocks * waiting_time
+        next_time = start_time + waiting_time_to_datetime(number_of_passed_clocks * waiting_time)
 
         return next_time, number_of_passed_clocks
 

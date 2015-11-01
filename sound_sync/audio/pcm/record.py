@@ -2,9 +2,8 @@ from sound_sync.audio.pcm.device import PCMDevice
 from sound_sync.audio.sound_device import SoundDevice
 
 
-class PCMRecorder(PCMDevice, SoundDevice):
+class PCMRecorder(PCMDevice):
     def __init__(self):
-        SoundDevice.__init__(self)
         PCMDevice.__init__(self)
 
     def initialize(self):

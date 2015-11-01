@@ -1,10 +1,10 @@
 import atexit
-import datetime
 import socket
-from sound_sync.audio.sound_device import SoundDevice
 
+from sound_sync.audio.sound_device import SoundDevice
 from sound_sync.rest_server.server_items.buffer_server_process import BufferServerProcess
 from sound_sync.rest_server.server_items.json_pickable import JSONPickleable
+from sound_sync.timing.time_utils import get_current_date
 
 
 def get_free_port():
@@ -54,8 +54,9 @@ class ChannelItem(Channel, SoundDevice):
         Channel.__init__(self, item_hash, request)
         SoundDevice.__init__(self)
 
+        # Set handler port and start time to a defined value when initializing this on the server.
         self.handler_port = get_free_port()
-        self.start_time = datetime.datetime.now()
+        self.start_time = get_current_date()
 
         #: The handler process
         self._process = None
@@ -98,7 +99,7 @@ class ClientItem(Client):
         Client.__init__(self, item_hash, request)
 
         #: The time of first login of the client
-        self.login_time = datetime.datetime.now()
+        self.login_time = get_current_date()
 
         #: The ip address of the client
         self.ip_address = request.headers["Host"]

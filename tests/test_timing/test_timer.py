@@ -13,15 +13,15 @@ class TestTimer(TimingTestCase):
         timer = Timer(start_time, time_interval, None)
 
         # Call the sleep function, because the time is in the future
-        self.datetime_mock.now = MagicMock(return_value=1E8)
+        self.datetime_mock.datetime.now = MagicMock(return_value=1E8)
         self.assertRaisesRegexp(TypeError, "'NoneType' object is not callable", timer.run)
 
         # Fail, because the time is in the past
-        self.datetime_mock.now = MagicMock(return_value=1E11)
+        self.datetime_mock.datetime.now = MagicMock(return_value=1E11)
         self.assertRaisesRegexp(ValueError, "Can not handle a start time in the past.", timer.run)
 
     def test_run(self):
-        self.datetime_mock.now = self.time_list_mock_function
+        self.datetime_mock.datetime.now = self.time_list_mock_function
 
         start_time = 2
         time_interval = 4
@@ -52,7 +52,7 @@ class TestTimer(TimingTestCase):
 
     def test_too_long_function(self):
 
-        self.datetime_mock.now = self.time_list_mock_function
+        self.datetime_mock.datetime.now = self.time_list_mock_function
 
         start_time = 4
         time_interval = 2

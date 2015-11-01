@@ -1,6 +1,8 @@
 import json
 import socket
 import urllib
+from mock import patch
+from sound_sync.timing.time_utils import to_datetime
 
 from tests.test_fixtures import ServerTestCase
 
@@ -34,7 +36,13 @@ class TestChannelListFromServer(ServerTestCase):
         self.assertEqual(added_channel["description"], "This is a description. It <strong>even</strong>" +
                          "have some html tags.")
 
-    def test_add_channels(self):
+    @patch("sound_sync.timing.time_utils.datetime")
+    def test_add_channels(self, time_mock):
+
+        import datetime
+        time_mock.datetime.now = lambda: datetime.datetime(1, 2, 3, 4, 5)
+        time_mock.datetime.strptime = datetime.datetime.strptime
+
         response = self.fetch('/channels/add')
         item_hash = self.assertResponse(response)
 
@@ -48,7 +56,9 @@ class TestChannelListFromServer(ServerTestCase):
         added_channel = response_dict[item_hash]
 
         self.assertEqual(type(added_channel), dict)
+
         self.assertIn("start_time", added_channel)
+        self.assertEqual(to_datetime(added_channel["start_time"]), datetime.datetime(1, 2, 3, 4, 5))
 
         self.assertIn("name", added_channel)
         self.assertEqual(added_channel["name"], "")
@@ -81,16 +91,15 @@ class TestChannelListFromServer(ServerTestCase):
         self.assertEqual(float(added_channel["factor"]), 10)
 
         self.assertIn("handler_port", added_channel)
-
-        self.assertIn("full_buffer_size", added_channel)
-        self.assertEqual(float(added_channel["full_buffer_size"]), 10)
-
         # Test if the handler_port is really free
         s = socket.socket()
         try:
             s.bind(("", int(added_channel["handler_port"])))
         except socket.error:
             self.fail()
+
+        self.assertIn("full_buffer_size", added_channel)
+        self.assertEqual(float(added_channel["full_buffer_size"]), 10)
 
         self.assertEqual(len(added_channel), 13)
 

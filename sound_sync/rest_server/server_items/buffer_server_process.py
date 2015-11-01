@@ -1,5 +1,4 @@
 from multiprocessing import Process
-import time
 
 
 class BufferServerProcess(Process):
@@ -13,5 +12,5 @@ class BufferServerProcess(Process):
             from sound_sync.buffer_server import BufferServer
         except ImportError:
             from buffer_server import BufferServer
-        self.buffer_server = BufferServer(self.port_number)
-        self.buffer_server.start()
+
+        BufferServer(self.port_number).start()
