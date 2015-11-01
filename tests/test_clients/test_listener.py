@@ -1,10 +1,10 @@
-from unittest import TestCase
 from sound_sync.audio.sound_device import SoundDevice
 from sound_sync.clients.listener import Listener
 from mock.mock import MagicMock, patch
+from tests.test_fixtures import TimingTestCase
 
 
-class TestListener(TestCase):
+class TestListener(TimingTestCase):
     def init_listener(self):
         listener = Listener()
         listener.host = "ThisIsTheHost"
@@ -139,34 +139,54 @@ class TestListener(TestCase):
 
     @patch("sound_sync.clients.base.httpclient")
     def test_main_loop(self, http_client_patch):
-         mocking_client = MagicMock()
-         http_client_patch.HTTPClient = lambda: mocking_client
+        mocking_client = MagicMock()
+        http_client_patch.HTTPClient = lambda: mocking_client
 
-         listener = self.init_listener()
+        listener = self.init_listener()
 
-         self.assertRaises(AssertionError, listener.main_loop)
-    #
-    #     sender.channel_hash = "345"
-    #     sender.handler_port = 547647
-    #
-    #     self.number_intervals = 0
-    #
-    #     def mock_get():
-    #         if self.number_intervals < 5:
-    #             self.number_intervals += 1
-    #             return "Buffer", 100
-    #         else:
-    #             raise NotImplementedError
-    #
-    #     sender.recorder.get = mock_get
-    #
-    #
-    #     try:
-    #         sender.main_loop()
-    #     except NotImplementedError:
-    #         # This is intended
-    #         pass
-    #
-    #     mocking_client.fetch.assert_called_with('http://ThisIsTheHost:547647/add',
-    #                                             method="POST", body="buffer=Buffer")
+        self.assertRaises(AssertionError, listener.main_loop)
+        #
+        #     sender.channel_hash = "345"
+        #     sender.handler_port = 547647
+        #
+        #     self.number_intervals = 0
+        #
+        #     def mock_get():
+        #         if self.number_intervals < 5:
+        #             self.number_intervals += 1
+        #             return "Buffer", 100
+        #         else:
+        #             raise NotImplementedError
+        #
+        #     sender.recorder.get = mock_get
+        #
+        #
+        #     try:
+        #         sender.main_loop()
+        #     except NotImplementedError:
+        #         # This is intended
+        #         pass
+        #
+        #     mocking_client.fetch.assert_called_with('http://ThisIsTheHost:547647/add',
+        #                                             method="POST", body="buffer=Buffer")
 
+    def test_calculate_next_starting_time_and_buffer(self):
+        import datetime
+        self.datetime_mock.timedelta = datetime.timedelta
+
+        listener = self.init_listener()
+
+        listener.player.start_time = datetime.datetime(2015, 11, 11, 11, 11, 11, 1000)
+        listener.player.factor = 1
+        listener.player.frame_rate = 1000000
+        listener.player.buffer_size = 102
+
+        self.datetime_mock.datetime.now = MagicMock(return_value=datetime.datetime(2015, 11, 11, 11, 11, 11, 500))
+        self.assertRaisesRegexp(ValueError, "Can not use start times in the future",
+                                listener.calculate_next_starting_time_and_buffer)
+
+        self.datetime_mock.datetime.now = MagicMock(return_value=datetime.datetime(2015, 11, 11, 11, 11, 11, 2000))
+        next_time, number_of_passed_clocks = listener.calculate_next_starting_time_and_buffer()
+
+        self.assertEqual(next_time, datetime.datetime(2015, 11, 11, 11, 11, 11, 2020))
+        self.assertEqual(number_of_passed_clocks, 10)

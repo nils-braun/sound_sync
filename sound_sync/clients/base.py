@@ -127,10 +127,12 @@ class BaseListener(Client, SoundSyncConnector):
             raise ValueError("Can not use start times in the future")
 
         time_delta = current_time - start_time
-        number_of_passed_clocks = int(time_delta.total_seconds() % waiting_time)
-        next_time = start_time + waiting_time_to_datetime(number_of_passed_clocks * waiting_time)
+        print time_delta.total_seconds() / waiting_time
+        number_of_passed_clocks = int(time_delta.total_seconds() / waiting_time)
+        number_of_next_clock = number_of_passed_clocks + 1
+        next_time = start_time + waiting_time_to_datetime(number_of_next_clock * waiting_time)
 
-        return next_time, number_of_passed_clocks
+        return next_time, number_of_next_clock
 
 
 class BaseSender(Channel, SoundSyncConnector):
