@@ -1,7 +1,7 @@
 from mock import MagicMock
 
 from sound_sync.timing.waitForTimeProcess import Timer
-from tests.test_fixtures import TimingTestCase
+from tests.fixtures import TimingTestCase
 
 
 class TestTimer(TimingTestCase):
