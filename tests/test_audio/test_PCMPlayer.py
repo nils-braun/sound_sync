@@ -1,36 +1,22 @@
-from unittest import TestCase
+from mock.mock import MagicMock
+
 from sound_sync.audio.pcm.play import PCMPlay
-from mock.mock import patch, MagicMock
+from tests.fixtures import SoundTestCase
 
 
-class TestPCMPlayer(TestCase):
-    def setUp(self):
-        patcher = patch("sound_sync.audio.pcm.device.alsaaudio")
-        self.alsaaudio = patcher.start()
-        self.addCleanup(patcher.stop)
-
-    def init_sound_player(self):
-        player = PCMPlay()
-        self.alsaaudio.PCM_PLAYBACK = 372435
-        self.alsaaudio.PCM_FORMAT_S16_LE = 21654
-        self.alsaaudio.PCM_NONBLOCK = 21354
-        player.buffer_size = 2
-        player.frame_rate = 3
-        player.channels = 4
-        player.factor = 5
-        player.initialize()
-        return player
-
+class TestPCMPlayer(SoundTestCase):
     def test_initialize(self):
         player = self.init_sound_player()
 
-        self.alsaaudio.PCM.assert_called_with(device="default", type=372435, mode=21354)
+        self.alsaaudio.PCM.assert_called_with(device="default", type=self.PCM_PLAYBACK,
+                                              mode=self.PCM_NONBLOCK)
 
-        player.pcm.setchannels.assert_called_with(4)
-        player.pcm.setrate.assert_called_with(3)
-        player.pcm.setformat.assert_called_with(21654)
         player.pcm.setperiodsize.assert_called_with(2)
+        player.pcm.setrate.assert_called_with(3)
+        player.pcm.setchannels.assert_called_with(4)
+        player.pcm.setformat.assert_called_with(self.PCM_FORMAT_S16_LE)
 
+    def test_double_initialize(self):
         player = PCMPlay()
         player.pcm = 3
 
@@ -50,11 +36,12 @@ class TestPCMPlayer(TestCase):
 
     def test_put(self):
         player = PCMPlay()
-        self.assertRaises(ValueError, player.put, "Buffer")
+        self.assertRaisesRegexp(ValueError, "^Device needs to be initialized first$",
+                                player.put, "Buffer")
 
         player = self.init_sound_player()
         player.pcm.write = MagicMock()
 
-        player.put("This is a buffer"*5)
-
-        player.pcm.write.assert_called_with("This is a buffer"*5)
+        test_buffer = "This is a buffer" * 5
+        player.put(test_buffer)
+        player.pcm.write.assert_called_with(test_buffer)

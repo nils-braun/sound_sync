@@ -1,36 +1,19 @@
-from unittest import TestCase
 from sound_sync.audio.pcm.record import PCMRecorder
-from mock.mock import patch
+from tests.fixtures import SoundTestCase
 
 
-class TestPCMRecorder(TestCase):
-    def setUp(self):
-        patcher = patch("sound_sync.audio.pcm.device.alsaaudio")
-        self.alsaaudio = patcher.start()
-        self.addCleanup(patcher.stop)
-
-    def init_sound_recorder(self):
-        recorder = PCMRecorder()
-        self.alsaaudio.cards = lambda: ["TestCard", "Loopback", "Bla"]
-        self.alsaaudio.PCM_CAPTURE = 372435
-        self.alsaaudio.PCM_FORMAT_S16_LE = 21654
-        recorder.buffer_size = 2
-        recorder.frame_rate = 3
-        recorder.channels = 4
-        recorder.factor = 5
-        recorder.initialize()
-        return recorder
-
+class TestPCMRecorder(SoundTestCase):
     def test_initialize(self):
         recorder = self.init_sound_recorder()
 
-        self.alsaaudio.PCM.assert_called_with(type=372435, device="hw:Loopback,1,0")
+        self.alsaaudio.PCM.assert_called_with(type=self.PCM_CAPTURE, device="hw:Loopback,1,0")
 
-        recorder.pcm.setchannels.assert_called_with(4)
-        recorder.pcm.setrate.assert_called_with(3)
-        recorder.pcm.setformat.assert_called_with(21654)
         recorder.pcm.setperiodsize.assert_called_with(2)
+        recorder.pcm.setrate.assert_called_with(3)
+        recorder.pcm.setchannels.assert_called_with(4)
+        recorder.pcm.setformat.assert_called_with(self.PCM_FORMAT_S16_LE)
 
+    def test_double_initialize(self):
         recorder = PCMRecorder()
         recorder.pcm = 3
 
@@ -43,10 +26,7 @@ class TestPCMRecorder(TestCase):
         self.alsaaudio.cards.assert_called_with()
 
         self.alsaaudio.cards = lambda: ["TestCard", "Loopback", "Bla"]
-        try:
-            PCMRecorder.assert_loopback_device()
-        except ValueError:
-            self.fail()
+        PCMRecorder.assert_loopback_device()
 
     def test_terminate(self):
         recorder = PCMRecorder()
@@ -60,12 +40,17 @@ class TestPCMRecorder(TestCase):
 
     def test_get(self):
         recorder = PCMRecorder()
-        recorder.factor = 4
+        recorder.factor = 1
         self.assertRaises(ValueError, recorder.get)
 
         recorder = self.init_sound_recorder()
-        recorder.pcm.read = lambda: (8234234, "This is a buffer")  # length, buffer
+        test_buffer_length = 8234234
+        test_buffer = "This is a buffer"
+        test_factor = 6
 
+        recorder.factor = test_factor
+
+        recorder.pcm.read = lambda: (test_buffer_length, test_buffer)  # length, buffer
         sound_buffer, length = recorder.get()
-        self.assertEqual(sound_buffer, "This is a buffer"*5)
-        self.assertEqual(length, 8234234*5)
+        self.assertEqual(sound_buffer, test_buffer*test_factor)
+        self.assertEqual(length, test_buffer_length*test_factor)

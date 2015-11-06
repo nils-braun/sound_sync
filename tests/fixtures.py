@@ -1,6 +1,8 @@
 from unittest import TestCase
 from mock import patch, MagicMock
 from tornado.testing import AsyncHTTPTestCase
+from sound_sync.audio.pcm.play import PCMPlay
+from sound_sync.audio.pcm.record import PCMRecorder
 from sound_sync.rest_server.server import RestServer
 
 
@@ -39,3 +41,39 @@ class ServerTestCase(AsyncHTTPTestCase):
             self.assertEqual(response.body, content)
         else:
             return response.body
+
+
+class SoundTestCase(TestCase):
+    def setUp(self):
+        self.PCM_CAPTURE = 372435
+        self.PCM_NONBLOCK = 21354
+        self.PCM_PLAYBACK = 372435
+        self.PCM_FORMAT_S16_LE = 21654
+
+        patcher = patch("sound_sync.audio.pcm.device.alsaaudio")
+        self.alsaaudio = patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def init_sound_player(self):
+        player = PCMPlay()
+        self.alsaaudio.PCM_PLAYBACK = self.PCM_PLAYBACK
+        self.alsaaudio.PCM_FORMAT_S16_LE = self.PCM_FORMAT_S16_LE
+        self.alsaaudio.PCM_NONBLOCK = self.PCM_NONBLOCK
+        player.buffer_size = 2
+        player.frame_rate = 3
+        player.channels = 4
+        player.factor = 5
+        player.initialize()
+        return player
+
+    def init_sound_recorder(self):
+        recorder = PCMRecorder()
+        self.alsaaudio.cards = lambda: ["TestCard", "Loopback", "Bla"]
+        self.alsaaudio.PCM_CAPTURE = self.PCM_CAPTURE
+        self.alsaaudio.PCM_FORMAT_S16_LE = self.PCM_FORMAT_S16_LE
+        recorder.buffer_size = 2
+        recorder.frame_rate = 3
+        recorder.channels = 4
+        recorder.factor = 5
+        recorder.initialize()
+        return recorder
