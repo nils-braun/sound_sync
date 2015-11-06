@@ -37,9 +37,6 @@ class Channel(JSONPickleable):
         #: The item has of the channel in the channel list
         self.channel_hash = item_hash
 
-        #: The size of a full buffer before playing
-        self.full_buffer_size = 10
-
         #: The buffer_handler server we are handling
         self.handler_port = None
 

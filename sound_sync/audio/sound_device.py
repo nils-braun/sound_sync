@@ -9,9 +9,6 @@ class SoundDevice:
         #: The used frame rate
         self.frame_rate = "44100"
 
-        #: The used waiting time in milliseconds
-        self.waiting_time = "10"
-
         #: The added delay of the channel
         self.added_delay = "0"
 

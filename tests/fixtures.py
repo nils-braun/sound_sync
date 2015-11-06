@@ -5,6 +5,8 @@ from mock import patch, MagicMock
 from tornado.testing import AsyncHTTPTestCase
 from sound_sync.audio.pcm.play import PCMPlay
 from sound_sync.audio.pcm.record import PCMRecorder
+from sound_sync.clients.connection import SoundSyncConnection
+from sound_sync.clients.sender import Sender
 from sound_sync.rest_server.server import RestServer
 
 
@@ -50,9 +52,20 @@ class ServerTestCase(AsyncHTTPTestCase):
         response = self.fetch('/channels/get')
         return response
 
+    def get_channels(self):
+        response = self.get_channels_html()
+        response = self.assertResponse(response)
+        response_dict = json.loads(response)
+        return response_dict
+
     def add_channel_html(self):
         response = self.fetch('/channels/add')
         return response
+
+    def add_channel(self):
+        channel_html = self.add_channel_html()
+        channel_hash = self.assertResponse(channel_html)
+        return channel_hash
 
     def set_channel_html(self, body, item_hash):
         response = self.fetch('/channels/set/' + str(item_hash), method="POST", body=body)
@@ -66,6 +79,12 @@ class ServerTestCase(AsyncHTTPTestCase):
         response = self.fetch('/clients/get')
         return response
 
+    def get_clients(self):
+        response = self.get_clients_html()
+        response = self.assertResponse(response)
+        response_dict = json.loads(response)
+        return response_dict
+
     def set_client_html(self, body, item_hash):
         response = self.fetch('/clients/set/' + str(item_hash), method="POST", body=body)
         return response
@@ -74,21 +93,15 @@ class ServerTestCase(AsyncHTTPTestCase):
         response = self.fetch('/clients/add')
         return response
 
+    def add_client(self):
+        client_html = self.add_client_html()
+        client_hash = self.assertResponse(client_html)
+        return client_hash
+
     def delete_client_html(self, item_hash):
         response = self.fetch('/clients/delete/' + item_hash)
         return response
 
-    def get_channels(self):
-        response = self.get_channels_html()
-        response = self.assertResponse(response)
-        response_dict = json.loads(response)
-        return response_dict
-
-    def get_clients(self):
-        response = self.get_clients_html()
-        response = self.assertResponse(response)
-        response_dict = json.loads(response)
-        return response_dict
 
 
 class SoundTestCase(TestCase):
@@ -125,3 +138,54 @@ class SoundTestCase(TestCase):
         recorder.factor = 5
         recorder.initialize()
         return recorder
+
+
+class SenderTestCase(TestCase):
+    def setUp(self):
+        self.number_of_stored_buffers = 5
+        self.test_name = "TheName"
+        self.test_port = 16347
+        self.test_host = "ThisIsTheHost"
+        self.test_description = "TheDescription"
+        self.test_buffer = "Buffer"
+        self.test_buffer_length = 100
+
+    def init_sender(self):
+        sender = Sender()
+        sender.connection.host = self.test_host
+        sender.connection.manager_port = self.test_port
+        sender.name = self.test_name
+        sender.description = self.test_description
+
+        # Ensure we will not run into an infinite loop
+        sender.recorder.get = ErrorAfter(self.number_of_stored_buffers, (self.test_buffer, self.test_buffer_length))
+        return sender
+
+    def init_own_sender(self):
+        sender = self.init_sender()
+        sender.connection.http_client = self
+        sender.connection.manager_string = ""
+
+        connection = SoundSyncConnection()
+        connection.http_client = self
+        connection.manager_string = ""
+
+        return sender, connection
+
+
+class ErrorAfter:
+    def __init__(self, limit, return_before=None):
+        self.limit = limit
+        self.calls = 0
+        self.return_before = return_before
+
+    def __call__(self):
+        self.calls += 1
+        if self.calls > self.limit:
+            raise CallableExhausted
+
+        return self.return_before
+
+
+class CallableExhausted(Exception):
+    pass

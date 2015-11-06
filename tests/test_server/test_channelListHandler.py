@@ -79,9 +79,6 @@ class TestChannelListFromServer(ServerTestCase):
         self.assertIn("frame_rate", added_channel)
         self.assertEqual(int(added_channel["frame_rate"]), 44100)
 
-        self.assertIn("waiting_time", added_channel)
-        self.assertEqual(int(added_channel["waiting_time"]), 10)
-
         self.assertIn("buffer_size", added_channel)
         self.assertEqual(int(added_channel["buffer_size"]), 1024)
 
@@ -99,10 +96,7 @@ class TestChannelListFromServer(ServerTestCase):
         except socket.error:
             self.fail()
 
-        self.assertIn("full_buffer_size", added_channel)
-        self.assertEqual(float(added_channel["full_buffer_size"]), 10)
-
-        self.assertEqual(len(added_channel), 13)
+        self.assertEqual(len(added_channel), 11)
 
         response = self.add_channel_html()
         item_hash = self.assertResponse(response)
