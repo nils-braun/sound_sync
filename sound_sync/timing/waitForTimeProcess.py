@@ -43,7 +43,7 @@ class Timer(Process):
                     raise RuntimeError("Called function lasted longer than a time interval.")
 
             time_delta = time_to_wait_for - current_time
-            sleep(time_delta / 2.0)
+            sleep(time_delta.total_seconds() / 2.0)
 
     def stop(self):
         self._should_run = False

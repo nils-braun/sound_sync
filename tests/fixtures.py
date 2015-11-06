@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from unittest import TestCase
 from mock import patch, MagicMock
 from tornado.testing import AsyncHTTPTestCase
@@ -18,11 +19,13 @@ class TimingTestCase(TestCase):
         self.time_mock = patcher.start()
         self.addCleanup(patcher.stop)
 
-        self.time_list_mock_function = MagicMock(side_effect=xrange(20))
+        self.datelist = [datetime(2015, 11, 6, 0, 0, i) for i in xrange(20)]
+
+        self.time_list_mock_function = MagicMock(side_effect=self.datelist)
 
     def get_current_time(self):
         current_time_list = list(self.time_list_mock_function.side_effect)
-        current_time = current_time_list[0] - 1
+        current_time = current_time_list[0] + timedelta(seconds=-1)
         self.time_list_mock_function.side_effect = current_time_list
         return current_time
 
