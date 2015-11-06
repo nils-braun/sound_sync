@@ -1,41 +1,43 @@
 import json
 import urllib
 
-from tests.test_fixtures import ServerTestCase
+from tests.fixtures import ServerTestCase
 
 
 class TestClientListFromServer(ServerTestCase):
     def test_get_clients(self):
-        response = self.fetch('/clients/get')
+        response = self.get_clients_html()
         self.assertResponse(response, "{}")
 
     def test_set_clients_properties(self):
-        response = self.fetch('/clients/add')
+        response = self.add_client_html()
         item_hash = self.assertResponse(response)
 
-        parameters = {"name": "My New Name", "ip_address": "111.111.222.333"}
+        test_name = "My New Name"
+        test_ip_address = "111.111.222.333"
+        parameters = {"name": test_name, "ip_address": test_ip_address}
         body = urllib.urlencode(parameters)
 
-        response = self.fetch('/clients/set/' + str(item_hash), method="POST", body=body)
+        response = self.set_client_html(body, item_hash)
         self.assertResponse(response, "")
 
-        response = self.fetch('/clients/set/' + str(item_hash + "1"), method="POST", body=body)
+        response = self.set_client_html(body, item_hash + "1")
         self.assertError(response, 502)
 
-        response = self.fetch('/clients/get')
+        response = self.get_clients_html()
         response = self.assertResponse(response)
         response_dict = json.loads(response)
         added_channel = response_dict[item_hash]
 
-        self.assertEqual(added_channel["name"], "My New Name")
+        self.assertEqual(added_channel["name"], test_name)
         self.assertEqual(added_channel["client_hash"], item_hash)
-        self.assertEqual(added_channel["ip_address"], "111.111.222.333")
+        self.assertEqual(added_channel["ip_address"], test_ip_address)
 
     def test_add_clients(self):
-        response = self.fetch('/clients/add')
+        response = self.add_client_html()
         item_hash = self.assertResponse(response)
 
-        response = self.fetch('/clients/get')
+        response = self.get_clients_html()
         response = self.assertResponse(response)
         response_dict = json.loads(response)
 
@@ -57,10 +59,10 @@ class TestClientListFromServer(ServerTestCase):
 
         self.assertEqual(len(added_client), 4)
 
-        response = self.fetch('/clients/add')
+        response = self.add_client_html()
         item_hash = self.assertResponse(response)
 
-        response = self.fetch('/clients/get')
+        response = self.get_clients_html()
         response = self.assertResponse(response)
         response_dict = json.loads(response)
 
@@ -68,17 +70,18 @@ class TestClientListFromServer(ServerTestCase):
         self.assertEqual(len(response_dict), 2)
 
     def test_delete_clients(self):
-        response = self.fetch('/clients/add')
+        response = self.add_client_html()
         item_hash = self.assertResponse(response)
 
-        response = self.fetch('/clients/delete/' + item_hash)
+        response = self.delete_client_html(item_hash)
         self.assertResponse(response, "")
 
-        response = self.fetch('/clients/get')
+        response = self.get_clients_html()
         response = self.assertResponse(response)
         response_dict = json.loads(response)
 
         self.assertEqual(len(response_dict), 0)
 
-        response = self.fetch('/clients/delete/' + item_hash)
+        response = self.delete_client_html(item_hash)
         self.assertError(response, 502)
+

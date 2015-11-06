@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import json
 from unittest import TestCase
 from mock import patch, MagicMock
 from tornado.testing import AsyncHTTPTestCase
@@ -44,6 +45,50 @@ class ServerTestCase(AsyncHTTPTestCase):
             self.assertEqual(response.body, content)
         else:
             return response.body
+
+    def get_channels_html(self):
+        response = self.fetch('/channels/get')
+        return response
+
+    def add_channel_html(self):
+        response = self.fetch('/channels/add')
+        return response
+
+    def set_channel_html(self, body, item_hash):
+        response = self.fetch('/channels/set/' + str(item_hash), method="POST", body=body)
+        return response
+
+    def delete_channel_html(self, item_hash):
+        response = self.fetch('/channels/delete/' + item_hash)
+        return response
+
+    def get_clients_html(self):
+        response = self.fetch('/clients/get')
+        return response
+
+    def set_client_html(self, body, item_hash):
+        response = self.fetch('/clients/set/' + str(item_hash), method="POST", body=body)
+        return response
+
+    def add_client_html(self):
+        response = self.fetch('/clients/add')
+        return response
+
+    def delete_client_html(self, item_hash):
+        response = self.fetch('/clients/delete/' + item_hash)
+        return response
+
+    def get_channels(self):
+        response = self.get_channels_html()
+        response = self.assertResponse(response)
+        response_dict = json.loads(response)
+        return response_dict
+
+    def get_clients(self):
+        response = self.get_clients_html()
+        response = self.assertResponse(response)
+        response_dict = json.loads(response)
+        return response_dict
 
 
 class SoundTestCase(TestCase):
