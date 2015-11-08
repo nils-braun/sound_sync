@@ -1,12 +1,16 @@
-from datetime import datetime, timedelta
 import json
+from datetime import datetime, timedelta
+from time import sleep
 from unittest import TestCase
+
 from mock import patch, MagicMock
+from tornado.httpclient import HTTPClient
 from tornado.testing import AsyncHTTPTestCase
+
 from sound_sync.audio.pcm.play import PCMPlay
 from sound_sync.audio.pcm.record import PCMRecorder
+from sound_sync.clients.base import BaseSender, BaseListener
 from sound_sync.clients.connection import SoundSyncConnection
-from sound_sync.clients.sender import Sender
 from sound_sync.rest_server.server import RestServer
 
 
@@ -103,7 +107,6 @@ class ServerTestCase(AsyncHTTPTestCase):
         return response
 
 
-
 class SoundTestCase(TestCase):
     def setUp(self):
         self.PCM_CAPTURE = 372435
@@ -140,15 +143,10 @@ class SoundTestCase(TestCase):
         return recorder
 
 
-class SenderTestCase(TestCase):
+class ClientTestCase(TestCase):
     def setUp(self):
-        self.number_of_stored_buffers = 5
-        self.test_name = "TheName"
         self.test_port = 16347
         self.test_host = "ThisIsTheHost"
-        self.test_description = "TheDescription"
-        self.test_buffer = "Buffer"
-        self.test_buffer_length = 100
 
     def mocking_http_client_fetch(self, manager_server, buffer_server, request, *args, **kwargs):
         self.assertTrue(request.startswith("http://" + self.test_host))
@@ -161,17 +159,28 @@ class SenderTestCase(TestCase):
             if buffer_server:
                 return buffer_server.fetch(request, *args, **kwargs)
 
+
+class SenderTestCase(ClientTestCase):
+    def setUp(self):
+        ClientTestCase.setUp(self)
+        self.number_of_stored_buffers = 5
+        self.test_name = "TheName"
+        self.test_description = "TheDescription"
+        self.test_buffer = "Buffer"
+        self.test_buffer_length = 100
+
     def init_own_sender(self, manager_server=None, buffer_server=None):
         def fetch_mock_local(*args, **kwargs):
             return self.mocking_http_client_fetch(manager_server, buffer_server, *args, **kwargs)
 
-        sender = Sender()
+        sender = BaseSender()
         sender.connection.host = self.test_host
         sender.connection.manager_port = self.test_port
         sender.name = self.test_name
         sender.description = self.test_description
 
         # Ensure we will not run into an infinite loop
+        sender.recorder = PCMRecorder()
         sender.recorder.get = ErrorAfter(self.number_of_stored_buffers, (self.test_buffer, self.test_buffer_length))
         sender.recorder.initialize = lambda : None
 
@@ -183,6 +192,50 @@ class SenderTestCase(TestCase):
         connection.manager_string = ""
 
         return sender, connection
+
+
+class ListenerTestCase(ClientTestCase):
+    def setUp(self):
+        ClientTestCase.setUp(self)
+        self.number_of_stored_buffers = 5
+        self.test_name = "TheName"
+        self.test_description = "TheDescription"
+        self.test_buffer = "Buffer"
+        self.test_buffer_length = 100
+
+    def init_own_listener(self, manager_server=None, buffer_server=None):
+        def fetch_mock_local(*args, **kwargs):
+            return self.mocking_http_client_fetch(manager_server, buffer_server, *args, **kwargs)
+
+        listener = BaseListener()
+        listener.connection.host = self.test_host
+        listener.connection.manager_port = self.test_port
+        listener.name = self.test_name
+        listener.description = self.test_description
+
+        # Ensure we will not run into an infinite loop
+        listener.player = PCMPlay()
+        #listener.player.put = ErrorAfter(self.number_of_stored_buffers, (self.test_buffer, self.test_buffer_length))
+        listener.player.initialize = lambda : None
+
+        listener.connection.http_client = MagicMock()
+        listener.connection.http_client.fetch = MagicMock(side_effect=fetch_mock_local)
+
+        connection = SoundSyncConnection()
+        connection.http_client = manager_server
+        connection.manager_string = ""
+
+        return listener, connection
+
+    def init_typical_setup(self):
+        real_http_client = HTTPClient()
+        self.test_host = "localhost"
+        listener, connection = self.init_own_listener(manager_server=self, buffer_server=real_http_client)
+        channel_hash = connection.add_channel_to_server()
+        listener.channel_hash = channel_hash
+        listener.initialize()
+        sleep(0.3)
+        return listener, connection, real_http_client
 
 
 class ErrorAfter:
