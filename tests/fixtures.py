@@ -234,7 +234,7 @@ class ListenerTestCase(ClientTestCase):
         channel_hash = connection.add_channel_to_server()
         listener.channel_hash = channel_hash
         listener.initialize()
-        sleep(0.3)
+        sleep(0.1)
         return listener, connection, real_http_client
 
 

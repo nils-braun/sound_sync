@@ -80,7 +80,7 @@ class TestBaseSender(SenderTestCase, ServerTestCase):
 
         self.assertNotEqual(sender1.channel_hash, sender2.channel_hash)
 
-        sleep(0.3)
+        sleep(0.1)
 
         try:
             sender1.main_loop()
