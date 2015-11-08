@@ -3,7 +3,7 @@ import urllib
 from mock import MagicMock
 from tornado.httpclient import HTTPClient, HTTPError
 
-from sound_sync.timing.time_utils import sleep
+from time import sleep
 from tests.fixtures import SenderTestCase, CallableExhausted, ServerTestCase
 
 
