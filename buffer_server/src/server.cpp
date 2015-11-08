@@ -13,7 +13,6 @@ server::server(int port_number) {
 
     cppcms::json::value port_string;
     port_string.number(port_number);
-    std::cout << "C++" << port_number << std::endl;
 
     cppcms::json::object service_dict {{"api", api_string}, {"port", port_string}};
     cppcms::json::object settings_dict {{"service", service_dict}};
@@ -24,9 +23,7 @@ server::server(int port_number) {
 
 void server::start() {
     if(m_server != nullptr) {
-        std::cout << "start " << std::endl;
         m_server->run();
-        std::cout << "end " << std::endl;
     }
 }
 
