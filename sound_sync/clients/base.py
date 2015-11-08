@@ -147,7 +147,7 @@ class BaseListener(Client):
             raise RuntimeError(response)
 
     def get_buffer(self, buffer_number):
-        response = self.connection.http_client.fetch(self.handler_string + "/get/%d" % buffer_number)
+        response = self.connection.http_client.fetch(self.handler_string + "/get/%d" % buffer_number, raise_error=False)
         if response.code == 200:
             return response.body
         else:
