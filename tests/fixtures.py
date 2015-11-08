@@ -150,7 +150,21 @@ class SenderTestCase(TestCase):
         self.test_buffer = "Buffer"
         self.test_buffer_length = 100
 
-    def init_sender(self):
+    def mocking_http_client_fetch(self, manager_server, buffer_server, request, *args, **kwargs):
+        self.assertTrue(request.startswith("http://" + self.test_host))
+
+        if request.startswith("http://" + self.test_host + ":" + str(self.test_port)):
+            if manager_server:
+                request_without_host = request.replace("http://" + self.test_host + ":" + str(self.test_port), "")
+                return manager_server.fetch(request_without_host, *args, **kwargs)
+        else:
+            if buffer_server:
+                return buffer_server.fetch(request, *args, **kwargs)
+
+    def init_own_sender(self, manager_server=None, buffer_server=None):
+        def fetch_mock_local(*args, **kwargs):
+            return self.mocking_http_client_fetch(manager_server, buffer_server, *args, **kwargs)
+
         sender = Sender()
         sender.connection.host = self.test_host
         sender.connection.manager_port = self.test_port
@@ -159,15 +173,13 @@ class SenderTestCase(TestCase):
 
         # Ensure we will not run into an infinite loop
         sender.recorder.get = ErrorAfter(self.number_of_stored_buffers, (self.test_buffer, self.test_buffer_length))
-        return sender
+        sender.recorder.initialize = lambda : None
 
-    def init_own_sender(self):
-        sender = self.init_sender()
-        sender.connection.http_client = self
-        sender.connection.manager_string = ""
+        sender.connection.http_client = MagicMock()
+        sender.connection.http_client.fetch = MagicMock(side_effect=fetch_mock_local)
 
         connection = SoundSyncConnection()
-        connection.http_client = self
+        connection.http_client = manager_server
         connection.manager_string = ""
 
         return sender, connection
