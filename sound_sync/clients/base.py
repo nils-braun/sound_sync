@@ -40,6 +40,9 @@ class BaseListener(Client):
         if self.client_hash is not None:
             return
 
+        if self.channel_hash is None:
+            raise ValueError()
+
         self.client_hash = self.connection.add_client_to_server()
         self.get_settings()
         self.connection.set_name_of_client(self.name, self.client_hash)
@@ -63,6 +66,9 @@ class BaseListener(Client):
         self.player.terminate()
 
     def get_settings(self):
+        if self.channel_hash is None:
+            raise ValueError()
+
         channel_information = self.connection.get_channel_information(self.channel_hash)
 
         JSONPickleable.fill_with_json(self.player, channel_information)
@@ -127,7 +133,6 @@ class BaseListener(Client):
             raise ValueError("Can not use start times in the future")
 
         time_delta = current_time - start_time
-        print time_delta.total_seconds() / waiting_time
         number_of_passed_clocks = int(time_delta.total_seconds() / waiting_time)
         number_of_next_clock = number_of_passed_clocks + 1
         next_time = start_time + waiting_time_to_datetime(number_of_next_clock * waiting_time)
