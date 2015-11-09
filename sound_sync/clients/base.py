@@ -79,9 +79,6 @@ class BaseListener(Client):
         if self.client_hash is None:
             raise AssertionError("Listener needs to be initialized first")
 
-        current_start_index = self.get_current_buffer_start_index()
-        self.buffer_list.set_start_index(current_start_index)
-
         # Receive as many packages as possible (to have a good starting point)
         self.initial_fill_buffer_list()
 
@@ -100,14 +97,14 @@ class BaseListener(Client):
         self.play_thread.run()
 
     def initial_fill_buffer_list(self):
-        # TODO: Maybe better: Do as many as possible
-        # noinspection PyArgumentList
-        current_start_index = self.buffer_list.get_start_index()
-        next_play_time, next_buffer_number = self.calculate_next_starting_time_and_buffer()
-        if next_buffer_number - current_start_index < 5:
+        current_start_index = self.get_current_buffer_start_index()
+        self.buffer_list.set_start_index(current_start_index)
+
+        current_end_index = self.get_current_buffer_end_index()
+        if current_end_index - current_start_index < 5:
             raise ValueError("Too few buffers loaded into the server.")
 
-        for buffer_index in xrange(current_start_index, next_buffer_number - 1):
+        for buffer_index in xrange(current_start_index, current_end_index + 1):
             self.receive_and_add_next_buffer()
 
     def receive_and_add_next_buffer(self):
@@ -141,10 +138,11 @@ class BaseListener(Client):
 
     def get_current_buffer_start_index(self):
         response = self.connection.http_client.fetch(self.handler_string + "/start")
-        if response.code == 200:
-            return int(response.body)
-        else:
-            raise RuntimeError(response)
+        return int(response.body)
+
+    def get_current_buffer_end_index(self):
+        response = self.connection.http_client.fetch(self.handler_string + "/end")
+        return int(response.body)
 
     def get_buffer(self, buffer_number):
         response = self.connection.http_client.fetch(self.handler_string + "/get/%d" % buffer_number, raise_error=False)

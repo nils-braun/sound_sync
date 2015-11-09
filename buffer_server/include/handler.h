@@ -11,6 +11,7 @@ public:
     void getBuffer(std::string buffer_number_as_string);
     void addBuffer();
     void getStartIndex();
+    void getEndIndex();
 
 private:
     BufferList m_bufferList;

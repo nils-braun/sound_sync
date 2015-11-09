@@ -16,6 +16,7 @@ class TestSoundBufferList(TestCase):
         test_buffer = "Test buffer"
 
         self.buffer_list.set_start_index(start_index)
+        self.assertEqual(self.buffer_list.get_next_free_index(), start_index)
 
         first_index = 2
         for i in xrange(first_index):
@@ -56,3 +57,7 @@ class TestSoundBufferList(TestCase):
 
     def test_get_start_index(self):
         self.assertEqual(self.buffer_list.get_start_index(), 0)
+
+        test_start_index = 10
+        self.buffer_list.set_start_index(test_start_index)
+        self.assertEqual(self.buffer_list.get_start_index(), test_start_index)
