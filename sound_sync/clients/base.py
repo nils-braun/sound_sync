@@ -87,7 +87,9 @@ class BaseListener(Client):
 
         # Receive information from the buffer server if possible
         while True:
-            self.receive_and_add_next_buffer()
+            current_end_index = self.get_current_buffer_end_index()
+            if current_end_index >= self.buffer_list.get_next_free_index():
+                self.receive_and_add_next_buffer()
 
     def start_play_thread(self):
         next_play_time, next_buffer_number = self.calculate_next_starting_time_and_buffer()
