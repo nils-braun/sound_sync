@@ -3,7 +3,7 @@ import time
 
 
 def get_current_date():
-    return datetime.datetime.now()
+    return datetime.datetime.utcnow()
 
 
 def to_datetime(date_string):

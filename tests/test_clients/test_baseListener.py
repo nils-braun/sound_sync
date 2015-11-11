@@ -144,7 +144,7 @@ class TestBaseListener(ListenerTestCase, ServerTestCase, TimingTestCase):
     def test_calculate_next_starting_time_and_buffer(self):
         listener, connection = self.init_own_listener()
 
-        self.datetime_mock.datetime.now = MagicMock(return_value=datetime(2015, 11, 4, 0, 0, 10))
+        self.datetime_mock.datetime.utcnow = MagicMock(return_value=datetime(2015, 11, 4, 0, 0, 10))
         self.datetime_mock.timedelta = timedelta
         listener.player.start_time = datetime(2015, 11, 4, 0, 0, 11)
 

@@ -7,7 +7,7 @@ from tests.fixtures import TimingTestCase
 class TestUtils(TimingTestCase):
     def test_get_current_date(self):
         time_utils.get_current_date()
-        self.datetime_mock.datetime.now.assert_called_with()
+        self.datetime_mock.datetime.utcnow.assert_called_with()
 
     def test_sleep(self):
         test_sleep_time = 343

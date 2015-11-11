@@ -41,7 +41,7 @@ class TestChannelListFromServer(ServerTestCase):
     def test_add_channels(self, time_mock):
 
         import datetime
-        time_mock.datetime.now = lambda: datetime.datetime(1, 2, 3, 4, 5)
+        time_mock.datetime.utcnow = lambda: datetime.datetime(1, 2, 3, 4, 5)
         time_mock.datetime.strptime = datetime.datetime.strptime
 
         response = self.add_channel_html()

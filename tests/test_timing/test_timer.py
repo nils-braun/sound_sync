@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from mock import MagicMock
 
-from sound_sync.timing.waitForTimeProcess import Timer
+from sound_sync.timing.timer import Timer
 from tests.fixtures import TimingTestCase
 
 
@@ -14,15 +14,15 @@ class TestTimer(TimingTestCase):
         timer = Timer(start_time, time_interval, None)
 
         # Call the sleep function, because the time is in the future
-        self.datetime_mock.datetime.now = MagicMock(return_value=datetime(2015, 11, 4, 0, 0, 0))
+        self.datetime_mock.datetime.utcnow = MagicMock(return_value=datetime(2015, 11, 4, 0, 0, 0))
         self.assertRaisesRegexp(TypeError, "'NoneType' object is not callable", timer.run)
 
         # Fail, because the time is in the past
-        self.datetime_mock.datetime.now = MagicMock(return_value=datetime(2015, 11, 6, 0, 0, 2))
+        self.datetime_mock.datetime.utcnow = MagicMock(return_value=datetime(2015, 11, 6, 0, 0, 2))
         self.assertRaisesRegexp(ValueError, "Can not handle a start time in the past.", timer.run)
 
     def test_run(self):
-        self.datetime_mock.datetime.now = self.time_list_mock_function
+        self.datetime_mock.datetime.utcnow = self.time_list_mock_function
 
         start_time = datetime(2015, 11, 6, 0, 0, 2)
         time_interval = timedelta(seconds=4)
@@ -54,7 +54,7 @@ class TestTimer(TimingTestCase):
 
     def test_too_long_function(self):
 
-        self.datetime_mock.datetime.now = self.time_list_mock_function
+        self.datetime_mock.datetime.utcnow = self.time_list_mock_function
 
         start_time = datetime(2015, 11, 6, 0, 0, 4)
         time_interval = timedelta(seconds=2)
