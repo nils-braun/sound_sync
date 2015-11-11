@@ -8,7 +8,7 @@ from sound_sync.clients.connection import SoundSyncConnection
 from sound_sync.rest_server.server_items.json_pickable import JSONPickleable
 from sound_sync.rest_server.server_items.server_items import Client, Channel
 from sound_sync.timing.time_utils import get_current_date, waiting_time_to_datetime
-from sound_sync.timing.waitForTimeProcess import Timer
+from sound_sync.timing.timer import Timer
 
 
 class BaseListener(Client):
