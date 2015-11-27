@@ -61,3 +61,5 @@ class BaseSender(Channel):
             raise ValueError()
 
         return "http://" + str(self.connection.host) + ":" + str(self.handler_port)
+
+
