@@ -1,12 +1,6 @@
 import argparse
-from sound_sync.clients.base import BaseSender
+from sound_sync.clients.base_sender import BaseSender
 from sound_sync.audio.pcm.record import PCMRecorder
-
-
-class Sender(BaseSender):
-    def __init__(self, host=None, manager_port=None):
-        BaseSender.__init__(self, host, manager_port)
-        self.recorder = PCMRecorder()
 
 
 def main():
@@ -31,8 +25,10 @@ def main():
                         type=str,
                         help="Description of this channel in the channel list. Default No Description.",
                         dest="description")
+
     args = parser.parse_args()
-    sender = Sender(args.hostname, args.manager_port)
+    sender = BaseSender(args.hostname, args.manager_port)
+    sender.recorder = PCMRecorder()
     sender.name = args.name
     sender.description = args.description
     sender.initialize()

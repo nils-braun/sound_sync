@@ -353,7 +353,7 @@ class TestBaseListener(ListenerTestCase, ServerTestCase, TimingTestCase):
     def test_main_loop(self):
         pass
 
-    @patch("sound_sync.clients.base.Timer", spec=True)
+    @patch("sound_sync.clients.base_listener.Timer", spec=True)
     def test_start_play_thread(self, timer_mock):
         timer_instance_mock = MagicMock()
         timer_mock.return_value = timer_instance_mock

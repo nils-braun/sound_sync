@@ -1,19 +1,6 @@
 import argparse
-
-from sound_sync.clients.base import BaseListener
+from sound_sync.clients.base_listener import BaseListener
 from sound_sync.audio.pcm.play import PCMPlay
-
-
-class ConsoleProgram:
-    def __init__(self):
-        pass
-
-
-class Listener(BaseListener, ConsoleProgram):
-    def __init__(self, channel_hash=None, host=None, manager_port=None):
-        BaseListener.__init__(self, channel_hash, host, manager_port)
-        ConsoleProgram.__init__(self)
-        self.player = PCMPlay()
 
 
 def main():
@@ -39,7 +26,9 @@ def main():
                         help="Channel hash to listen to.",
                         dest="channel_hash")
     args = parser.parse_args()
-    listener = Listener(args.channel_hash, args.hostname, args.manager_port)
+
+    listener = BaseListener(args.channel_hash, args.hostname, args.manager_port)
+    listener.player = PCMPlay()
     listener.name = args.name
     listener.initialize()
     try:

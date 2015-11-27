@@ -9,7 +9,8 @@ from tornado.testing import AsyncHTTPTestCase
 
 from sound_sync.audio.pcm.play import PCMPlay
 from sound_sync.audio.pcm.record import PCMRecorder
-from sound_sync.clients.base import BaseSender, BaseListener
+from sound_sync.clients.base_listener import BaseListener
+from sound_sync.clients.base_sender import BaseSender
 from sound_sync.clients.connection import SoundSyncConnection
 from sound_sync.rest_server.server import RestServer
 
