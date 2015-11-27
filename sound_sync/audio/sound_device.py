@@ -1,3 +1,6 @@
+import datetime
+
+
 class SoundDevice:
     """
     Data structure for every device handling sound
@@ -22,4 +25,4 @@ class SoundDevice:
         self.start_time = None
 
     def get_waiting_time(self):
-        return float(self.factor) * float(self.buffer_size) / float(self.frame_rate)
+        return datetime.timedelta(seconds=float(self.factor) * float(self.buffer_size) / float(self.frame_rate))
