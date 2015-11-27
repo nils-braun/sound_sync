@@ -39,9 +39,23 @@ class TestPCMPlayer(SoundTestCase):
         self.assertRaisesRegexp(ValueError, "^Device needs to be initialized first$",
                                 player.put, "Buffer")
 
-        player = self.init_sound_player()
-        player.pcm.write = MagicMock()
+        test_buffer = "This is a buffer"
+        number_of_buffers = 5
 
-        test_buffer = "This is a buffer" * 5
-        player.put(test_buffer)
-        player.pcm.write.assert_called_with(test_buffer)
+        player = self.init_sound_player()
+        pcm_response = [0, 0] +  [len(test_buffer) / 4] * number_of_buffers
+        player.pcm.write = MagicMock(side_effect = pcm_response)
+
+        player.put(test_buffer * number_of_buffers)
+        send_buffers = player.pcm.write.call_args_list
+        for i in xrange(0, 2):
+            args, kwargs = send_buffers[i]
+            self.assertEqual(len(args), 1)
+            self.assertEqual(args[0], test_buffer * (number_of_buffers))
+            self.assertEqual(kwargs, {})
+
+        for i in xrange(2, number_of_buffers):
+            args, kwargs = send_buffers[i]
+            self.assertEqual(len(args), 1)
+            self.assertEqual(args[0], test_buffer * (number_of_buffers - i + 2))
+            self.assertEqual(kwargs, {})
