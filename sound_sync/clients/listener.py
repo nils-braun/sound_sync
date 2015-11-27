@@ -39,7 +39,7 @@ def main():
                         help="Channel hash to listen to.",
                         dest="channel_hash")
     args = parser.parse_args()
-    listener = Listener(args.channel_hash, args.host, args.manager_port)
+    listener = Listener(args.channel_hash, args.hostname, args.manager_port)
     listener.name = args.name
     listener.initialize()
     try:

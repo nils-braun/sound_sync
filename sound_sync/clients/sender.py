@@ -32,7 +32,7 @@ def main():
                         help="Description of this channel in the channel list. Default No Description.",
                         dest="description")
     args = parser.parse_args()
-    sender = Sender(args.host, args.manager_port)
+    sender = Sender(args.hostname, args.manager_port)
     sender.name = args.name
     sender.description = args.description
     sender.initialize()
