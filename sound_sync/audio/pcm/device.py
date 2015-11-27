@@ -1,6 +1,8 @@
 from sound_sync.audio.sound_device import SoundDevice
 import alsaaudio
 
+from sound_sync.timing.time_utils import sleep
+
 
 class PCMDevice(SoundDevice):
     def __init__(self):
@@ -51,4 +53,13 @@ class PCMDevice(SoundDevice):
         if self.pcm is None:
             raise ValueError("Device needs to be initialized first")
 
-        self.pcm.write(bytes(sound_buffer))
+        written_bytes = 0
+        sound_buffer_bytes = bytes(sound_buffer)
+
+        while written_bytes < len(sound_buffer_bytes):
+            sound_buffer_to_write = sound_buffer_bytes[written_bytes:]
+            currently_written_bytes = self.pcm.write(sound_buffer_to_write)
+            if currently_written_bytes > 0:
+                written_bytes += currently_written_bytes * 4
+            else:
+                sleep(0.0001)
