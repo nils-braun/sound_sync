@@ -4,12 +4,11 @@ from sound_sync.timing.time_utils import to_datetime
 class SoundBufferWithTime():
     SPLIT_SEPARATOR = "<||>"
 
-    def __init__(self, sound_buffer=None, buffer_number=None, buffer_time=None):
+    def __init__(self, sound_buffer, buffer_number, buffer_time):
         self.sound_buffer = sound_buffer
         self.buffer_time = buffer_time
         self.buffer_number = buffer_number
         self.sound_buffer_length = len(sound_buffer)
-        print self.sound_buffer
 
     @staticmethod
     def construct_from_string(string):
