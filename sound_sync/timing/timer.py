@@ -7,23 +7,20 @@ class Timer(Process):
     Wait until a certain time has occurred in a different process and execute a target function.
     TODO: Handle reoccurring events!
     """
-    def __init__(self, start_time_to_wait_for, time_interval, target_function):
+    def __init__(self, start_time_to_wait_for, target_function):
         """
         Initialize the timer process
         :param start_time_to_wait_for: the time in seconds after the Epoch
-        :param time_interval: the time in seconds to add after each call
         :param target_function: the function to call. Can not return anything.
         """
         self.start_time_to_wait_for = start_time_to_wait_for
         self.target_function = target_function
-        self.time_interval = time_interval
         self._should_run = True
 
         super(Timer, self).__init__()
 
     def run(self):
         start_time_to_wait_for = self.start_time_to_wait_for
-        time_interval = self.time_interval
 
         current_time = get_current_date()
 
@@ -36,11 +33,8 @@ class Timer(Process):
             current_time = get_current_date()
             if current_time >= time_to_wait_for:
                 self.target_function()
-                time_to_wait_for += time_interval
-                current_time = get_current_date()
-
-                if current_time > time_to_wait_for:
-                    raise RuntimeError("Called function lasted longer than a time interval.")
+                self._should_run = False
+                return
 
             time_delta = time_to_wait_for - current_time
             sleep(time_delta.total_seconds() / 2.0)

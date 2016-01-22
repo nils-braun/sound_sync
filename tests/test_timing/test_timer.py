@@ -10,8 +10,7 @@ class TestTimer(TimingTestCase):
         self.time_mock.sleep = None
 
         start_time = datetime(2015, 11, 6, 0, 0, 0)
-        time_interval = timedelta(10)
-        timer = Timer(start_time, time_interval, None)
+        timer = Timer(start_time, None)
 
         # Call the sleep function, because the time is in the future
         self.datetime_mock.datetime.utcnow = MagicMock(return_value=datetime(2015, 11, 4, 0, 0, 0))
@@ -25,64 +24,24 @@ class TestTimer(TimingTestCase):
         self.datetime_mock.datetime.utcnow = self.time_list_mock_function
 
         start_time = datetime(2015, 11, 6, 0, 0, 2)
-        time_interval = timedelta(seconds=4)
-        timer = Timer(start_time, time_interval, None)
-
-        def callable_function():
-            current_time = self.get_current_time()
-            self.assertIn(current_time.second, [2, 6, 10])
-
-            if current_time.second == 10:
-                timer.stop()
-
-        timer.target_function = callable_function
 
         def sleep_function(time_delta):
             current_time = self.get_current_time()
-            self.assertIn(current_time.second, [1, 3, 4, 5, 7, 8, 9, 11])
-
-            if current_time.second in [1, 5, 9]:
-                self.assertEqual(time_delta, 0.5)
-            elif current_time.second in [3, 7, 11]:
-                self.assertEqual(time_delta, 1.5)
-            elif current_time.second in [4, 8]:
-                self.assertEqual(time_delta, 1)
+            self.assertEqual(current_time.second, 1)
+            self.assertEqual(time_delta, 0.5)
 
         self.time_mock.sleep = sleep_function
+
+        def callable_function():
+            current_time = self.get_current_time()
+            self.assertEqual(current_time.second, 2)
+
+        timer = Timer(start_time, callable_function)
 
         timer.run()
 
-    def test_too_long_function(self):
-
-        self.datetime_mock.datetime.utcnow = self.time_list_mock_function
-
-        start_time = datetime(2015, 11, 6, 0, 0, 4)
-        time_interval = timedelta(seconds=2)
-        timer = Timer(start_time, time_interval, None)
-
-        def callable_function():
-            self.assertEqual(self.get_current_time().second, 4)
-            self.time_list_mock_function.side_effect = [datetime(2015, 11, 6, 0, 0, 7)]
-
-        timer.target_function = callable_function
-
-        def sleep_function(time_delta):
-            current_time = self.get_current_time()
-            self.assertIn(current_time.second, [1, 2, 3])
-
-            if current_time.second in [1]:
-                self.assertEqual(time_delta, 1.5)
-            elif current_time.second in [2]:
-                self.assertEqual(time_delta, 1)
-            elif current_time.second in [3]:
-                self.assertEqual(time_delta, 0.5)
-
-        self.time_mock.sleep = sleep_function
-
-        self.assertRaises(RuntimeError, timer.run)
-
     def test_stop(self):
-        timer = Timer(None, None, None)
+        timer = Timer(None, None)
 
         self.assertEqual(timer._should_run, True)
 
@@ -90,4 +49,19 @@ class TestTimer(TimingTestCase):
         self.assertEqual(timer._should_run, False)
 
 
+    def test_stop_before_function(self):
+        self.datetime_mock.datetime.utcnow = self.time_list_mock_function
 
+        start_time = datetime(2015, 11, 6, 0, 0, 2)
+
+        def sleep_function(time_delta):
+            timer._should_run = False
+
+        self.time_mock.sleep = sleep_function
+
+        def callable_error():
+            raise AssertionError()
+
+        timer = Timer(start_time, callable_error)
+
+        timer.run()
