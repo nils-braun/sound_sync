@@ -1,34 +1,50 @@
 import urllib
 from datetime import datetime, timedelta
 
-from mock import MagicMock, patch
+from mock import MagicMock, patch, call
+
+from sound_sync.clients.sound_buffer_with_time import SoundBufferWithTime
 from sound_sync.rest_server.server_items.server_items import Channel
+from sound_sync.timing.time_utils import sleep
 from tests.fixtures import ListenerTestCase,  ServerTestCase, TimingTestCase
 
 
-class TestBaseListener(ListenerTestCase, ServerTestCase, TimingTestCase):
+class TestBaseListener(ListenerTestCase, ServerTestCase):
     def setUp(self):
         ServerTestCase.setUp(self)
         ListenerTestCase.setUp(self)
-        TimingTestCase.setUp(self)
+
+    def test_terminate_with_none(self):
+        listener, connection = self.init_own_listener(manager_server=self)
+        self.assertEqual(self, connection.http_client)
+
+        listener.player.terminate = MagicMock()
+
+        # Should not fail, as client hash is None
+        self.assertEqual(listener.client_hash, None)
+        listener.terminate()
+
+        self.assertEqual(listener.player.terminate.call_count, 0)
 
     def test_terminate(self):
         listener, connection = self.init_own_listener(manager_server=self)
-
-        listener.terminate()
-
         self.assertEqual(self, connection.http_client)
 
+        listener.player.terminate = MagicMock()
+
         client_hash = connection.add_client_to_server()
+        listener.client_hash = client_hash
+
         clients = self.get_clients()
         self.assertEqual(len(clients), 1)
 
-        listener.client_hash = client_hash
         listener.terminate()
 
-        self.assertEqual(listener.client_hash, None)
         clients = self.get_clients()
         self.assertEqual(len(clients), 0)
+
+        self.assertEqual(listener.client_hash, None)
+        listener.player.terminate.assert_called_once_with()
 
     def test_handler_string(self):
         listener, connection = self.init_own_listener()
@@ -88,80 +104,53 @@ class TestBaseListener(ListenerTestCase, ServerTestCase, TimingTestCase):
         clients = self.get_clients()
         self.assertEqual(len(clients), 1)
 
-    def test_receive_and_add_next_buffer(self):
+    def test_receive_and_play_next_buffer(self):
         listener, connection = self.init_own_listener()
 
-        listener.get_buffer = MagicMock(return_value=self.test_buffer)
+        test_buffer_with_time = SoundBufferWithTime(sound_buffer=self.test_buffer, buffer_number=0, buffer_time=datetime(2015, 11, 3, 0, 0, 10))
+        listener.get_buffer = MagicMock(return_value=test_buffer_with_time.to_string())
+        listener.play_buffer = MagicMock()
 
-        listener.receive_and_add_next_buffer()
+        listener.next_expected_buffer_number = 0
+
+        listener.receive_and_play_next_buffer()
+
         listener.get_buffer.assert_called_once_with(0)
+        self.assertEqual(listener.play_buffer.call_count, 1)
+        self.assertEqual(listener.play_buffer.call_args, ((test_buffer_with_time, ), ))
+        self.assertEqual(listener.next_expected_buffer_number, 1)
 
-        result_buffer = listener.buffer_list.get_buffer("0")
-        self.assertEqual(result_buffer, self.test_buffer)
+        listener.next_expected_buffer_number = 10
+        self.assertRaises(AssertionError, listener.receive_and_play_next_buffer)
 
-        self.assertEqual(listener.buffer_list.get_next_free_index(), 1)
+        test_buffer_with_time = SoundBufferWithTime(sound_buffer=self.test_buffer, buffer_number=10, buffer_time=datetime(2015, 11, 3, 0, 0, 10))
+        listener.get_buffer = MagicMock(return_value=test_buffer_with_time.to_string())
 
-    def test_receive_and_add_next_buffer_real(self):
+        listener.next_expected_buffer_number = 10
+        listener.receive_and_play_next_buffer()
+        listener.get_buffer.assert_called_once_with(10)
+        self.assertEqual(listener.next_expected_buffer_number, 11)
+
+    def test_receive_and_play_next_buffer_real(self):
         listener, connection, real_http_client = self.init_typical_setup()
+
+        listener.play_buffer = MagicMock()
+        listener.next_expected_buffer_number = 0
+
+        test_buffer_with_time = SoundBufferWithTime(sound_buffer=self.test_buffer, buffer_number=0, buffer_time=datetime(2015, 11, 3, 0, 0, 10))
 
         buffer_numbers = 10
         for i in xrange(buffer_numbers):
-            self.send_buffer(self.test_buffer + str(i), listener, real_http_client)
+            test_buffer_with_time.buffer_number = i
+            self.send_buffer(test_buffer_with_time.to_string(), listener, real_http_client)
 
         for i in xrange(buffer_numbers):
-            listener.receive_and_add_next_buffer()
+            listener.receive_and_play_next_buffer()
 
-        for i in xrange(buffer_numbers):
-            result_buffer = listener.buffer_list.get_buffer(str(i))
-            self.assertEqual(result_buffer, self.test_buffer + str(i))
-
-        self.assertEqual(listener.buffer_list.get_next_free_index(), 10)
-
-    def test_play_next_buffer(self):
-        listener, connection = self.init_own_listener()
-
-        listener.last_played_buffer_number = 0
-        listener.player.put = MagicMock()
-
-        for i in xrange(10):
-            listener.buffer_list.add_buffer(self.test_buffer + str(i))
-
-        for i in xrange(9):
-            listener.play_next_buffer()
-            self.assertEqual(listener.last_played_buffer_number, i + 1)
-            listener.player.put.assert_called_with(self.test_buffer + str(i + 1))
-
-        self.assertRaises(RuntimeError, listener.play_next_buffer)
-
-        listener.buffer_list.add_buffer(self.test_buffer + "10")
-        listener.play_next_buffer()
-        listener.player.put.assert_called_with(self.test_buffer + str(10))
-
-    def test_calculate_next_starting_time_and_buffer(self):
-        listener, connection = self.init_own_listener()
-
-        self.datetime_mock.datetime.utcnow = MagicMock(return_value=datetime(2015, 11, 4, 0, 0, 10))
-        self.datetime_mock.timedelta = timedelta
-        listener.player.start_time = datetime(2015, 11, 4, 0, 0, 11)
-
-        self.assertRaises(ValueError, listener.calculate_next_starting_time_and_buffer)
-
-        listener.player.start_time = datetime(2015, 11, 4, 0, 0, 0)
-
-        listener.player.get_waiting_time = lambda: 10
-        next_time, number_of_next_clock = listener.calculate_next_starting_time_and_buffer()
-        self.assertEqual(next_time, datetime(2015, 11, 4, 0, 0, 20))
-        self.assertEqual(number_of_next_clock, 2)
-
-        listener.player.get_waiting_time = lambda: 11
-        next_time, number_of_next_clock = listener.calculate_next_starting_time_and_buffer()
-        self.assertEqual(next_time, datetime(2015, 11, 4, 0, 0, 11))
-        self.assertEqual(number_of_next_clock, 1)
-
-        listener.player.get_waiting_time = lambda: 3
-        next_time, number_of_next_clock = listener.calculate_next_starting_time_and_buffer()
-        self.assertEqual(next_time, datetime(2015, 11, 4, 0, 0, 12))
-        self.assertEqual(number_of_next_clock, 4)
+        self.assertEqual(listener.play_buffer.call_count, 10)
+        for i, call_arg in enumerate(listener.play_buffer.call_args_list):
+            test_buffer_with_time.buffer_number = i
+            self.assertEqual(call_arg, call(test_buffer_with_time))
 
     def test_get_current_buffer_start_index(self):
         mocking_client = MagicMock()
@@ -233,65 +222,6 @@ class TestBaseListener(ListenerTestCase, ServerTestCase, TimingTestCase):
         end_index = listener.get_current_buffer_end_index()
         self.assertEqual(end_index, 10)
 
-    def test_initial_fill_buffer_list_fail(self):
-        listener, connection = self.init_own_listener()
-
-        test_buffer_start_index = 100
-        listener.get_current_buffer_start_index = MagicMock(return_value=test_buffer_start_index)
-        listener.get_buffer = MagicMock(return_value=self.test_buffer)
-
-        next_buffer_number = 101
-        listener.get_current_buffer_end_index = MagicMock(return_value=next_buffer_number)
-
-        self.assertRaisesRegexp(ValueError, "^Too few buffers loaded into the server.$",
-                                listener.initial_fill_buffer_list)
-
-    def test_initial_fill_buffer_list(self):
-        listener, connection = self.init_own_listener()
-
-        test_buffer_start_index = 100
-
-        listener.get_current_buffer_start_index = MagicMock(return_value=test_buffer_start_index)
-        listener.get_buffer = MagicMock(return_value=self.test_buffer)
-
-        next_buffer_number = 120
-        listener.get_current_buffer_end_index = MagicMock(return_value=next_buffer_number)
-        listener.initial_fill_buffer_list()
-
-        self.assertEqual(listener.buffer_list.get_start_index(), 100)
-        self.assertEqual(listener.buffer_list.get_next_free_index(), 121)
-        self.assertEqual(listener.get_buffer.call_count, 21)
-
-        for i in xrange(100, 120):
-            self.assertEqual(listener.buffer_list.get_buffer(str(i)), self.test_buffer)
-
-        self.assertRaises(RuntimeError, listener.buffer_list.get_buffer, str(121))
-
-    def test_initial_fill_buffer_list_real_fail(self):
-        listener, connection, real_http_client = self.init_typical_setup()
-
-        buffer_numbers = 5
-        for i in xrange(buffer_numbers):
-            self.send_buffer(self.test_buffer + str(i), listener, real_http_client)
-
-        self.assertRaisesRegexp(ValueError, "^Too few buffers loaded into the server.$",
-                                listener.initial_fill_buffer_list)
-
-    def test_initial_fill_buffer_list_real(self):
-        listener, connection, real_http_client = self.init_typical_setup()
-
-        buffer_numbers = 10
-        for i in xrange(buffer_numbers):
-            self.send_buffer(self.test_buffer + str(i), listener, real_http_client)
-
-        listener.initial_fill_buffer_list()
-
-        self.assertEqual(listener.buffer_list.get_next_free_index(), 10)
-        self.assertEqual(listener.buffer_list.get_start_index(), 0)
-
-        for i in xrange(buffer_numbers):
-            self.assertEqual(listener.buffer_list.get_buffer(str(i)), self.test_buffer + str(i))
-
     def test_get_buffer_fail(self):
         mocking_client = MagicMock()
         listener, connection = self.init_own_listener(buffer_server=mocking_client)
@@ -336,6 +266,8 @@ class TestBaseListener(ListenerTestCase, ServerTestCase, TimingTestCase):
         for i in xrange(buffer_numbers):
             self.send_buffer(self.test_buffer + str(i), listener, real_http_client)
 
+        sleep(0.05)
+
         for i in xrange(buffer_numbers):
             buffer = listener.get_buffer(i)
             self.assertEqual(buffer, self.test_buffer + str(i))
@@ -349,25 +281,3 @@ class TestBaseListener(ListenerTestCase, ServerTestCase, TimingTestCase):
         body = urllib.urlencode(parameters)
         real_http_client.fetch(listener.handler_string + '/add',
                                method="POST", body=body)
-
-    def test_main_loop(self):
-        pass
-
-    @patch("sound_sync.clients.base_listener.Timer", spec=True)
-    def test_start_play_thread(self, timer_mock):
-        timer_instance_mock = MagicMock()
-        timer_mock.return_value = timer_instance_mock
-
-        listener, connection = self.init_own_listener()
-
-        listener.player.start_time = datetime(2015, 11, 6, 0, 0, 0)
-        test_waiting_time = 9
-        listener.player.get_waiting_time = lambda: test_waiting_time
-
-        self.datetime_mock.datetime.utcnow = MagicMock(return_value=datetime(2015, 11, 6, 0, 0, 10))
-        self.datetime_mock.timedelta = timedelta
-
-        listener.start_play_thread()
-
-        timer_mock.assert_called_once_with(datetime(2015, 11, 6, 0, 0, 18), test_waiting_time, listener.play_next_buffer)
-        timer_instance_mock.run.assert_called_once_with()
