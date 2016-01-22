@@ -23,7 +23,7 @@ def setup_package():
     pytest_runner = ['pytest-runner'] if needs_pytest else []
     setup(setup_requires=['six', 'pyscaffold>=2.3rc1,<2.4a0'] + pytest_runner,
           ext_modules=[buffer_server_ext],
-          tests_require=['pytest_cov', 'pytest'],
+          tests_require=['pytest_cov', 'pytest>2.8'],
           use_pyscaffold=True)
 
 
