@@ -1,10 +1,7 @@
-from buffer_server import BufferList
-
 from sound_sync.clients.connection import SoundSyncConnection
 from sound_sync.clients.sound_buffer_with_time import SoundBufferWithTime
 from sound_sync.rest_server.server_items.json_pickable import JSONPickleable
 from sound_sync.rest_server.server_items.server_items import Client, Channel
-from sound_sync.timing.time_utils import get_current_date, waiting_time_to_datetime
 from sound_sync.timing.timer import Timer
 
 
@@ -105,4 +102,8 @@ class BaseListener(Client):
             raise RuntimeError(response)
 
     def play_buffer(self, sound_buffer_with_time):
-        raise NotImplementedError()
+        def play():
+            self.player.put(sound_buffer_with_time.sound_buffer)
+
+        timer = Timer(sound_buffer_with_time.buffer_time, play)
+        timer.start()
