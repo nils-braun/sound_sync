@@ -5,6 +5,7 @@ class SoundDevice:
     """
     Data structure for every device handling sound
     """
+
     def __init__(self):
         #: The number of speaker channels
         self.channels = "2"

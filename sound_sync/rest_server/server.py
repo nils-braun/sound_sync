@@ -8,7 +8,6 @@ from sound_sync.rest_server.handler import ErrorHandler, ListHandler
 from sound_sync.rest_server.server_items.server_items import ClientItem, ChannelItem
 
 
-
 # TODO: Add a heartbeat
 
 class RestServer:
@@ -17,7 +16,6 @@ class RestServer:
         self.channel_list = dict()
 
     def get_app(self):
-
         channel_initializer = {"item_type": ChannelItem, "item_list": self.channel_list}
         client_initializer = {"item_type": ClientItem, "item_list": self.client_list}
 

@@ -19,6 +19,7 @@ class Channel(JSONPickleable):
     """
     Data structure for the channels
     """
+
     def __init__(self, item_hash=None, request=None):
         """
         Initialize with a given hash
@@ -47,6 +48,7 @@ class ChannelItem(Channel, SoundDevice):
     Note: ClientPrograms (as the sender or the listener) use only the Channel datastructure, not the ChannelClient
     as they add a SoundDevice by themselves and do not need the handler process
     """
+
     def __init__(self, item_hash, request):
         Channel.__init__(self, item_hash, request)
         SoundDevice.__init__(self)
@@ -75,6 +77,7 @@ class Client(JSONPickleable):
     """
     Data structure for the clients
     """
+
     def __init__(self, item_hash=None, request=None):
         """
         Initialize with a given hash
@@ -92,6 +95,7 @@ class ClientItem(Client):
     """
     Data structure for the clients handled by the server (with added meta information)
     """
+
     def __init__(self, item_hash, request):
         Client.__init__(self, item_hash, request)
 

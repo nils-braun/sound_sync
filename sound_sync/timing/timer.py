@@ -1,4 +1,5 @@
 from multiprocessing import Process
+
 from sound_sync.timing.time_utils import get_current_date, sleep
 
 
@@ -7,6 +8,7 @@ class Timer(Process):
     Wait until a certain time has occurred in a different process and execute a target function.
     TODO: Handle reoccurring events!
     """
+
     def __init__(self, start_time_to_wait_for, target_function):
         """
         Initialize the timer process
@@ -41,4 +43,3 @@ class Timer(Process):
 
     def stop(self):
         self._should_run = False
-

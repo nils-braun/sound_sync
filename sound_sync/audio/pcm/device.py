@@ -1,6 +1,6 @@
-from sound_sync.audio.sound_device import SoundDevice
 import alsaaudio
 
+from sound_sync.audio.sound_device import SoundDevice
 from sound_sync.timing.time_utils import sleep
 
 

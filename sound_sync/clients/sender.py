@@ -1,6 +1,7 @@
 import argparse
-from sound_sync.clients.base_sender import BaseSender
+
 from sound_sync.audio.pcm.record import PCMRecorder
+from sound_sync.clients.base_sender import BaseSender
 
 
 def main():

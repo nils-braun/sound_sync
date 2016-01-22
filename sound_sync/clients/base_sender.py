@@ -1,4 +1,5 @@
 import urllib
+
 from sound_sync.clients.connection import SoundSyncConnection
 from sound_sync.clients.sound_buffer_with_time import SoundBufferWithTime
 from sound_sync.rest_server.server_items.json_pickable import JSONPickleable

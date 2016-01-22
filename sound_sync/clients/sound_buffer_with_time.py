@@ -15,9 +15,9 @@ class SoundBufferWithTime():
         splitted_information = string.split(SoundBufferWithTime.SPLIT_SEPARATOR)
 
         new_sound_buffer = SoundBufferWithTime(
-            sound_buffer=SoundBufferWithTime.SPLIT_SEPARATOR.join(splitted_information[:-3]),
-            buffer_number=int(splitted_information[-2]),
-            buffer_time=to_datetime(splitted_information[-3]))
+                sound_buffer=SoundBufferWithTime.SPLIT_SEPARATOR.join(splitted_information[:-3]),
+                buffer_number=int(splitted_information[-2]),
+                buffer_time=to_datetime(splitted_information[-3]))
 
         sound_buffer_length = int(splitted_information[-1])
         assert new_sound_buffer.sound_buffer_length == sound_buffer_length

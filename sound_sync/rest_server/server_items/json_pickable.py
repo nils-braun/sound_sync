@@ -2,6 +2,7 @@ class JSONPickleable:
     """
     Mixin class for every pickable object
     """
+
     def __init__(self):
         """
         Do nothing

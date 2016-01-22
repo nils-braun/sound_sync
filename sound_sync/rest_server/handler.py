@@ -1,4 +1,5 @@
 import random
+
 from tornado.web import RequestHandler
 
 NOT_SUPPORTED_ERROR_CODE = 501

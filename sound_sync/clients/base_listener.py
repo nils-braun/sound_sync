@@ -86,13 +86,15 @@ class BaseListener(Client):
         self.play_buffer(temp_extracted_buffer)
         self.next_expected_buffer_number += 1
 
-    def get_current_buffer_start_index(self):
-        response = self.connection.http_client.fetch(self.handler_string + "/start")
+    def get_buffer_index(self, type):
+        response = self.connection.http_client.fetch(self.handler_string + "/" + type)
         return int(response.body)
 
+    def get_current_buffer_start_index(self):
+        return self.get_buffer_index("start")
+
     def get_current_buffer_end_index(self):
-        response = self.connection.http_client.fetch(self.handler_string + "/end")
-        return int(response.body)
+        return self.get_buffer_index("end")
 
     def get_buffer(self, buffer_number):
         response = self.connection.http_client.fetch(self.handler_string + "/get/%d" % buffer_number, raise_error=False)

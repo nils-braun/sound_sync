@@ -1,5 +1,4 @@
 from sound_sync.audio.pcm.device import PCMDevice
-from sound_sync.audio.sound_device import SoundDevice
 
 
 class PCMRecorder(PCMDevice):

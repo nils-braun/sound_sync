@@ -1,5 +1,6 @@
 import json
 import urllib
+
 from tornado import httpclient
 
 __author__ = 'nils'
@@ -9,8 +10,8 @@ class SoundSyncConnection:
     """
     Class to handle the connection to the sound sync server from a client.
     """
-    def __init__(self, host=None, manager_port=None):
 
+    def __init__(self, host=None, manager_port=None):
         #: The port of the manager host
         self.manager_port = manager_port
 
@@ -23,6 +24,10 @@ class SoundSyncConnection:
     @property
     def manager_string(self):
         return "http://" + str(self.host) + ":" + str(self.manager_port)
+
+    def send_to_url(self, url, content):
+        body = urllib.urlencode(content)
+        self.http_client.fetch(url, body=body, method="POST")
 
     def add_channel_to_server(self):
         response = self.http_client.fetch(self.manager_string + "/channels/add")
@@ -43,13 +48,11 @@ class SoundSyncConnection:
     def set_name_and_description_of_channel(self, name, description, channel_hash):
         parameters = {"name": name,
                       "description": description}
-        body = urllib.urlencode(parameters)
-        self.http_client.fetch(self.manager_string + "/channels/set/" + channel_hash, body=body, method="POST")
+        self.send_to_url(self.manager_string + "/channels/set/" + channel_hash, parameters)
 
     def set_name_of_client(self, name, client_hash):
         parameters = {"name": name}
-        body = urllib.urlencode(parameters)
-        self.http_client.fetch(self.manager_string + "/clients/set/" + client_hash, body=body, method="POST")
+        self.send_to_url(self.manager_string + "/clients/set/" + client_hash, parameters)
 
     def get_channel_information(self, channel_hash):
         response = self.http_client.fetch(self.manager_string + "/channels/get")
