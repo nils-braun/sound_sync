@@ -31,3 +31,9 @@ class SoundBufferWithTime():
                                                                   str(self.sound_buffer_length)])
 
         return return_string
+
+    def __eq__(self, other):
+        return (other.sound_buffer == self.sound_buffer and
+                other.buffer_time == self.buffer_time and
+                other.buffer_number == self.buffer_number and
+                other.sound_buffer_length == self.sound_buffer_length)
