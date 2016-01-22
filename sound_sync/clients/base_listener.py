@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from sound_sync.clients.connection import SoundSyncConnection
 from sound_sync.clients.sound_buffer_with_time import SoundBufferWithTime
 from sound_sync.rest_server.server_items.json_pickable import JSONPickleable
@@ -75,16 +77,19 @@ class BaseListener(Client):
         # Receive information from the buffer server if possible
         while True:
             current_end_index = self.get_current_buffer_end_index()
-            if current_end_index >= self.next_expected_buffer_number:
+            if current_end_index > self.next_expected_buffer_number:
                 self.receive_and_play_next_buffer()
 
     def receive_and_play_next_buffer(self):
-        temp_buffer = self.get_buffer(self.next_expected_buffer_number)
-        temp_extracted_buffer = SoundBufferWithTime.construct_from_string(temp_buffer)
-        assert temp_extracted_buffer.buffer_number == self.next_expected_buffer_number
+        try:
+            temp_buffer = self.get_buffer(self.next_expected_buffer_number)
+            temp_extracted_buffer = SoundBufferWithTime.construct_from_string(temp_buffer)
+            assert temp_extracted_buffer.buffer_number == self.next_expected_buffer_number
 
-        self.play_buffer(temp_extracted_buffer)
-        self.next_expected_buffer_number += 1
+            self.play_buffer(temp_extracted_buffer)
+            self.next_expected_buffer_number += 1
+        except RuntimeError:
+            pass
 
     def get_buffer_index(self, type):
         response = self.connection.http_client.fetch(self.handler_string + "/" + type)
@@ -107,5 +112,10 @@ class BaseListener(Client):
         def play():
             self.player.put(sound_buffer_with_time.sound_buffer)
 
-        timer = Timer(sound_buffer_with_time.buffer_time, play)
-        timer.start()
+        sound_buffer_with_time.buffer_time += timedelta(seconds=10)
+
+        try:
+            timer = Timer(sound_buffer_with_time.buffer_time, play)
+            timer.start()
+        except ValueError:
+            pass

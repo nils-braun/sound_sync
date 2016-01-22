@@ -19,15 +19,15 @@ class Timer(Process):
         self.target_function = target_function
         self._should_run = True
 
-        super(Timer, self).__init__()
-
-    def run(self):
-        start_time_to_wait_for = self.start_time_to_wait_for
-
         current_time = get_current_date()
 
         if current_time > start_time_to_wait_for:
             raise ValueError("Can not handle a start time in the past.")
+
+        super(Timer, self).__init__()
+
+    def run(self):
+        start_time_to_wait_for = self.start_time_to_wait_for
 
         time_to_wait_for = start_time_to_wait_for
 

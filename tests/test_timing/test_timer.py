@@ -6,19 +6,23 @@ from tests.fixtures import TimingTestCase
 
 
 class TestTimer(TimingTestCase):
-    def test_fail_or_not_fail_for_past_values(self):
+    def test_not_fail_for_future_values(self):
         self.time_mock.sleep = None
 
         start_time = datetime(2015, 11, 6, 0, 0, 0)
-        timer = Timer(start_time, None)
 
-        # Call the sleep function, because the time is in the future
         self.datetime_mock.datetime.utcnow = MagicMock(return_value=datetime(2015, 11, 4, 0, 0, 0))
-        self.assertRaisesRegexp(TypeError, "'NoneType' object is not callable", timer.run)
 
-        # Fail, because the time is in the past
+        # This should not fail
+        Timer(start_time, None)
+
+    def test_fail_for_past_values(self):
+        self.time_mock.sleep = None
+
+        start_time = datetime(2015, 11, 6, 0, 0, 0)
         self.datetime_mock.datetime.utcnow = MagicMock(return_value=datetime(2015, 11, 6, 0, 0, 2))
-        self.assertRaisesRegexp(ValueError, "Can not handle a start time in the past.", timer.run)
+
+        self.assertRaisesRegexp(ValueError, "Can not handle a start time in the past.", Timer, start_time, None)
 
     def test_run(self):
         self.datetime_mock.datetime.utcnow = self.time_list_mock_function
@@ -41,7 +45,10 @@ class TestTimer(TimingTestCase):
         timer.run()
 
     def test_stop(self):
-        timer = Timer(None, None)
+        self.datetime_mock.datetime.utcnow = self.time_list_mock_function
+
+        start_time = datetime(2015, 11, 6, 0, 0, 2)
+        timer = Timer(start_time, None)
 
         self.assertEqual(timer._should_run, True)
 
