@@ -59,3 +59,19 @@ class TestPCMPlayer(SoundTestCase):
             self.assertEqual(len(args), 1)
             self.assertEqual(args[0], test_buffer * (number_of_buffers - i + 2))
             self.assertEqual(kwargs, {})
+
+    def test_put_with_errors(self):
+        player = self.init_sound_player()
+
+        self.counter = 0
+
+        def player_mock(buffer):
+            self.counter += 1
+            if self.counter % 2 == 0:
+                raise RuntimeError()
+            else:
+                return 2
+
+        player.pcm.write = player_mock
+
+        player.put("This is a test buffer")

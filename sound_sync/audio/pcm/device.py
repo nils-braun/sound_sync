@@ -58,8 +58,11 @@ class PCMDevice(SoundDevice):
 
         while written_bytes < len(sound_buffer_bytes):
             sound_buffer_to_write = sound_buffer_bytes[written_bytes:]
-            currently_written_bytes = self.pcm.write(sound_buffer_to_write)
-            if currently_written_bytes > 0:
-                written_bytes += currently_written_bytes * 4
-            else:
-                sleep(0.0001)
+            try:
+                currently_written_bytes = self.pcm.write(sound_buffer_to_write)
+                if currently_written_bytes > 0:
+                    written_bytes += currently_written_bytes * 4
+            except RuntimeError:
+                pass
+
+            sleep(0.0001)
