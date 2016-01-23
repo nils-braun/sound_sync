@@ -1,9 +1,9 @@
-from multiprocessing import Process
+from threading import Thread
 
 from sound_sync.timing.time_utils import get_current_date, sleep
 
 
-class Timer(Process):
+class Timer(Thread):
     """
     Wait until a certain time has occurred in a different process and execute a target function.
     TODO: Handle reoccurring events!
