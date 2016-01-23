@@ -4,6 +4,7 @@ from sound_sync.clients.connection import SoundSyncConnection
 from sound_sync.clients.sound_buffer_with_time import SoundBufferWithTime
 from sound_sync.rest_server.server_items.json_pickable import JSONPickleable
 from sound_sync.rest_server.server_items.server_items import Client, Channel
+from sound_sync.timing.time_utils import sleep
 from sound_sync.timing.timer import Timer
 
 
@@ -76,6 +77,7 @@ class BaseListener(Client):
 
         # Receive information from the buffer server if possible
         while True:
+            sleep(0.001)
             current_end_index = self.get_current_buffer_end_index()
             if current_end_index > self.next_expected_buffer_number:
                 self.receive_and_play_next_buffer()
@@ -112,10 +114,11 @@ class BaseListener(Client):
         def play():
             self.player.put(sound_buffer_with_time.sound_buffer)
 
-        sound_buffer_with_time.buffer_time += timedelta(seconds=10)
+        sound_buffer_with_time.buffer_time += timedelta(seconds=1)
 
         try:
             timer = Timer(sound_buffer_with_time.buffer_time, play)
             timer.start()
         except ValueError:
             pass
+
