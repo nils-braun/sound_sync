@@ -40,6 +40,7 @@ coverage.xml
 
 # Build and docs folder/files
 build/*
+externals/build/*
 dist/*
 sdist/*
 docs/_rst/*
@@ -47,7 +48,6 @@ docs/_build/*
 cover/*
 MANIFEST
 buffer_server/build
-externals
 
 
 .coverage*
