@@ -65,7 +65,7 @@ class TestBaseSender(SenderTestCase, ServerTestCase):
                                                    buffer_time=expected_time)
 
         expected_parameters = {"buffer": expected_send_buffer.to_string()}
-        expected_body = urllib.urlencode(expected_parameters)
+        expected_body = urllib.parse.urlencode(expected_parameters)
 
         mocking_client.fetch.assert_called_with('http://' + self.test_host + ':' + str(test_handler_port) + '/add',
                                                 method="POST", body=expected_body)
@@ -105,8 +105,8 @@ class TestBaseSender(SenderTestCase, ServerTestCase):
         except CallableExhausted:
             pass
 
-        for i in xrange(self.number_of_stored_buffers):
-            self.assertEqual(real_http_client.fetch(sender1.handler_string + "/get/" + str(i)).body,
+        for i in range(self.number_of_stored_buffers):
+            self.assertEqual(str(real_http_client.fetch(sender1.handler_string + "/get/" + str(i)).body, encoding="utf8"),
                              "%s<||>%s<||>%d<||>6" % (self.test_buffer, test_current_time + i * sender1.recorder.get_waiting_time(), i))
 
         self.assertRaisesRegexp(HTTPError, "502: Bad Gateway", real_http_client.fetch,
@@ -114,18 +114,18 @@ class TestBaseSender(SenderTestCase, ServerTestCase):
         self.assertRaisesRegexp(HTTPError, "502: Bad Gateway", real_http_client.fetch,
                                 sender2.handler_string + "/get/" + str(0))
 
-        self.assertEqual(real_http_client.fetch(sender1.handler_string + "/start").body, "0")
-        self.assertEqual(real_http_client.fetch(sender2.handler_string + "/start").body, "0")
+        self.assertEqual(str(real_http_client.fetch(sender1.handler_string + "/start").body, encoding="utf8"), "0")
+        self.assertEqual(str(real_http_client.fetch(sender2.handler_string + "/start").body, encoding="utf8"), "0")
 
         try:
             sender2.main_loop()
         except CallableExhausted:
             pass
 
-        for i in xrange(self.number_of_stored_buffers):
-            self.assertEqual(real_http_client.fetch(sender1.handler_string + "/get/" + str(i)).body,
+        for i in range(self.number_of_stored_buffers):
+            self.assertEqual(str(real_http_client.fetch(sender1.handler_string + "/get/" + str(i)).body, encoding="utf8"),
                              "%s<||>%s<||>%d<||>6" % (self.test_buffer, test_current_time + i * sender1.recorder.get_waiting_time(), i))
-            self.assertEqual(real_http_client.fetch(sender2.handler_string + "/get/" + str(i)).body,
+            self.assertEqual(str(real_http_client.fetch(sender2.handler_string + "/get/" + str(i)).body, encoding="utf8"),
                              "%s<||>%s<||>%d<||>6" % (self.test_buffer, test_current_time + i * sender1.recorder.get_waiting_time(), i))
 
         self.assertRaisesRegexp(HTTPError, "502: Bad Gateway", real_http_client.fetch,
@@ -133,8 +133,8 @@ class TestBaseSender(SenderTestCase, ServerTestCase):
         self.assertRaisesRegexp(HTTPError, "502: Bad Gateway", real_http_client.fetch,
                                 sender2.handler_string + "/get/" + str(self.number_of_stored_buffers + 1))
 
-        self.assertEqual(real_http_client.fetch(sender1.handler_string + "/start").body, "0")
-        self.assertEqual(real_http_client.fetch(sender2.handler_string + "/start").body, "0")
+        self.assertEqual(str(real_http_client.fetch(sender1.handler_string + "/start").body, encoding="utf8"), "0")
+        self.assertEqual(str(real_http_client.fetch(sender2.handler_string + "/start").body, encoding="utf8"), "0")
 
         sender1.terminate()
         channels = self.get_channels()
@@ -152,7 +152,7 @@ class TestBaseSender(SenderTestCase, ServerTestCase):
         sender.channel_hash = channel_hash
 
         # Change recorder settings and handler port
-        body = urllib.urlencode({"handler_port": "64567", "channels": "5", "buffer_size": "34"})
+        body = urllib.parse.urlencode({"handler_port": "64567", "channels": "5", "buffer_size": "34"})
         self.set_channel_html(body, channel_hash)
 
         sender.get_settings()

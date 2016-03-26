@@ -43,7 +43,7 @@ class BaseSender(Channel):
                                               buffer_time=buffer_time)
 
             parameters = {"buffer": send_buffer.to_string()}
-            body = urllib.urlencode(parameters)
+            body = urllib.parse.urlencode(parameters)
             self.connection.http_client.fetch(self.handler_string + '/add',
                                               method="POST", body=body)
             buffer_number += 1

@@ -68,7 +68,7 @@ class TestBaseListener(ListenerTestCase, ServerTestCase):
         listener.channel_hash = channel_hash
 
         # Change recorder settings and handler port
-        body = urllib.urlencode({"handler_port": "64567", "channels": "5", "buffer_size": "34"})
+        body = urllib.parse.urlencode({"handler_port": "64567", "channels": "5", "buffer_size": "34"})
         self.set_channel_html(body, channel_hash)
 
         listener.get_settings()
@@ -140,11 +140,11 @@ class TestBaseListener(ListenerTestCase, ServerTestCase):
         test_buffer_with_time = SoundBufferWithTime(sound_buffer=self.test_buffer, buffer_number=0, buffer_time=datetime(2015, 11, 3, 0, 0, 10))
 
         buffer_numbers = 10
-        for i in xrange(buffer_numbers):
+        for i in range(buffer_numbers):
             test_buffer_with_time.buffer_number = i
             self.send_buffer(test_buffer_with_time.to_string(), listener, real_http_client)
 
-        for i in xrange(buffer_numbers):
+        for i in range(buffer_numbers):
             listener.receive_and_play_next_buffer()
 
         self.assertEqual(listener.start_play_timer.call_count, 10)
@@ -178,9 +178,9 @@ class TestBaseListener(ListenerTestCase, ServerTestCase):
         self.assertEqual(start_index, 0)
 
         parameters = {"buffer": self.test_buffer}
-        body = urllib.urlencode(parameters)
+        body = urllib.parse.urlencode(parameters)
 
-        for i in xrange(101):
+        for i in range(101):
             real_http_client.fetch(listener.handler_string + '/add',
                                    method="POST", body=body)
 
@@ -213,9 +213,9 @@ class TestBaseListener(ListenerTestCase, ServerTestCase):
         self.assertEqual(end_index, 0)
 
         parameters = {"buffer": self.test_buffer}
-        body = urllib.urlencode(parameters)
+        body = urllib.parse.urlencode(parameters)
 
-        for i in xrange(11):
+        for i in range(11):
             real_http_client.fetch(listener.handler_string + '/add',
                                    method="POST", body=body)
 
@@ -263,12 +263,12 @@ class TestBaseListener(ListenerTestCase, ServerTestCase):
         listener, connection, real_http_client = self.init_typical_setup()
 
         buffer_numbers = 10
-        for i in xrange(buffer_numbers):
+        for i in range(buffer_numbers):
             self.send_buffer(self.test_buffer + str(i), listener, real_http_client)
 
         sleep(0.05)
 
-        for i in xrange(buffer_numbers):
+        for i in range(buffer_numbers):
             buffer = listener.get_buffer(i)
             self.assertEqual(buffer, self.test_buffer + str(i))
 
@@ -278,6 +278,6 @@ class TestBaseListener(ListenerTestCase, ServerTestCase):
 
     def send_buffer(self, buffer_content, listener, real_http_client):
         parameters = {"buffer": buffer_content}
-        body = urllib.urlencode(parameters)
+        body = urllib.parse.urlencode(parameters)
         real_http_client.fetch(listener.handler_string + '/add',
                                method="POST", body=body)
