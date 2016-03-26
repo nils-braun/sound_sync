@@ -19,20 +19,20 @@ class TestSoundBufferList(TestCase):
         self.assertEqual(self.buffer_list.get_next_free_index(), start_index)
 
         first_index = 2
-        for i in xrange(first_index):
+        for i in range(first_index):
             self.buffer_list.add_buffer(test_buffer + str(i))
 
-        for i in xrange(first_index):
+        for i in range(first_index):
             self.assertEqual(self.buffer_list.get_buffer(str(i + start_index)), test_buffer + str(i))
 
         self.assertEqual(self.buffer_list.get_start_index(), start_index)
         self.assertEqual(self.buffer_list.get_next_free_index(), first_index + start_index)
 
         second_index = 8
-        for i in xrange(second_index):
+        for i in range(second_index):
             self.buffer_list.add_buffer(test_buffer + str(i + first_index))
 
-        for i in xrange(-self.max_buffer_size, 0):
+        for i in range(-self.max_buffer_size, 0):
             self.assertEqual(self.buffer_list.get_buffer(str(start_index + first_index + second_index + i)),
                              test_buffer + str(first_index + second_index + i))
 
@@ -45,7 +45,7 @@ class TestSoundBufferList(TestCase):
         self.test_add_buffer(start_index=148)
 
     def test_get_buffer(self):
-        for i in xrange(10):
+        for i in range(10):
             self.buffer_list.add_buffer("Test buffer " + str(i))
 
         self.assertEqual(self.buffer_list.get_buffer("5"), "Test buffer 5")

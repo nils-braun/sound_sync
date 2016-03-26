@@ -1,0 +1,3 @@
+libboost-dev
+python-dev
+gcc>=4.7

@@ -35,7 +35,7 @@ class ListHandler(RequestHandler):
                 return self.send_error(KEY_ERROR_CODE)
         elif action == "get":
             return self.write({item_hash: list_item.encode_json()
-                               for item_hash, list_item in self.item_list.iteritems()})
+                               for item_hash, list_item in self.item_list.items()})
 
         else:
             return self.send_error(NOT_SUPPORTED_ERROR_CODE)

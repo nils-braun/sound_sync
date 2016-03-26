@@ -26,7 +26,8 @@ class TestSoundSyncConnection(ServerTestCase):
 
         channels = self.get_channels()
         self.assertEqual(len(channels), 1)
-        self.assertEqual(channels.keys()[0], channel_hash)
+        print(channels.keys())
+        self.assertEqual(list(channels.keys()), [channel_hash])
 
     def test_remove_channel_from_server(self):
         self.setUpForOwnServer()
@@ -72,7 +73,7 @@ class TestSoundSyncConnection(ServerTestCase):
 
         clients = self.get_clients()
         self.assertEqual(len(clients), 1)
-        self.assertEqual(clients.keys()[0], client_hash)
+        self.assertEqual(list(clients.keys()), [client_hash])
 
     def test_remove_client_from_server(self):
         self.setUpForOwnServer()

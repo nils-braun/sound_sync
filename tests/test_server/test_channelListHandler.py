@@ -20,7 +20,7 @@ class TestChannelListFromServer(ServerTestCase):
         test_name = "My New Name"
         test_description = "This is a description. It <strong>even</strong> have some html tags."
         parameters = {"name": test_name, "description": test_description}
-        body = urllib.urlencode(parameters)
+        body = urllib.parse.urlencode(parameters)
 
         response = self.set_channel_html(body, item_hash)
         self.assertResponse(response, "")

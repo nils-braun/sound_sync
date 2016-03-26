@@ -27,7 +27,7 @@ class TimingTestCase(TestCase):
         self.time_mock = patcher.start()
         self.addCleanup(patcher.stop)
 
-        self.datelist = [datetime(2015, 11, 6, 0, 0, i) for i in xrange(20)]
+        self.datelist = [datetime(2015, 11, 6, 0, 0, i) for i in range(20)]
 
         self.time_list_mock_function = MagicMock(side_effect=self.datelist)
 
@@ -48,10 +48,12 @@ class ServerTestCase(AsyncHTTPTestCase):
 
     def assertResponse(self, response, content=None):
         self.assertEqual(response.code, 200)
+        body = str(response.body, encoding="utf8")
+
         if content is not None:
-            self.assertEqual(response.body, content)
+            self.assertEqual(body, content)
         else:
-            return response.body
+            return body
 
     def get_channels_html(self):
         response = self.fetch('/channels/get')
@@ -77,7 +79,7 @@ class ServerTestCase(AsyncHTTPTestCase):
         return response
 
     def delete_channel_html(self, item_hash):
-        response = self.fetch('/channels/delete/' + item_hash)
+        response = self.fetch('/channels/delete/' + str(item_hash))
         return response
 
     def get_clients_html(self):

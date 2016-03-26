@@ -16,7 +16,7 @@ class TestClientListFromServer(ServerTestCase):
         test_name = "My New Name"
         test_ip_address = "111.111.222.333"
         parameters = {"name": test_name, "ip_address": test_ip_address}
-        body = urllib.urlencode(parameters)
+        body = urllib.parse.urlencode(parameters)
 
         response = self.set_client_html(body, item_hash)
         self.assertResponse(response, "")

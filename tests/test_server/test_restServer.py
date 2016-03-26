@@ -13,7 +13,7 @@ class TestRestServer(ServerTestCase):
         self.assertError(response, 501)
 
         parameter = {"test": "test"}
-        body = urllib.urlencode(parameter)
+        body = urllib.parse.urlencode(parameter)
         response = self.fetch("/channels/foo/1", method="POST", body=body)
         self.assertError(response, 501)
 
@@ -21,6 +21,6 @@ class TestRestServer(ServerTestCase):
         self.assertError(response, 501)
 
         parameter = {"test": "test"}
-        body = urllib.urlencode(parameter)
+        body = urllib.parse.urlencode(parameter)
         response = self.fetch("/clients/foo/1", method="POST", body=body)
         self.assertError(response, 501)

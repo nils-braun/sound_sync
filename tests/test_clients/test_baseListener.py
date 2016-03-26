@@ -109,15 +109,15 @@ class TestBaseListener(ListenerTestCase, ServerTestCase):
 
         test_buffer_with_time = SoundBufferWithTime(sound_buffer=self.test_buffer, buffer_number=0, buffer_time=datetime(2015, 11, 3, 0, 0, 10))
         listener.get_buffer = MagicMock(return_value=test_buffer_with_time.to_string())
-        listener.play_buffer = MagicMock()
+        listener.start_play_timer = MagicMock()
 
         listener.next_expected_buffer_number = 0
 
         listener.receive_and_play_next_buffer()
 
         listener.get_buffer.assert_called_once_with(0)
-        self.assertEqual(listener.play_buffer.call_count, 1)
-        self.assertEqual(listener.play_buffer.call_args, ((test_buffer_with_time, ), ))
+        self.assertEqual(listener.start_play_timer.call_count, 1)
+        self.assertEqual(listener.start_play_timer.call_args, ((test_buffer_with_time,),))
         self.assertEqual(listener.next_expected_buffer_number, 1)
 
         listener.next_expected_buffer_number = 10
@@ -134,7 +134,7 @@ class TestBaseListener(ListenerTestCase, ServerTestCase):
     def test_receive_and_play_next_buffer_real(self):
         listener, connection, real_http_client = self.init_typical_setup()
 
-        listener.play_buffer = MagicMock()
+        listener.start_play_timer = MagicMock()
         listener.next_expected_buffer_number = 0
 
         test_buffer_with_time = SoundBufferWithTime(sound_buffer=self.test_buffer, buffer_number=0, buffer_time=datetime(2015, 11, 3, 0, 0, 10))
@@ -147,8 +147,8 @@ class TestBaseListener(ListenerTestCase, ServerTestCase):
         for i in xrange(buffer_numbers):
             listener.receive_and_play_next_buffer()
 
-        self.assertEqual(listener.play_buffer.call_count, 10)
-        for i, call_arg in enumerate(listener.play_buffer.call_args_list):
+        self.assertEqual(listener.start_play_timer.call_count, 10)
+        for i, call_arg in enumerate(listener.start_play_timer.call_args_list):
             test_buffer_with_time.buffer_number = i
             self.assertEqual(call_arg, call(test_buffer_with_time))
 

@@ -21,22 +21,32 @@ class SoundSyncConnection:
         #: A http client to use (for free ;-)
         self.http_client = httpclient.HTTPClient()
 
+        #: A different manager string, only used for testing
+        self._manager_string = None
+
     @property
     def manager_string(self):
-        return "http://" + str(self.host) + ":" + str(self.manager_port)
+        if self._manager_string is not None:
+            return self._manager_string
+        else:
+            return "http://" + str(self.host) + ":" + str(self.manager_port)
+
+    @manager_string.setter
+    def manager_string(self, mock_url):
+        self._manager_string = mock_url
 
     def send_to_url(self, url, content):
-        body = urllib.urlencode(content)
+        body = urllib.parse.urlencode(content)
         self.http_client.fetch(url, body=body, method="POST")
 
     def add_channel_to_server(self):
         response = self.http_client.fetch(self.manager_string + "/channels/add")
-        channel_hash = response.body
+        channel_hash = str(response.body, encoding="utf8")
         return channel_hash
 
     def add_client_to_server(self):
         response = self.http_client.fetch(self.manager_string + "/clients/add")
-        client_hash = response.body
+        client_hash = str(response.body, encoding="utf8")
         return client_hash
 
     def remove_channel_from_server(self, channel_hash):
@@ -56,5 +66,5 @@ class SoundSyncConnection:
 
     def get_channel_information(self, channel_hash):
         response = self.http_client.fetch(self.manager_string + "/channels/get")
-        response_dict = json.loads(response.body)
+        response_dict = json.loads(str(response.body, encoding="utf8"))
         return response_dict[channel_hash]

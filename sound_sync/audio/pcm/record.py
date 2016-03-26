@@ -18,7 +18,7 @@ class PCMRecorder(PCMDevice):
     def get(self):
         length = 0
         sound_buffer = r""
-        for i in xrange(int(self.factor)):
+        for i in range(int(self.factor)):
             current_length, current_sound_buffer = PCMDevice.get(self)
             length += current_length
             sound_buffer += current_sound_buffer

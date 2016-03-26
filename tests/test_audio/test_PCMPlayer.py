@@ -48,16 +48,16 @@ class TestPCMPlayer(SoundTestCase):
 
         player.put(test_buffer * number_of_buffers)
         send_buffers = player.pcm.write.call_args_list
-        for i in xrange(0, 2):
+        for i in range(0, 2):
             args, kwargs = send_buffers[i]
             self.assertEqual(len(args), 1)
-            self.assertEqual(args[0], test_buffer * (number_of_buffers))
+            self.assertEqual(args[0], bytes(test_buffer * (number_of_buffers), encoding="utf8"))
             self.assertEqual(kwargs, {})
 
-        for i in xrange(2, number_of_buffers):
+        for i in range(2, number_of_buffers):
             args, kwargs = send_buffers[i]
             self.assertEqual(len(args), 1)
-            self.assertEqual(args[0], test_buffer * (number_of_buffers - i + 2))
+            self.assertEqual(args[0], bytes(test_buffer * (number_of_buffers - i + 2), encoding="utf8"))
             self.assertEqual(kwargs, {})
 
     def test_put_with_errors(self):
