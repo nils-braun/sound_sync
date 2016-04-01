@@ -1,8 +1,7 @@
+import datetime
 from unittest import TestCase
 
-import datetime
-
-from sound_sync.clients.sound_buffer_with_time import SoundBufferWithTime
+from sound_sync.entities.sound_buffer_with_time import SoundBufferWithTime
 
 
 class TestSoundBufferWithTime(TestCase):

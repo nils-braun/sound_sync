@@ -17,6 +17,3 @@ class PCMPlay(PCMDevice):
             return
 
         self.initialize_pcm(card_name="default", capture_device=False, blocking=False)
-
-    def put(self, sound_buffer):
-        PCMDevice.put(self, sound_buffer)

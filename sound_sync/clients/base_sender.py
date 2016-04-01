@@ -1,7 +1,7 @@
 import urllib
 
 from sound_sync.clients.connection import SoundSyncConnection
-from sound_sync.clients.sound_buffer_with_time import SoundBufferWithTime
+from sound_sync.entities.sound_buffer_with_time import SoundBufferWithTime
 from sound_sync.rest_server.server_items.json_pickable import JSONPickleable
 from sound_sync.rest_server.server_items.server_items import Channel
 from sound_sync.timing.time_utils import get_current_date
@@ -36,6 +36,7 @@ class BaseSender(Channel):
 
         while True:
             sound_buffer, length = self.recorder.get()
+            # TODO: Better use the real time here?
             buffer_time = starting_time + self.recorder.get_waiting_time() * buffer_number
 
             send_buffer = SoundBufferWithTime(sound_buffer=sound_buffer,

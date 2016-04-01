@@ -1,9 +1,5 @@
 from unittest import TestCase
-
-try:
-    from sound_sync.buffer_server import BufferList
-except ImportError:
-    from buffer_server import BufferList
+from buffer_server import BufferList
 
 
 class TestSoundBufferList(TestCase):

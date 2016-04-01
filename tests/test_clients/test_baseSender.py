@@ -1,12 +1,12 @@
 import urllib
-
-from datetime import datetime, timedelta
-from mock import MagicMock, patch
-from tornado.httpclient import HTTPClient, HTTPError
+from datetime import datetime
 from time import sleep
 
-from sound_sync.clients.sound_buffer_with_time import SoundBufferWithTime
-from tests.fixtures import SenderTestCase, CallableExhausted, ServerTestCase, TimingTestCase
+from mock import MagicMock, patch
+from tornado.httpclient import HTTPClient, HTTPError
+
+from sound_sync.entities.sound_buffer_with_time import SoundBufferWithTime
+from tests.fixtures import SenderTestCase, CallableExhausted, ServerTestCase
 
 
 class TestBaseSender(SenderTestCase, ServerTestCase):

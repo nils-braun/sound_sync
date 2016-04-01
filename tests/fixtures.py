@@ -1,4 +1,5 @@
 import json
+import urllib
 from datetime import datetime, timedelta
 from time import sleep
 from unittest import TestCase
@@ -69,11 +70,6 @@ class ServerTestCase(AsyncHTTPTestCase):
         response = self.fetch('/channels/add')
         return response
 
-    def add_channel(self):
-        channel_html = self.add_channel_html()
-        channel_hash = self.assertResponse(channel_html)
-        return channel_hash
-
     def set_channel_html(self, body, item_hash):
         response = self.fetch('/channels/set/' + str(item_hash), method="POST", body=body)
         return response
@@ -99,11 +95,6 @@ class ServerTestCase(AsyncHTTPTestCase):
     def add_client_html(self):
         response = self.fetch('/clients/add')
         return response
-
-    def add_client(self):
-        client_html = self.add_client_html()
-        client_hash = self.assertResponse(client_html)
-        return client_hash
 
     def delete_client_html(self, item_hash):
         response = self.fetch('/clients/delete/' + item_hash)
@@ -239,6 +230,12 @@ class ListenerTestCase(ClientTestCase):
         listener.initialize()
         sleep(0.1)
         return listener, connection, real_http_client
+
+    def send_buffer(self, buffer_content, listener, real_http_client):
+        parameters = {"buffer": buffer_content}
+        body = urllib.parse.urlencode(parameters)
+        real_http_client.fetch(listener.handler_string + '/add',
+                               method="POST", body=body)
 
 
 class ErrorAfter:

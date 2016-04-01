@@ -8,9 +8,6 @@ class BufferServerProcess(Process):
         self.port_number = port_number
 
     def run(self):
-        try:
-            from sound_sync.buffer_server import BufferServer
-        except ImportError:
-            from buffer_server import BufferServer
+        from buffer_server import BufferServer
 
         BufferServer(self.port_number).start()

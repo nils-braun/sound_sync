@@ -1,9 +1,6 @@
-try:
-    from buffer_server import BufferList
-except ImportError:
-    from sound_sync.buffer_server import BufferList
+from buffer_server import BufferList
 
-from sound_sync.clients.buffer_downloader import BufferDownloader
+from sound_sync.clients.buffer_downloader_thread import BufferDownloaderThread
 from sound_sync.clients.buffer_player_thread import BufferPlayerThread
 from sound_sync.clients.connection import SoundSyncConnection
 from sound_sync.rest_server.server_items.json_pickable import JSONPickleable
@@ -29,9 +26,9 @@ class BaseListener(Client):
         self.buffer_list = BufferList(100)
 
         #: The threads to handle the playing
-        self.downloader_thread = BufferDownloader(self.connection.http_client.fetch, self.buffer_list)
+        self.downloader_thread = BufferDownloaderThread(self)
 
-        self.player_thread = BufferPlayerThread(self.buffer_list, self.player)
+        self.player_thread = BufferPlayerThread(self)
 
         #: The last played buffer
         self.last_played_buffer_number = -1
@@ -49,8 +46,6 @@ class BaseListener(Client):
 
         self.player.initialize()
 
-        self.downloader_thread.initialize(self.handler_string)
-
     @property
     def handler_string(self):
         if self._connected_channel is None or self._connected_channel.handler_port is None:
@@ -64,10 +59,10 @@ class BaseListener(Client):
 
         self.player.terminate()
         self.player_thread.terminate()
+        self.downloader_thread.terminate()
 
-        #self.connection.remove_client_from_server(self.client_hash)
+        self.connection.remove_client_from_server(self.client_hash)
         self.client_hash = None
-
 
     def get_settings(self):
         if self.channel_hash is None:
@@ -83,6 +78,7 @@ class BaseListener(Client):
         if self.client_hash is None:
             raise AssertionError("Listener needs to be initialized first")
 
+        # We do not need both of them to run as anther thread. We choose the downloader thread as our one.
         self.player_thread.start()
-        self.downloader_thread.main_loop()
+        self.downloader_thread.run()
 
