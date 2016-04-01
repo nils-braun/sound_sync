@@ -2,9 +2,10 @@ from unittest import TestCase
 
 from mock import MagicMock
 
+from sound_sync.clients.base_listener import BaseListener
 from sound_sync.clients.buffer_downloader_thread import BufferDownloaderThread
 from sound_sync.entities.sound_buffer_with_time import SoundBufferWithTime
-from sound_sync.timing.time_utils import to_datetime
+from sound_sync.timing.time_utils import to_datetime, sleep
 from tests.fixtures import ListenerTestCase, ServerTestCase
 
 
@@ -79,5 +80,24 @@ class TestBufferDownloaderThread(ListenerTestCase, ServerTestCase):
         self.assertRaises(RuntimeError, listener.downloader_thread.get_buffer, 1)
 
     def test_run(self):
-        self.fail()
+        listener = BaseListener()
+        buffer_downloader = BufferDownloaderThread(listener)
+
+        self.assertRaises(ValueError, buffer_downloader.run)
+
+        listener, connection, real_http_client = self.init_typical_setup()
+
+        for i in range(30):
+            test_buffer = SoundBufferWithTime("Test", i, to_datetime(("2010-01-01 01:01:00")))
+            self.send_buffer(test_buffer.to_string(), listener, real_http_client)
+
+        listener.downloader_thread.start()
+
+        sleep(0.6)
+
+        listener.terminate()
+
+        self.assertEqual(listener.buffer_list.get_start_index(), 0)
+        self.assertEqual(listener.buffer_list.get_next_free_index(), 30)
+
 

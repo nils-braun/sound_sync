@@ -48,6 +48,9 @@ class BufferDownloaderThread(ThreadedSubListener):
                     except RuntimeError:
                         pass
 
+                if not temp_buffer:
+                    raise RuntimeError
+
                 temp_extracted_buffer = SoundBufferWithTime.construct_from_string(temp_buffer)
                 assert temp_extracted_buffer.buffer_number == next_buffer_index
 
