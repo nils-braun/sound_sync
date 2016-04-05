@@ -1,9 +1,20 @@
+sudo: false
 language: python
 python:
   - "3.4"
   - "2.7"
 install: 
-  sudo apt-get install -y libasound2-dev libboost-dev python-dev gcc-4.7 &&
-  pip install -rrequirements.txt &&
-  python setup.py install
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
+  - pip install -rrequirements.txt
+  - python setup.py install
 script: python setup.py test
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - gcc-4.8
+      - g++-4.8
+      - libasound2-dev 
+      - libboost-dev 
