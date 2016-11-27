@@ -1,5 +1,8 @@
 from multiprocessing import Process
 
+from tornado.httpserver import HTTPServer
+from tornado.ioloop import IOLoop
+
 
 class BufferServerProcess(Process):
     def __init__(self, port_number):
@@ -8,6 +11,4 @@ class BufferServerProcess(Process):
         self.port_number = port_number
 
     def run(self):
-        from buffer_server import BufferServer
-
-        BufferServer(self.port_number).start()
+        pass

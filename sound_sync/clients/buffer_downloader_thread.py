@@ -12,6 +12,7 @@ class BufferDownloaderThread(ThreadedSubListener):
     def get_buffer_index(self, start_or_end):
         assert(start_or_end in ["start", "end"])
         response = self.parent_listener.connection.http_client.fetch(self.parent_listener.handler_string + "/" + start_or_end)
+
         return int(response.body)
 
     def get_current_buffer_start_index(self):
@@ -37,8 +38,8 @@ class BufferDownloaderThread(ThreadedSubListener):
         self.parent_listener.buffer_list.set_start_index(next_expected_buffer_number)
 
         while self._should_run:
-            current_end_index_server = self.get_current_buffer_end_index()
-            current_end_index_local = self.parent_listener.buffer_list.get_next_free_index() - 1
+            current_end_index_server = self.get_current_buffer_end_index() - 1
+            current_end_index_local = self.parent_listener.buffer_list.get_next_free_index()
 
             if current_end_index_server > current_end_index_local:
                 next_buffer_index = current_end_index_local + 1
@@ -50,17 +51,15 @@ class BufferDownloaderThread(ThreadedSubListener):
                         temp_buffer = self.get_buffer(next_buffer_index)
                         break
                     except RuntimeError:
-                        print("Getting failed...", next_buffer_index)
-                        raise RuntimeError
+                        pass
 
                 if not temp_buffer:
                     raise RuntimeError
 
-                print("Having", next_buffer_index)
-
                 temp_extracted_buffer = SoundBufferWithTime.construct_from_string(temp_buffer)
                 assert temp_extracted_buffer.buffer_number == next_buffer_index
 
+                print("Having", next_buffer_index)
                 self.parent_listener.buffer_list.add_buffer(temp_buffer)
             else:
                 sleep(0.2)

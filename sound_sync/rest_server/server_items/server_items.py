@@ -54,7 +54,7 @@ class ChannelItem(Channel, SoundDevice):
         SoundDevice.__init__(self)
 
         # Set handler port and start time to a defined value when initializing this on the server.
-        self.handler_port = get_free_port()
+        self.handler_port = 8888 #get_free_port()
         self.start_time = get_current_date()
 
         #: The handler process

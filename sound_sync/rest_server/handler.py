@@ -54,3 +54,32 @@ class ListHandler(RequestHandler):
 
         else:
             return self.send_error(NOT_SUPPORTED_ERROR_CODE)
+
+
+class BufferHandler(RequestHandler):
+    def __init__(self, application, request, **kwargs):
+        super(BufferHandler, self).__init__(application, request, **kwargs)
+
+    # noinspection PyMethodOverriding,PyAttributeOutsideInit
+    def initialize(self, buffer_list):
+        self.buffer_list = buffer_list
+
+    def get(self, action, index=None):
+        if action == "start":
+            return self.write(str(self.buffer_list.get_start_index()))
+        elif action == "end":
+            return self.write(str(self.buffer_list.get_next_free_index()))
+        elif action == "get":
+            try:
+                return self.write(str(self.buffer_list.get_buffer(str(index))))
+            except RuntimeError:
+                self.send_error(KEY_ERROR_CODE)
+        else:
+            return self.send_error(NOT_SUPPORTED_ERROR_CODE)
+
+    def post(self, action):
+        if action == "add":
+            self.buffer_list.add_buffer(self.get_argument("buffer"))
+
+        else:
+            return self.send_error(NOT_SUPPORTED_ERROR_CODE)
