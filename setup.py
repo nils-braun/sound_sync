@@ -10,7 +10,7 @@ def setup_package():
     buffer_server_ext = Extension('sound_sync/buffer_server',
                                   sources=list(map(lambda filename: os.path.join("buffer_server/src/", filename), ['python.cpp', 'handler.cpp', 'buffer_list.cpp', 'server.cpp'])),
                                   libraries=['boost_python-py34', 'boost_system', 'cppcms'],
-                                  extra_compile_args=["-std=c++11"])
+                                  extra_compile_args=["-std=c++11", "-Iexternals/cppcms-1.0.5", "-Iexternals/cppcms-1.0.5/booster", "-Iexternals/cppcms-1.0.5/build", "-Iexternals/cppcms-1.0.5/build/booster"])
 
     needs_pytest = {'pytest', 'test', 'ptr'}.intersection(sys.argv)
     pytest_runner = ['pytest-runner'] if needs_pytest else []
@@ -19,8 +19,7 @@ def setup_package():
           packages=find_packages(),
           setup_requires=['setuptools>=17.1'] + pytest_runner,
           ext_modules=[buffer_server_ext],
-          tests_require=['nose', 'mock'],
-          test_suite="nose.collector",
+          tests_require=['pytest', 'mock', 'pytest-cov', 'coverage'],
           )
 
 

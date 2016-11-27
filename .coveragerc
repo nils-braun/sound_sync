@@ -2,7 +2,8 @@
 [run]
 branch = True
 source = sound_sync
-omit = */_version.py
+omit = */_version.py 
+       */console_applications/*.py
 
 [report]
 # Regexes for lines to exclude from consideration

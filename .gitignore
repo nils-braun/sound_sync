@@ -40,7 +40,7 @@ coverage.xml
 
 # Build and docs folder/files
 build/*
-externals/build/*
+externals/*/build/*
 dist/*
 sdist/*
 docs/_rst/*
@@ -51,3 +51,4 @@ buffer_server/build
 
 
 .coverage*
+venv/
