@@ -25,7 +25,7 @@ class TestBufferDownloaderThread(ListenerTestCase, ServerTestCase):
         self.assertEqual(listener.downloader_thread.get_buffer_index("start"), 0)
         self.assertEqual(listener.downloader_thread.get_buffer_index("end"), 0)
 
-        buffer = SoundBufferWithTime("Test", 0, to_datetime(("2010-01-01 01:01:00")))
+        buffer = SoundBufferWithTime(bytes("Test", encoding="utf8"), 0, to_datetime("2010-01-01 01:01:00"))
 
         self.send_buffer(buffer.to_string(), listener, real_http_client)
         self.assertEqual(listener.downloader_thread.get_buffer_index("start"), 0)
@@ -60,7 +60,7 @@ class TestBufferDownloaderThread(ListenerTestCase, ServerTestCase):
     def test_get_buffer(self):
         listener, connection, real_http_client = self.init_typical_setup()
 
-        test_buffer = SoundBufferWithTime("Test", 0, to_datetime(("2010-01-01 01:01:00")))
+        test_buffer = SoundBufferWithTime(bytes("Test", encoding="utf8"), 0, to_datetime("2010-01-01 01:01:00"))
 
         self.send_buffer(test_buffer.to_string(), listener, real_http_client)
 
@@ -69,7 +69,7 @@ class TestBufferDownloaderThread(ListenerTestCase, ServerTestCase):
         self.assertEqual(buffer, test_buffer)
 
         for i in range(150):
-            test_buffer = SoundBufferWithTime("Test", i + 1, to_datetime(("2010-01-01 01:01:00")))
+            test_buffer = SoundBufferWithTime(bytes("Test", encoding="utf8"), i + 1, to_datetime("2010-01-01 01:01:00"))
             self.send_buffer(test_buffer.to_string(), listener, real_http_client)
 
         buffer_string = listener.downloader_thread.get_buffer(150)
@@ -88,7 +88,7 @@ class TestBufferDownloaderThread(ListenerTestCase, ServerTestCase):
         listener, connection, real_http_client = self.init_typical_setup()
 
         for i in range(30):
-            test_buffer = SoundBufferWithTime("Test", i, to_datetime(("2010-01-01 01:01:00")))
+            test_buffer = SoundBufferWithTime(bytes("Test", encoding="utf8"), i, to_datetime("2010-01-01 01:01:00"))
             self.send_buffer(test_buffer.to_string(), listener, real_http_client)
 
         listener.downloader_thread.start()

@@ -24,8 +24,9 @@ class BufferDownloaderThread(ThreadedSubListener):
         response = self.parent_listener.connection.http_client.fetch(self.parent_listener.handler_string + "/get/%d" % buffer_number,
                                                                      raise_error=False)
         if response.code == 200:
-            return response.body.decode("utf8")
+            return response.body
         else:
+            print(response.body)
             raise RuntimeError(response)
 
     def run(self):
@@ -41,15 +42,21 @@ class BufferDownloaderThread(ThreadedSubListener):
 
             if current_end_index_server > current_end_index_local:
                 next_buffer_index = current_end_index_local + 1
+
+                temp_buffer = None
+
                 for i in range(self.maximum_retries):
                     try:
                         temp_buffer = self.get_buffer(next_buffer_index)
                         break
                     except RuntimeError:
-                        pass
+                        print("Getting failed...", next_buffer_index)
+                        raise RuntimeError
 
                 if not temp_buffer:
                     raise RuntimeError
+
+                print("Having", next_buffer_index)
 
                 temp_extracted_buffer = SoundBufferWithTime.construct_from_string(temp_buffer)
                 assert temp_extracted_buffer.buffer_number == next_buffer_index

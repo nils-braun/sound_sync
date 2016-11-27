@@ -45,7 +45,7 @@ class TestPCMRecorder(SoundTestCase):
 
         recorder = self.init_sound_recorder()
         test_buffer_length = 8234234
-        test_buffer = "This is a buffer"
+        test_buffer = bytes("This is a buffer", encoding="utf8")
         test_factor = 6
 
         recorder.factor = test_factor

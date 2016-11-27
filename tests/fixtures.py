@@ -160,7 +160,7 @@ class SenderTestCase(ClientTestCase):
         self.number_of_stored_buffers = 5
         self.test_name = "TheName"
         self.test_description = "TheDescription"
-        self.test_buffer = "Buffer"
+        self.test_buffer = bytes("Buffer", encoding="utf8")
         self.test_buffer_length = 100
 
     def init_own_sender(self, manager_server=None, buffer_server=None):
@@ -176,7 +176,7 @@ class SenderTestCase(ClientTestCase):
         # Ensure we will not run into an infinite loop
         sender.recorder = PCMRecorder()
         sender.recorder.get = ErrorAfter(self.number_of_stored_buffers, (self.test_buffer, self.test_buffer_length))
-        sender.recorder.initialize = lambda : None
+        sender.recorder.initialize = lambda: None
 
         sender.connection.http_client = MagicMock()
         sender.connection.http_client.fetch = MagicMock(side_effect=fetch_mock_local)

@@ -32,6 +32,7 @@ def main():
     listener.player = PCMPlay()
     listener.name = args.name
     listener.initialize()
+
     try:
         listener.main_loop()
     finally:

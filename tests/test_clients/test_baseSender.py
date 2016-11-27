@@ -106,12 +106,14 @@ class TestBaseSender(SenderTestCase, ServerTestCase):
             pass
 
         for i in range(self.number_of_stored_buffers):
-            self.assertEqual(str(real_http_client.fetch(sender1.handler_string + "/get/" + str(i)).body, encoding="utf8"),
-                             "%s<||>%s<||>%d<||>6" % (self.test_buffer, test_current_time + i * sender1.recorder.get_waiting_time(), i))
+            stored_buffer = real_http_client.fetch(sender1.handler_string + "/get/" + str(i)).body
+            assumed_stored_buffer = SoundBufferWithTime(self.test_buffer, i,
+                                                        test_current_time + i * sender1.recorder.get_waiting_time())
+            self.assertEqual(stored_buffer.decode("utf8"), assumed_stored_buffer.to_string())
 
-        self.assertRaisesRegexp(HTTPError, "502: Bad Gateway", real_http_client.fetch,
+        self.assertRaisesRegex(HTTPError, "502: Bad Gateway", real_http_client.fetch,
                                 sender1.handler_string + "/get/" + str(self.number_of_stored_buffers + 1))
-        self.assertRaisesRegexp(HTTPError, "502: Bad Gateway", real_http_client.fetch,
+        self.assertRaisesRegex(HTTPError, "502: Bad Gateway", real_http_client.fetch,
                                 sender2.handler_string + "/get/" + str(0))
 
         self.assertEqual(str(real_http_client.fetch(sender1.handler_string + "/start").body, encoding="utf8"), "0")
@@ -123,14 +125,19 @@ class TestBaseSender(SenderTestCase, ServerTestCase):
             pass
 
         for i in range(self.number_of_stored_buffers):
-            self.assertEqual(str(real_http_client.fetch(sender1.handler_string + "/get/" + str(i)).body, encoding="utf8"),
-                             "%s<||>%s<||>%d<||>6" % (self.test_buffer, test_current_time + i * sender1.recorder.get_waiting_time(), i))
-            self.assertEqual(str(real_http_client.fetch(sender2.handler_string + "/get/" + str(i)).body, encoding="utf8"),
-                             "%s<||>%s<||>%d<||>6" % (self.test_buffer, test_current_time + i * sender1.recorder.get_waiting_time(), i))
+            stored_buffer = real_http_client.fetch(sender1.handler_string + "/get/" + str(i)).body
+            assumed_stored_buffer = SoundBufferWithTime(self.test_buffer, i,
+                                                        test_current_time + i * sender1.recorder.get_waiting_time())
+            self.assertEqual(stored_buffer.decode("utf8"), assumed_stored_buffer.to_string())
 
-        self.assertRaisesRegexp(HTTPError, "502: Bad Gateway", real_http_client.fetch,
+            stored_buffer = real_http_client.fetch(sender2.handler_string + "/get/" + str(i)).body
+            assumed_stored_buffer = SoundBufferWithTime(self.test_buffer, i,
+                                                        test_current_time + i * sender2.recorder.get_waiting_time())
+            self.assertEqual(stored_buffer.decode("utf8"), assumed_stored_buffer.to_string())
+
+        self.assertRaisesRegex(HTTPError, "502: Bad Gateway", real_http_client.fetch,
                                 sender1.handler_string + "/get/" + str(self.number_of_stored_buffers + 1))
-        self.assertRaisesRegexp(HTTPError, "502: Bad Gateway", real_http_client.fetch,
+        self.assertRaisesRegex(HTTPError, "502: Bad Gateway", real_http_client.fetch,
                                 sender2.handler_string + "/get/" + str(self.number_of_stored_buffers + 1))
 
         self.assertEqual(str(real_http_client.fetch(sender1.handler_string + "/start").body, encoding="utf8"), "0")
