@@ -1,5 +1,3 @@
-import urllib
-
 from sound_sync.clients.connection import SoundSyncConnection
 from sound_sync.entities.sound_buffer_with_time import SoundBufferWithTime
 from sound_sync.rest_server.server_items.json_pickable import JSONPickleable
@@ -43,10 +41,7 @@ class BaseSender(Channel):
                                               buffer_number=buffer_number,
                                               buffer_time=buffer_time)
 
-            parameters = {"buffer": send_buffer.to_string()}
-            body = urllib.parse.urlencode(parameters)
-            self.connection.http_client.fetch(self.handler_string + '/add',
-                                              method="POST", body=body)
+            self.connection.add_buffer(send_buffer, self.channel_hash)
             buffer_number += 1
 
     def terminate(self):
@@ -58,13 +53,4 @@ class BaseSender(Channel):
 
     def get_settings(self):
         channel_information = self.connection.get_channel_information(self.channel_hash)
-
         JSONPickleable.fill_with_json(self.recorder, channel_information)
-        self.handler_port = channel_information["handler_port"]
-
-    @property
-    def handler_string(self):
-        if self.handler_port is None:
-            raise ValueError()
-
-        return "http://" + str(self.connection.host) + ":" + str(self.handler_port)

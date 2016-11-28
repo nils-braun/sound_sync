@@ -1,10 +1,10 @@
 import json
 import urllib
 
-from tests.fixtures import ServerTestCase
+from tests.fixtures import LowLevelServerTestCase
 
 
-class TestClientListFromServer(ServerTestCase):
+class TestClientListFromServer(LowLevelServerTestCase):
     def test_get_clients(self):
         response = self.get_clients_html()
         self.assertResponse(response, "{}")

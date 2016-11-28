@@ -11,7 +11,7 @@ class RestServer:
     def __init__(self):
         self.client_list = dict()
         self.channel_list = dict()
-        self.buffer_list = BufferList(100)
+        self.buffer_list = dict()
 
     def get_app(self):
         channel_initializer = {"item_type": ChannelItem, "item_list": self.channel_list}
@@ -24,8 +24,6 @@ class RestServer:
             url(r"/channels/(\w+)/(\d+)$", ListHandler, channel_initializer),
             url(r"/clients/(\w+)$", ListHandler, client_initializer),
             url(r"/clients/(\w+)/(\d+)$", ListHandler, client_initializer),
-            url(r"/(add)", BufferHandler, buffer_initializer),
-            url(r"/(start)", BufferHandler, buffer_initializer),
-            url(r"/(end)", BufferHandler, buffer_initializer),
-            url(r"/(get)/(\d+)$", BufferHandler, buffer_initializer),
+            url(r"/buffers/(\w+)/(\w+)", BufferHandler, buffer_initializer),
+            url(r"/buffers/(\w+)/(\w+)/(\d+)$", BufferHandler, buffer_initializer),
         ])

@@ -46,13 +46,6 @@ class BaseListener(Client):
 
         self.player.initialize()
 
-    @property
-    def handler_string(self):
-        if self._connected_channel is None or self._connected_channel.handler_port is None:
-            raise ValueError()
-
-        return "http://" + str(self.connection.host) + ":" + str(self._connected_channel.handler_port)
-
     def terminate(self):
         if self.client_hash is None:
             return

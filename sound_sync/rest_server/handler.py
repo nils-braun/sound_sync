@@ -1,4 +1,5 @@
 import random
+from buffer_server import BufferList
 
 from tornado.web import RequestHandler
 
@@ -34,9 +35,14 @@ class ListHandler(RequestHandler):
             else:
                 return self.send_error(KEY_ERROR_CODE)
         elif action == "get":
-            return self.write({item_hash: list_item.encode_json()
-                               for item_hash, list_item in self.item_list.items()})
-
+            if list_hash:
+                if list_hash in self.item_list:
+                    return self.write(self.item_list[list_hash].encode_json())
+                else:
+                    return self.send_error(KEY_ERROR_CODE)
+            else:
+                return self.write({item_hash: list_item.encode_json()
+                                   for item_hash, list_item in self.item_list.items()})
         else:
             return self.send_error(NOT_SUPPORTED_ERROR_CODE)
 
@@ -64,22 +70,31 @@ class BufferHandler(RequestHandler):
     def initialize(self, buffer_list):
         self.buffer_list = buffer_list
 
-    def get(self, action, index=None):
+    def get(self, channel_hash, action, index=None):
+        if channel_hash not in self.buffer_list:
+            print(channel_hash, self.buffer_list)
+            return self.send_error(KEY_ERROR_CODE)
+        else:
+            buffer_list = self.buffer_list[channel_hash]
+
         if action == "start":
-            return self.write(str(self.buffer_list.get_start_index()))
+            return self.write(str(buffer_list.get_start_index()))
         elif action == "end":
-            return self.write(str(self.buffer_list.get_next_free_index()))
+            return self.write(str(buffer_list.get_next_free_index()))
         elif action == "get":
             try:
-                return self.write(str(self.buffer_list.get_buffer(str(index))))
+                return self.write(str(buffer_list.get_buffer(str(index))))
             except RuntimeError:
                 self.send_error(KEY_ERROR_CODE)
         else:
             return self.send_error(NOT_SUPPORTED_ERROR_CODE)
 
-    def post(self, action):
+    def post(self, channel_hash, action):
+        if channel_hash not in self.buffer_list:
+            self.buffer_list[channel_hash] = BufferList(100)
+
         if action == "add":
-            self.buffer_list.add_buffer(self.get_argument("buffer"))
+            self.buffer_list[channel_hash].add_buffer(self.get_argument("buffer"))
 
         else:
             return self.send_error(NOT_SUPPORTED_ERROR_CODE)

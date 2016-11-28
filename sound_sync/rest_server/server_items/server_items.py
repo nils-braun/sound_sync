@@ -7,14 +7,6 @@ from sound_sync.rest_server.server_items.json_pickable import JSONPickleable
 from sound_sync.timing.time_utils import get_current_date
 
 
-def get_free_port():
-    s = socket.socket()
-    s.bind(('', 0))
-    port = s.getsockname()[1]
-    s.close()
-    return port
-
-
 class Channel(JSONPickleable):
     """
     Data structure for the channels
@@ -38,9 +30,6 @@ class Channel(JSONPickleable):
         #: The item has of the channel in the channel list
         self.channel_hash = item_hash
 
-        #: The buffer_handler server we are handling
-        self.handler_port = None
-
 
 class ChannelItem(Channel, SoundDevice):
     """
@@ -54,7 +43,7 @@ class ChannelItem(Channel, SoundDevice):
         SoundDevice.__init__(self)
 
         # Set handler port and start time to a defined value when initializing this on the server.
-        self.handler_port = 8888 #get_free_port()
+        self.handler_port = 8888
         self.start_time = get_current_date()
 
         #: The handler process

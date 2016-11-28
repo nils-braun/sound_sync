@@ -1,6 +1,7 @@
 from sound_sync.clients.threaded_sub_listener import ThreadedSubListener
 from sound_sync.timing.time_utils import sleep
 from sound_sync.entities.sound_buffer_with_time import SoundBufferWithTime
+from tornado.httpclient import HTTPError
 
 
 class BufferDownloaderThread(ThreadedSubListener):
@@ -9,48 +10,29 @@ class BufferDownloaderThread(ThreadedSubListener):
 
         self.maximum_retries = 100
 
-    def get_buffer_index(self, start_or_end):
-        assert(start_or_end in ["start", "end"])
-        response = self.parent_listener.connection.http_client.fetch(self.parent_listener.handler_string + "/" + start_or_end)
-
-        return int(response.body)
-
-    def get_current_buffer_start_index(self):
-        return self.get_buffer_index("start")
-
-    def get_current_buffer_end_index(self):
-        return self.get_buffer_index("end")
-
-    def get_buffer(self, buffer_number):
-        response = self.parent_listener.connection.http_client.fetch(self.parent_listener.handler_string + "/get/%d" % buffer_number,
-                                                                     raise_error=False)
-        if response.code == 200:
-            return response.body
-        else:
-            print(response.body)
-            raise RuntimeError(response)
-
-    def run(self):
-        if not self.parent_listener.handler_string:
+    def run(self, testing_mode=False):
+        if not self.parent_listener.channel_hash:
             raise ValueError()
 
-        next_expected_buffer_number = self.get_current_buffer_start_index()
+        channel_hash = self.parent_listener.channel_hash
+
+        next_expected_buffer_number = self.parent_listener.connection.get_start_index(channel_hash)
         self.parent_listener.buffer_list.set_start_index(next_expected_buffer_number)
 
         while self._should_run:
-            current_end_index_server = self.get_current_buffer_end_index() - 1
+            current_end_index_server = self.parent_listener.connection.get_end_index(channel_hash)
             current_end_index_local = self.parent_listener.buffer_list.get_next_free_index()
 
             if current_end_index_server > current_end_index_local:
-                next_buffer_index = current_end_index_local + 1
+                next_buffer_index = current_end_index_local
 
                 temp_buffer = None
 
                 for i in range(self.maximum_retries):
                     try:
-                        temp_buffer = self.get_buffer(next_buffer_index)
+                        temp_buffer = self.parent_listener.connection.get_buffer_raw(next_buffer_index, channel_hash)
                         break
-                    except RuntimeError:
+                    except HTTPError:
                         pass
 
                 if not temp_buffer:
@@ -61,5 +43,7 @@ class BufferDownloaderThread(ThreadedSubListener):
 
                 print("Having", next_buffer_index)
                 self.parent_listener.buffer_list.add_buffer(temp_buffer)
+            elif testing_mode:
+                return
             else:
                 sleep(0.2)

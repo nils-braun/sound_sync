@@ -18,7 +18,7 @@ def setup_package():
           version="0.1",
           packages=find_packages(),
           setup_requires=['setuptools>=17.1'] + pytest_runner,
-          ext_modules=[buffer_server_ext],
+          #ext_modules=[buffer_server_ext],
           tests_require=['pytest', 'mock', 'pytest-cov', 'coverage'],
           )
 

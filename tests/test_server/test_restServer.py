@@ -1,9 +1,9 @@
 import urllib
 
-from tests.fixtures import ServerTestCase
+from tests.fixtures import LowLevelServerTestCase
 
 
-class TestRestServer(ServerTestCase):
+class TestRestServer(LowLevelServerTestCase):
     def test_main(self):
         response = self.fetch('/')
         self.assertError(response, 501)

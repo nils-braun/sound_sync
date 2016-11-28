@@ -5,10 +5,10 @@ import urllib
 from mock import patch
 
 from sound_sync.timing.time_utils import to_datetime
-from tests.fixtures import ServerTestCase
+from tests.fixtures import LowLevelServerTestCase
 
 
-class TestChannelListFromServer(ServerTestCase):
+class TestChannelListFromServer(LowLevelServerTestCase):
     def test_get_channels(self):
         response = self.get_channels_html()
         self.assertResponse(response, "{}")

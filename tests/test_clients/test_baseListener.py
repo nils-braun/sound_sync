@@ -13,9 +13,7 @@ class TestBaseListener(ListenerTestCase, ServerTestCase):
         ListenerTestCase.setUp(self)
 
     def test_terminate_with_none(self):
-        listener, connection = self.init_own_listener(manager_server=self)
-        self.assertEqual(self, connection.http_client)
-
+        listener = self.init_own_listener()
         listener.player.terminate = MagicMock()
 
         # Should not fail, as client hash is None
@@ -25,71 +23,57 @@ class TestBaseListener(ListenerTestCase, ServerTestCase):
         self.assertEqual(listener.player.terminate.call_count, 0)
 
     def test_terminate(self):
-        listener, connection = self.init_own_listener(manager_server=self)
-        self.assertEqual(self, connection.http_client)
-
+        listener = self.init_own_listener()
         listener.player.terminate = MagicMock()
 
-        client_hash = connection.add_client_to_server()
+        client_hash = self.connection.add_client_to_server()
         listener.client_hash = client_hash
 
-        clients = self.get_clients()
+        clients = self.connection.get_clients()
         self.assertEqual(len(clients), 1)
 
         listener.terminate()
 
-        clients = self.get_clients()
+        clients = self.connection.get_clients()
         self.assertEqual(len(clients), 0)
 
         self.assertEqual(listener.client_hash, None)
         listener.player.terminate.assert_called_once_with()
 
-    def test_handler_string(self):
-        listener, connection = self.init_own_listener()
-        listener.connection.host = self.test_host
-        self.assertRaises(ValueError, getattr, listener, "handler_string")
-
-        test_handler_port = 54654
-        listener._connected_channel = Channel()
-        listener._connected_channel.handler_port = test_handler_port
-
-        self.assertEqual(listener.handler_string, "http://" + self.test_host + ":" + str(test_handler_port))
-
     def test_get_settings(self):
-        listener, connection = self.init_own_listener(manager_server=self)
+        listener = self.init_own_listener()
 
         self.assertRaises(ValueError, listener.get_settings)
 
-        channel_hash = connection.add_channel_to_server()
-        client_hash = connection.add_client_to_server()
+        channel_hash = self.connection.add_channel_to_server()
+        client_hash = self.connection.add_client_to_server()
         listener.client_hash = client_hash
         listener.channel_hash = channel_hash
 
         # Change recorder settings and handler port
-        body = urllib.parse.urlencode({"handler_port": "64567", "channels": "5", "buffer_size": "34"})
-        self.set_channel_html(body, channel_hash)
+        body = {"channels": "5", "buffer_size": "34"}
+        self.connection.set_parameters_of_channel(body, channel_hash)
 
         listener.get_settings()
 
         # Check player settings and handler port
-        self.assertEqual(listener._connected_channel.handler_port, "64567")
         self.assertEqual(listener._connected_channel.channel_hash, channel_hash)
         self.assertEqual(listener.player.channels, "5")
         self.assertEqual(listener.player.buffer_size, "34")
 
     def test_initialize(self):
-        listener, connection = self.init_own_listener(manager_server=self)
+        listener = self.init_own_listener()
 
         listener.player.initialize = MagicMock()
 
         self.assertRaises(ValueError, listener.initialize)
 
-        channel_hash = connection.add_channel_to_server()
+        channel_hash = self.connection.add_channel_to_server()
         listener.channel_hash = channel_hash
 
         listener.initialize()
 
-        clients = self.get_clients()
+        clients = self.connection.get_clients()
         self.assertEqual(len(clients), 1)
         self.assertIn(listener.client_hash, clients)
         result_client = clients[listener.client_hash]
@@ -99,7 +83,7 @@ class TestBaseListener(ListenerTestCase, ServerTestCase):
         # Doing the same twice should not harm
         listener.initialize()
         self.assertEqual(listener.player.initialize.call_count, 1)
-        clients = self.get_clients()
+        clients = self.connection.get_clients()
         self.assertEqual(len(clients), 1)
 
     def test_mainloop(self):
