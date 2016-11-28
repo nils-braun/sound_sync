@@ -60,6 +60,11 @@ class TestSoundSyncConnection(SoundSyncConnectionTestCase):
         self.assertEqual(channel_information["name"], test_name)
         self.assertEqual(channel_information["description"], test_description)
 
+    def test_get_invalid_channel(self):
+        invalid_hash = "1234"
+
+        self.assertRaises(HTTPError, self.connection.get_channel_information, invalid_hash)
+
     def test_add_client_to_server(self):
         client_hash = self.connection.add_client_to_server()
 

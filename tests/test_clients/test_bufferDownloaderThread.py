@@ -1,7 +1,3 @@
-from unittest import TestCase
-
-from mock import MagicMock
-
 from sound_sync.clients.base_listener import BaseListener
 from sound_sync.clients.buffer_downloader_thread import BufferDownloaderThread
 from sound_sync.entities.sound_buffer_with_time import SoundBufferWithTime

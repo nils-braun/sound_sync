@@ -89,15 +89,6 @@ class TestChannelListFromServer(LowLevelServerTestCase):
         self.assertEqual(float(added_channel["factor"]), 10)
 
         self.assertIn("handler_port", added_channel)
-        # Test if the handler_port is really free
-        s = socket.socket()
-
-        #try:
-        #    s.bind(("", int(added_channel["handler_port"])))
-        #    s.close()
-        #except socket.error:
-        #    self.fail()
-
         self.assertEqual(len(added_channel), 11)
 
         response = self.add_channel_html()
