@@ -29,7 +29,7 @@ class BufferPlayerThread(ThreadedSubListener):
                 sound_buffer_with_time = SoundBufferWithTime.construct_from_string(sound_buffer)
 
                 print(sound_buffer_with_time.buffer_number, next_buffer_number)
-                assert sound_buffer_with_time.buffer_number == next_buffer_number
+                #assert sound_buffer_with_time.buffer_number == next_buffer_number
 
                 self.start_play_timer(sound_buffer_with_time)
                 self.last_played_buffer_number = next_buffer_number

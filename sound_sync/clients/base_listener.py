@@ -1,8 +1,7 @@
-from buffer_server import BufferList
-
 from sound_sync.clients.buffer_downloader_thread import BufferDownloaderThread
 from sound_sync.clients.buffer_player_thread import BufferPlayerThread
 from sound_sync.clients.connection import SoundSyncConnection
+from sound_sync.entities.buffer_list import BufferList
 from sound_sync.rest_server.server_items.json_pickable import JSONPickleable
 from sound_sync.rest_server.server_items.server_items import Client, Channel
 

@@ -1,6 +1,6 @@
 import base64
 from unittest import TestCase
-from buffer_server import BufferList
+from sound_sync.entities.buffer_list import BufferList
 from sound_sync.entities.sound_buffer_with_time import SoundBufferWithTime
 from sound_sync.timing.time_utils import to_datetime
 
@@ -47,9 +47,9 @@ class TestSoundBufferList(TestCase):
         for i in range(10):
             self.buffer_list.add_buffer(bytes("Test buffer " + str(i), encoding="utf8"))
 
-        self.assertEqual(self.buffer_list.get_buffer("5"), "Test buffer 5")
-        self.assertEqual(self.buffer_list.get_buffer("7"), "Test buffer 7")
-        self.assertEqual(self.buffer_list.get_buffer("9"), "Test buffer 9")
+        self.assertEqual(self.buffer_list.get_buffer("5"), b"Test buffer 5")
+        self.assertEqual(self.buffer_list.get_buffer("7"), b"Test buffer 7")
+        self.assertEqual(self.buffer_list.get_buffer("9"), b"Test buffer 9")
 
         self.assertRaises(RuntimeError, self.buffer_list.get_buffer, "4")
         self.assertRaises(RuntimeError, self.buffer_list.get_buffer, "10")

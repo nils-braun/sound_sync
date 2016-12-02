@@ -1,6 +1,6 @@
 import random
-from buffer_server import BufferList
 
+from sound_sync.entities.buffer_list import BufferList
 from tornado.web import RequestHandler
 
 NOT_SUPPORTED_ERROR_CODE = 501

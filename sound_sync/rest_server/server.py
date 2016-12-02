@@ -3,8 +3,6 @@ from tornado.web import Application, url
 from sound_sync.rest_server.handler import ErrorHandler, ListHandler, BufferHandler
 from sound_sync.rest_server.server_items.server_items import ClientItem, ChannelItem
 
-from buffer_server import BufferList
-
 # TODO: Add a heartbeat
 
 class RestServer:
