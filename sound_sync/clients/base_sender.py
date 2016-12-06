@@ -29,13 +29,11 @@ class BaseSender(Channel):
         if self.channel_hash is None:
             raise AssertionError("Sender needs to be initialized first")
 
-        starting_time = get_current_date()
         buffer_number = 0
 
         while True:
             sound_buffer, length = self.recorder.get()
-            # TODO: Better use the real time here?
-            buffer_time = starting_time + self.recorder.get_waiting_time() * buffer_number
+            buffer_time = get_current_date()
 
             send_buffer = SoundBufferWithTime(sound_buffer=sound_buffer,
                                               buffer_number=buffer_number,

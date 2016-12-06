@@ -46,7 +46,7 @@ class TestBaseSender(SenderTestCase, ServerTestCase):
         for i in range(self.number_of_stored_buffers):
             resulting_sound_buffer = self.connection.get_buffer(i, sender.channel_hash)
 
-            expected_time = test_current_time + i * sender.recorder.get_waiting_time()
+            expected_time = test_current_time
             expected_send_buffer = SoundBufferWithTime(sound_buffer=self.test_buffer,
                                                        buffer_number=i,
                                                        buffer_time=expected_time)
@@ -101,7 +101,7 @@ class TestBaseSender(SenderTestCase, ServerTestCase):
         for i in range(self.number_of_stored_buffers):
             resulting_sound_buffer = self.connection.get_buffer(i, sender1.channel_hash)
 
-            expected_time = test_current_time + i * sender1.recorder.get_waiting_time()
+            expected_time = test_current_time
             expected_send_buffer = SoundBufferWithTime(sound_buffer=self.test_buffer,
                                                        buffer_number=i,
                                                        buffer_time=expected_time)
@@ -110,7 +110,7 @@ class TestBaseSender(SenderTestCase, ServerTestCase):
 
             resulting_sound_buffer = self.connection.get_buffer(i, sender2.channel_hash)
 
-            expected_time = test_current_time + i * sender2.recorder.get_waiting_time()
+            expected_time = test_current_time
             expected_send_buffer = SoundBufferWithTime(sound_buffer=self.test_buffer,
                                                        buffer_number=i,
                                                        buffer_time=expected_time)
