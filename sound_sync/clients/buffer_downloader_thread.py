@@ -16,7 +16,7 @@ class BufferDownloaderThread(ThreadedSubListener):
 
         channel_hash = self.parent_listener.channel_hash
 
-        next_expected_buffer_number = self.parent_listener.connection.get_start_index(channel_hash)
+        next_expected_buffer_number = self.parent_listener.connection.get_start_index(channel_hash) + 10
         self.parent_listener.buffer_list.set_start_index(next_expected_buffer_number)
 
         while self._should_run:

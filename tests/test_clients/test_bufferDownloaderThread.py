@@ -18,7 +18,7 @@ class TestBufferDownloaderThread(ListenerTestCase, ServerTestCase):
 
         listener = self.init_typical_setup()
 
-        for i in range(30):
+        for i in range(40):
             test_buffer = SoundBufferWithTime(bytes("Test", encoding="utf8"), i, to_datetime("2010-01-01 01:01:00"))
             self.connection.add_buffer(test_buffer, listener.channel_hash)
 
@@ -26,14 +26,14 @@ class TestBufferDownloaderThread(ListenerTestCase, ServerTestCase):
 
         listener.terminate()
 
-        self.assertEqual(listener.buffer_list.get_start_index(), 0)
+        self.assertEqual(listener.buffer_list.get_start_index(), 10)
 
-        for i in range(30):
+        for i in range(10, 40):
             test_buffer = SoundBufferWithTime(bytes("Test", encoding="utf8"), i, to_datetime("2010-01-01 01:01:00"))
             result_buffer = SoundBufferWithTime.construct_from_string(listener.buffer_list.get_buffer(str(i)))
 
             self.assertEqual(test_buffer.buffer_number, result_buffer.buffer_number)
 
-        self.assertEqual(listener.buffer_list.get_next_free_index(), 30)
+        self.assertEqual(listener.buffer_list.get_next_free_index(), 40)
 
 
