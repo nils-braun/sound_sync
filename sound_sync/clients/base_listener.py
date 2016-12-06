@@ -74,3 +74,7 @@ class BaseListener(Client):
         self.player_thread.start()
         self.downloader_thread.run()
 
+    def print_all_channels(self):
+        for channel in self.connection.get_channels().items():
+            print(channel)
+

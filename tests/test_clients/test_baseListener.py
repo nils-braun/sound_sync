@@ -1,10 +1,21 @@
-import urllib
-
 from mock import MagicMock
 
 from sound_sync.clients.base_listener import BaseListener
-from sound_sync.rest_server.server_items.server_items import Channel
 from tests.fixtures import ListenerTestCase,  ServerTestCase
+
+from contextlib import contextmanager
+from io import StringIO
+import sys
+
+@contextmanager
+def captured_output():
+    new_out, new_err = StringIO(), StringIO()
+    old_out, old_err = sys.stdout, sys.stderr
+    try:
+        sys.stdout, sys.stderr = new_out, new_err
+        yield sys.stdout, sys.stderr
+    finally:
+        sys.stdout, sys.stderr = old_out, old_err
 
 
 class TestBaseListener(ListenerTestCase, ServerTestCase):
@@ -60,6 +71,33 @@ class TestBaseListener(ListenerTestCase, ServerTestCase):
         self.assertEqual(listener._connected_channel.channel_hash, channel_hash)
         self.assertEqual(listener.player.channels, "5")
         self.assertEqual(listener.player.buffer_size, "34")
+
+    def test_print_all_channels(self):
+        listener = self.init_own_listener()
+
+        with captured_output() as (out, err):
+            listener.print_all_channels()
+
+        self.assertEqual(out.getvalue(), "")
+
+        channel_hash = self.connection.add_channel_to_server()
+
+        with captured_output() as (out, err):
+            listener.print_all_channels()
+
+        return_dict = out.getvalue()
+
+        self.assertIn(channel_hash, return_dict)
+
+        second_channel_hash = self.connection.add_channel_to_server()
+
+        with captured_output() as (out, err):
+            listener.print_all_channels()
+
+        return_dict = out.getvalue()
+        self.assertIn(channel_hash, return_dict)
+        self.assertIn(second_channel_hash, return_dict)
+
 
     def test_initialize(self):
         listener = self.init_own_listener()

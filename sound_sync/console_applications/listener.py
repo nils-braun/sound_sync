@@ -31,6 +31,11 @@ def main():
     listener = BaseListener(args.channel_hash, args.hostname, args.manager_port)
     listener.player = PCMPlay()
     listener.name = args.name
+
+    if not args.channel_hash:
+        listener.print_all_channels()
+        exit()
+
     listener.initialize()
 
     try:
