@@ -1,117 +1,7 @@
 import json
-import urllib
 
+import collections
 import zmq as zmq
-
-from sound_sync.entities.sound_buffer_with_time import SoundBufferWithTime
-from tornado import httpclient
-
-__author__ = 'nils'
-
-
-class SoundSyncConnection:
-    """
-    Class to handle the connection to the sound sync server from a client.
-    """
-
-    def __init__(self, host=None, manager_port=None):
-        #: The port of the manager host
-        self.manager_port = manager_port
-
-        #: The address of the manager host
-        self.host = host
-
-        #: A http client to use (for free ;-)
-        self.http_client = httpclient.HTTPClient()
-
-        #: A different manager string, only used for testing
-        self._manager_string = None
-
-    @property
-    def manager_string(self):
-        if self._manager_string is not None:
-            return self._manager_string
-        else:
-            return "http://" + str(self.host) + ":" + str(self.manager_port)
-
-    @manager_string.setter
-    def manager_string(self, mock_url):
-        self._manager_string = mock_url
-
-    def send_to_url(self, url, content=None, method="POST"):
-        if content:
-            body = urllib.parse.urlencode(content)
-            response = self.http_client.fetch(self.manager_string + url, body=body, method=method)
-        else:
-            response = self.http_client.fetch(self.manager_string + url)
-
-        response.rethrow()
-        return response
-
-    def add_channel_to_server(self):
-        response = self.send_to_url("/channels/add")
-        channel_hash = str(response.body, encoding="utf8")
-        return channel_hash
-
-    def add_client_to_server(self):
-        response = self.send_to_url("/clients/add")
-        client_hash = str(response.body, encoding="utf8")
-        return client_hash
-
-    def remove_channel_from_server(self, channel_hash):
-        self.send_to_url("/channels/delete/{channel_hash}".format(channel_hash=channel_hash))
-
-    def remove_client_from_server(self, client_hash):
-        self.send_to_url("/clients/delete/{client_hash}".format(client_hash=client_hash))
-
-    def get_channel_information(self, channel_hash):
-        response = self.send_to_url("/channels/get/{channel_hash}".format(channel_hash=channel_hash))
-        response_dict = json.loads(str(response.body, encoding="utf8"))
-        return response_dict
-
-    def get_channels(self):
-        response = self.send_to_url("/channels/get")
-        response_dict = json.loads(str(response.body, encoding="utf8"))
-        return response_dict
-
-    def get_clients(self):
-        response = self.send_to_url("/clients/get")
-        response_dict = json.loads(str(response.body, encoding="utf8"))
-        return response_dict
-
-    def set_name_and_description_of_channel(self, name, description, channel_hash):
-        parameters = {"name": name, "description": description}
-        self.set_parameters_of_channel(parameters, channel_hash)
-
-    def set_parameters_of_channel(self, parameters, channel_hash):
-        self.send_to_url("/channels/set/{channel_hash}".format(channel_hash=channel_hash), parameters)
-
-    def set_name_of_client(self, name, client_hash):
-        parameters = {"name": name}
-        self.send_to_url("/clients/set/{channel_hash}".format(channel_hash=client_hash), parameters)
-
-    def add_buffer(self, sound_buffer, channel_hash):
-        parameters = {"buffer": sound_buffer.to_string()}
-        self.send_to_url("/buffers/{channel_hash}/add".format(channel_hash=channel_hash), parameters)
-
-    def get_buffer(self, buffer_number, channel_hash):
-        buffer = self.get_buffer_raw(buffer_number, channel_hash)
-        return SoundBufferWithTime.construct_from_string(buffer)
-
-    def get_buffer_raw(self, buffer_number, channel_hash):
-        buffer = self.send_to_url("/buffers/{channel_hash}/get/{buffer_number}".format(channel_hash=channel_hash,
-                                                                                       buffer_number=buffer_number))
-        return str(buffer.body, encoding="utf8")
-
-    def get_start_index(self, channel_hash):
-        return self.get_buffer_index("start", channel_hash)
-
-    def get_end_index(self, channel_hash):
-        return self.get_buffer_index("end", channel_hash)
-
-    def get_buffer_index(self, start_or_end, channel_hash):
-        return int(self.send_to_url("/buffers/{channel_hash}/{start_or_end}".format(channel_hash=channel_hash,
-                                                                                    start_or_end=start_or_end)).body)
 
 
 class Message:
@@ -121,6 +11,7 @@ class Message:
         self.message_body = self.as_buffer(message_body)
 
     def send(self, socket):
+        print("Sending to", self.topic, "a", self.message_type, "message")
         socket.send_multipart([self.as_buffer(self.topic),
                                self.as_buffer(self.message_type),
                                self.as_buffer(self.message_body)])
@@ -241,3 +132,58 @@ class Subscriber(Socket):
         assert message.topic == self.topic
 
         return message
+
+
+class Proxy(Socket):
+    def __init__(self, publisher_port, subscriber_port, cache_length=100, context=None):
+        super().__init__(context)
+
+        self.frontend = self.context.socket(zmq.SUB)
+        self.frontend.bind("tcp://*:{port}".format(port=publisher_port))
+        self.backend = self.context.socket(zmq.XPUB)
+        self.backend.bind("tcp://*:{port}".format(port=subscriber_port))
+
+        # Subscribe to every single topic from publisher
+        self.frontend.setsockopt(zmq.SUBSCRIBE, b"")
+
+        # Listen to all new subscriptions
+        self.backend.setsockopt(zmq.XPUB_VERBOSE, True)
+
+        # Store last instance of each topic in a cache
+        self.cache = collections.defaultdict(lambda: collections.deque(maxlen=cache_length))
+
+        self.poller = zmq.Poller()
+
+        self.dict_of_pollers = {self.frontend: self.frontend_method, self.backend: self.backend_method}
+
+        for poll_item in self.dict_of_pollers.keys():
+            self.poller.register(poll_item, zmq.POLLIN)
+
+    def backend_method(self):
+        event = self.backend.recv()
+
+        print("Server backend:", event)
+
+        # Event is one byte 0=unsub or 1=sub, followed by topic
+        if event[0] == 1:
+            topic = event[1:]
+            if topic in self.cache:
+                print("Sending cached topic %s" % topic)
+                for message in self.cache[topic]:
+                    message.send(self.backend)
+
+    def frontend_method(self):
+        message = Message.recv(self.frontend)
+
+        print("Server frontend:", message)
+
+        self.cache[message.topic].append(message)
+
+        message.send(self.backend)
+
+    def poll(self):
+        events = dict(self.poller.poll())
+
+        for poll_item, poll_function in self.dict_of_pollers.items():
+            if poll_item in events:
+                poll_function()
