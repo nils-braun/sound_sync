@@ -42,8 +42,11 @@ class BaseListener():
                 break
             elif message.message_type == "parameters":
                 print("Got settings", message)
-                parameters = json.loads(str(message.message_body, encoding="utf8"))
-                self.use_settings(parameters)
+                if self._connected_channel is None:
+                    parameters = json.loads(str(message.message_body, encoding="utf8"))
+                    self.use_settings(parameters)
+                else:
+                    raise RuntimeError()
             elif message.message_type == "content":
                 print("Got content", message)
 
