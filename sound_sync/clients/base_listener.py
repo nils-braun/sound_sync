@@ -3,8 +3,8 @@ from datetime import timedelta
 
 from sound_sync.clients.connection import Subscriber
 from sound_sync.entities.sound_buffer_with_time import SoundBufferWithTime
-from sound_sync.rest_server.server_items.json_pickable import JSONPickleable
-from sound_sync.rest_server.server_items.server_items import Channel
+from sound_sync.server.server_items.json_pickable import JSONPickleable
+from sound_sync.server.server_items.server_items import Channel
 from sound_sync.timing.timer import Timer
 
 
@@ -37,17 +37,17 @@ class BaseListener():
         while True:
             message = self.connection.receive()
 
-            if message.message_type == "control":
+            if message.message_type == b"control":
                 print("Got control message", message)
                 break
-            elif message.message_type == "parameters":
+            elif message.message_type == b"parameters":
                 print("Got settings", message)
                 if self._connected_channel is None:
                     parameters = json.loads(str(message.message_body, encoding="utf8"))
                     self.use_settings(parameters)
                 else:
                     raise RuntimeError()
-            elif message.message_type == "content":
+            elif message.message_type == b"content":
                 print("Got content", message)
 
                 sound_buffer_with_time = SoundBufferWithTime.construct_from_string(message.message_type)
@@ -66,3 +66,5 @@ class BaseListener():
                 except ValueError:
                     print("Value error")
                     pass
+            else:
+                raise ValueError(message)

@@ -12,7 +12,7 @@ def main():
                         help="Hostname of the management server.",
                         dest="hostname")
     parser.add_argument("-p", "--port",
-                        default=8888,
+                        default=8887,
                         type=int,
                         help="Port to send to on the server. Default 8887.",
                         dest="port")

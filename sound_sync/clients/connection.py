@@ -3,6 +3,8 @@ import json
 import collections
 import zmq as zmq
 
+from sound_sync.timing.time_utils import sleep
+
 
 class Message:
     def __init__(self, topic, message_type, message_body):
@@ -19,7 +21,10 @@ class Message:
     @staticmethod
     def recv(socket):
         message = socket.recv_multipart()
-        return Message(*message)
+        message = Message(*message)
+
+        print("Got message:", message)
+        return message
 
     @staticmethod
     def as_buffer(x):
@@ -35,7 +40,13 @@ class Message:
                 return x
 
     def __str__(self):
-        return "{self.message_type} ({self.topic}): {self.message_body}".format(self=self)
+        message_body_length = len(self.message_body)
+
+        if message_body_length > 5:
+            body = message_body_length
+        else:
+            body = self.message_body
+        return "{self.message_type} ({self.topic}): {body}".format(self=self, body=body)
 
 
 class Socket:
@@ -84,6 +95,8 @@ class Publisher(Socket):
 
         # Initialise topic by translating it to a correctly formatted topic
         self.topic = self.as_uuid(topic)
+
+        sleep(1)
 
     def _send_content(self, content):
         message = Message(self.topic, "content", content)

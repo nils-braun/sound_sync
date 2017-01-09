@@ -2,8 +2,8 @@ import atexit
 import socket
 
 from sound_sync.audio.sound_device import SoundDevice
-from sound_sync.rest_server.server_items.buffer_server_process import BufferServerProcess
-from sound_sync.rest_server.server_items.json_pickable import JSONPickleable
+from sound_sync.server.server_items.buffer_server_process import BufferServerProcess
+from sound_sync.server.server_items.json_pickable import JSONPickleable
 from sound_sync.timing.time_utils import get_current_date
 
 
