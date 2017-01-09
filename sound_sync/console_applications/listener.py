@@ -14,23 +14,17 @@ def main():
     parser.add_argument("-p", "--port",
                         default=8888,
                         type=int,
-                        help="Port of the management socket on the management server. Default 8888.",
-                        dest="manager_port")
-    parser.add_argument("-n", "--name",
-                        default="Untitled",
-                        type=str,
-                        help="Name of this channel in the channel list. Default Untitled.",
-                        dest="name")
+                        help="Port of the listen to on the server. Default 8888.",
+                        dest="port")
     parser.add_argument("-c", "--channel_hash",
-                        default=None,
+                        default="1",
                         type=str,
                         help="Channel hash to listen to.",
                         dest="channel_hash")
     args = parser.parse_args()
 
-    listener = BaseListener(args.channel_hash, args.hostname, args.manager_port)
+    listener = BaseListener(args.hostname, args.port, args.channel_hash)
     listener.player = PCMPlay()
-    listener.name = args.name
     listener.initialize()
 
     try:

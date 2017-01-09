@@ -218,3 +218,26 @@ class Publisher(Socket):
 
     def add_buffer(self, sound_buffer):
         self._send_content(sound_buffer.to_string())
+
+
+class Subscriber(Socket):
+    """
+    Class to handle the connection to the sound sync server from a client.
+    """
+
+    def __init__(self, host, port, topic, context=None):
+        #: The port of the manager host
+        super().__init__(context)
+
+        # Initialise topic by translating it to a correctly formatted topic
+        self.topic = self.as_uuid(topic)
+
+        self.subscriber = self.get_connected_socket(socket_type=zmq.SUB,
+                                                    url="tcp://{host}:{port}".format(host=host, port=port),
+                                                    options={zmq.SUBSCRIBE: self.topic})
+
+    def receive(self):
+        message = Message.recv(self.subscriber)
+        assert message.topic == self.topic
+
+        return message
