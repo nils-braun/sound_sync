@@ -12,7 +12,7 @@ class Channel(JSONPickleable):
     Data structure for the channels
     """
 
-    def __init__(self, item_hash=None, request=None):
+    def __init__(self, item_hash=None):
         """
         Initialize with a given hash
         """

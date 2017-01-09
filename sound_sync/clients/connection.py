@@ -1,6 +1,8 @@
 import json
 import urllib
 
+import zmq as zmq
+
 from sound_sync.entities.sound_buffer_with_time import SoundBufferWithTime
 from tornado import httpclient
 
@@ -110,3 +112,109 @@ class SoundSyncConnection:
     def get_buffer_index(self, start_or_end, channel_hash):
         return int(self.send_to_url("/buffers/{channel_hash}/{start_or_end}".format(channel_hash=channel_hash,
                                                                                     start_or_end=start_or_end)).body)
+
+
+class Message:
+    def __init__(self, topic, message_type, message_body):
+        self.topic = self.as_buffer(topic)
+        self.message_type = self.as_buffer(message_type)
+        self.message_body = self.as_buffer(message_body)
+
+    def send(self, socket):
+        socket.send_multipart([self.as_buffer(self.topic),
+                               self.as_buffer(self.message_type),
+                               self.as_buffer(self.message_body)])
+
+    @staticmethod
+    def recv(socket):
+        message = socket.recv_multipart()
+        return Message(*message)
+
+    @staticmethod
+    def as_buffer(x):
+        if isinstance(x, bytes):
+            return x
+
+        try:
+            return x.encode()
+        except AttributeError:
+            try:
+                return str(x).encode()
+            except TypeError:
+                return x
+
+    def __str__(self):
+        return "{self.message_type} ({self.topic}): {self.message_body}".format(self=self)
+
+
+class Socket:
+    def __init__(self, context=None):
+        if not context:
+            self.context = zmq.Context.instance()
+        else:
+            self.context = self.context
+
+    @staticmethod
+    def as_uuid(subscription):
+        return Message.as_buffer("%03d" % int(subscription))
+
+    def get_socket(self, socket_type, url, bind, options=None):
+        socket = self.context.socket(socket_type)
+
+        if bind:
+            socket.bind(url)
+        else:
+            socket.connect(url)
+
+        if options:
+            for key, value in options.items():
+                socket.setsockopt(key, value)
+
+        return socket
+
+    def get_bound_socket(self, socket_type, url, options=None):
+        return self.get_socket(socket_type=socket_type, url=url, bind=True, options=options)
+
+    def get_connected_socket(self, socket_type, url, options=None):
+        return self.get_socket(socket_type=socket_type, url=url, bind=False, options=options)
+
+
+class Publisher(Socket):
+    """
+    Class to handle the connection to the sound sync server from a client.
+    """
+
+    def __init__(self, host, port, topic, context=None):
+        # Publisher is connected to publisher port of host
+        super().__init__(context)
+
+        self._publisher = self.get_connected_socket(socket_type=zmq.PUB,
+                                                    url="tcp://{host}:{port}".format(host=host, port=port))
+
+        # Initialise topic by translating it to a correctly formatted topic
+        self.topic = self.as_uuid(topic)
+
+    def _send_content(self, content):
+        message = Message(self.topic, "content", content)
+        message.send(self._publisher)
+
+    def _send_control(self, control_flag):
+        message = Message(self.topic, "control", str(control_flag))
+        message.send(self._publisher)
+
+    def _send_parameters(self, parameters):
+        message = Message(self.topic, "parameters", json.dumps(parameters))
+        message.send(self._publisher)
+
+    def add_channel_to_server(self):
+        self._send_control("add")
+
+    def remove_channel_from_server(self):
+        self._send_control("remove")
+
+    def set_name_and_description_of_channel(self, name, description):
+        parameters = {"name": name, "description": description}
+        self._send_parameters(parameters)
+
+    def add_buffer(self, sound_buffer):
+        self._send_content(sound_buffer.to_string())

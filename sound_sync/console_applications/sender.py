@@ -14,8 +14,13 @@ def main():
     parser.add_argument("-p", "--port",
                         default=8888,
                         type=int,
-                        help="Port of the management socket on the management server. Default 8888.",
-                        dest="manager_port")
+                        help="Port to send to on the server. Default 8887.",
+                        dest="port")
+    parser.add_argument("--hash",
+                        default="1",
+                        type=str,
+                        help="Hash value. TODO",
+                        dest="hash")
     parser.add_argument("-n", "--name",
                         default="Untitled",
                         type=str,
@@ -28,7 +33,7 @@ def main():
                         dest="description")
 
     args = parser.parse_args()
-    sender = BaseSender(args.hostname, args.manager_port)
+    sender = BaseSender(args.hostname, args.port, args.hash)
     sender.recorder = PCMRecorder()
     sender.name = args.name
     sender.description = args.description
