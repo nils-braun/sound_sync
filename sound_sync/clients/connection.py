@@ -1,9 +1,7 @@
 import json
 
-import collections
 import zmq as zmq
 
-from sound_sync.entities.buffer_list import BufferList
 from sound_sync.timing.time_utils import sleep
 
 
@@ -14,7 +12,6 @@ class Message:
         self.message_body = self.as_buffer(message_body)
 
     def send(self, socket):
-        print("Sending to", self.topic, "a", self.message_type, "message")
         socket.send_multipart([self.as_buffer(self.topic),
                                self.as_buffer(self.message_type),
                                self.as_buffer(self.message_body)])
@@ -24,7 +21,6 @@ class Message:
         message = socket.recv_multipart()
         message = Message(*message)
 
-        print("Got message:", message)
         return message
 
     @staticmethod
