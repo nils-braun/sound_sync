@@ -47,7 +47,7 @@ class PCMDevice(SoundDevice):
             raise ValueError("Device needs to be initialized first")
 
         current_length, current_sound_buffer = self.pcm.read()
-        return current_length, current_sound_buffer
+        return current_sound_buffer, current_length
 
     def put(self, sound_buffer):
         if self.pcm is None:
