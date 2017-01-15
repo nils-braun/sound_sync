@@ -13,9 +13,5 @@ def to_datetime(date_string):
         return datetime.datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
 
 
-def waiting_time_to_datetime(waiting_time):
-    return datetime.timedelta(seconds=waiting_time)
-
-
 def sleep(sleep_time):
     time.sleep(sleep_time)
