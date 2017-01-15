@@ -3,6 +3,7 @@ import json
 import collections
 import zmq as zmq
 
+from sound_sync.entities.buffer_list import BufferList
 from sound_sync.timing.time_utils import sleep
 
 
@@ -148,51 +149,23 @@ class Subscriber(Socket):
 
 
 class Proxy(Socket):
-    def __init__(self, publisher_port, subscriber_port, cache_length=100, context=None):
+    def __init__(self, publisher_port, subscriber_port, frontend_method, backend_method, context=None):
         super().__init__(context)
 
-        self.frontend = self.context.socket(zmq.SUB)
-        self.frontend.bind("tcp://*:{port}".format(port=publisher_port))
-        self.backend = self.context.socket(zmq.XPUB)
-        self.backend.bind("tcp://*:{port}".format(port=subscriber_port))
-
         # Subscribe to every single topic from publisher
-        self.frontend.setsockopt(zmq.SUBSCRIBE, b"")
+        self.frontend = self.get_bound_socket(zmq.SUB, url="tcp://*:{port}".format(port=publisher_port),
+                                              options={zmq.SUBSCRIBE: b""})
 
         # Listen to all new subscriptions
-        self.backend.setsockopt(zmq.XPUB_VERBOSE, True)
-
-        # Store last instance of each topic in a cache
-        self.cache = collections.defaultdict(lambda: collections.deque(maxlen=cache_length))
+        self.backend = self.get_bound_socket(zmq.XPUB, url="tcp://*:{port}".format(port=subscriber_port),
+                                             options={zmq.XPUB_VERBOSE: True})
 
         self.poller = zmq.Poller()
 
-        self.dict_of_pollers = {self.frontend: self.frontend_method, self.backend: self.backend_method}
+        self.dict_of_pollers = {self.frontend: frontend_method, self.backend: backend_method}
 
         for poll_item in self.dict_of_pollers.keys():
             self.poller.register(poll_item, zmq.POLLIN)
-
-    def backend_method(self):
-        event = self.backend.recv()
-
-        print("Server backend:", event)
-
-        # Event is one byte 0=unsub or 1=sub, followed by topic
-        if event[0] == 1:
-            topic = event[1:]
-            if topic in self.cache:
-                print("Sending cached topic %s" % topic)
-                for message in self.cache[topic]:
-                    message.send(self.backend)
-
-    def frontend_method(self):
-        message = Message.recv(self.frontend)
-
-        print("Server frontend:", message)
-
-        self.cache[message.topic].append(message)
-
-        message.send(self.backend)
 
     def poll(self):
         events = dict(self.poller.poll())
