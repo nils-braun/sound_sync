@@ -16,4 +16,4 @@ class PCMPlay(PCMDevice):
         if self.pcm is not None:
             return
 
-        self.initialize_pcm(card_name="default", capture_device=False, blocking=False)
+        self.initialize_pcm(card_name="default", capture_device=False, blocking=True)

@@ -53,16 +53,6 @@ class PCMDevice(SoundDevice):
         if self.pcm is None:
             raise ValueError("Device needs to be initialized first")
 
-        written_bytes = 0
         assert isinstance(sound_buffer, bytes)
 
-        while written_bytes < len(sound_buffer):
-            sound_buffer_to_write = sound_buffer[written_bytes:]
-            try:
-                currently_written_bytes = int(self.pcm.write(sound_buffer_to_write))
-                if currently_written_bytes > 0:
-                    written_bytes += currently_written_bytes * 4
-            except RuntimeError:
-                pass
-
-            sleep(0.0001)
+        self.pcm.write(sound_buffer)
