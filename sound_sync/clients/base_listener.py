@@ -3,12 +3,12 @@ from datetime import timedelta
 
 from sound_sync.clients.connection import Subscriber
 from sound_sync.entities.sound_buffer_with_time import SoundBufferWithTime
-from sound_sync.server.server_items.json_pickable import JSONPickleable
-from sound_sync.server.server_items.server_items import Channel
+from sound_sync.entities.channel import Channel
+from sound_sync.entities.json_pickable import JSONPickleable
 from sound_sync.timing.timer import Timer
 
 
-class BaseListener():
+class BaseListener:
     def __init__(self, host, port, channel_hash):
         #: The connection to the rest server
         self.connection = Subscriber(host, port, channel_hash)
@@ -39,30 +39,29 @@ class BaseListener():
 
             if message.message_type == b"control":
                 print("Got control message", message)
-                break
             elif message.message_type == b"parameters":
                 print("Got settings", message)
                 if self._connected_channel is None:
                     parameters = json.loads(str(message.message_body, encoding="utf8"))
                     self.use_settings(parameters)
                 else:
-                    raise RuntimeError()
+                    print("Not implemented in the moment")
             elif message.message_type == b"content":
                 print("Got content", message)
 
-                sound_buffer_with_time = SoundBufferWithTime.construct_from_string(message.message_type)
+                sound_buffer_with_time = SoundBufferWithTime.construct_from_string(str(message.message_body, encoding="utf8"))
 
                 def play():
                     print("Playing", sound_buffer_with_time.buffer_number)
                     self.player.put(sound_buffer_with_time.sound_buffer)
 
-                sound_buffer_with_time.buffer_time += timedelta(seconds=23)
+                sound_buffer_with_time.buffer_time += timedelta(seconds=10)
                 print("Starting player for", sound_buffer_with_time.buffer_number,
                       "at", sound_buffer_with_time.buffer_time)
 
                 try:
                     timer = Timer(sound_buffer_with_time.buffer_time, play)
-                    timer.run()
+                    timer.start()
                 except ValueError:
                     print("Value error")
                     pass
