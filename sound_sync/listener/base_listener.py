@@ -1,9 +1,14 @@
+import json
+from collections import deque
 from datetime import timedelta
 from functools import partial
 
+from sound_sync.clients.connection import Subscriber
 from sound_sync.entities.buffer_list import BufferList
-from sound_sync.listener.downloader_thread import DownloaderThread
-from sound_sync.timing.time_utils import sleep
+from sound_sync.entities.channel import Channel
+from sound_sync.entities.json_pickable import JSONPickleable
+from sound_sync.entities.sound_buffer_with_time import SoundBufferWithTime
+from sound_sync.timing.time_utils import sleep, get_current_date
 from sound_sync.timing.timer import Timer
 
 
@@ -15,12 +20,25 @@ class BaseListener:
         #: The buffer list over which the threads communicate TODO: Implement this with zeromq?
         self.buffer_list = BufferList(max_buffer_size=100)
 
-        #: The thread used for downloading the buffers from the server
-        self.downloader_thread = DownloaderThread(parent=self, host=host, port=port, channel_hash=channel_hash)
-
-        self.chunksize = 3
+        self.chunksize = 20
 
         self.timer_list = []
+
+        #: The connection to the rest server
+        self.connection = Subscriber(host, port, channel_hash)
+
+        #: The channel hash of the channel we want to listen to
+        self.channel_hash = channel_hash
+
+        #: The channel we are listening to
+        self._connected_channel = None
+
+        self.current_delta = timedelta()
+
+    def use_settings(self, channel_information):
+        JSONPickleable.fill_with_json(self.player, channel_information)
+        self._connected_channel = Channel()
+        JSONPickleable.fill_with_json(self._connected_channel, channel_information)
 
     def initialize(self):
         self.player.initialize()
@@ -29,37 +47,83 @@ class BaseListener:
         for timer in self.timer_list:
             timer.stop()
 
-        self.downloader_thread.stop()
-
-        self.player.terminate()
+        # TODO: This seems to hang. Why?
+        #self.player.terminate()
 
     def start_play(self):
-        while len(self.buffer_list) <= self.chunksize:
-            sleep(0.01)
+        print("Started player thread")
 
-        next_buffers = [self.buffer_list.pop() for _ in range(self.chunksize)]
-        start_time = next_buffers[0].buffer_time + timedelta(seconds=3)
-        end_time = next_buffers[-1].buffer_time
-        try:
-            play_timer = Timer(start_time, partial(self.play, buffer_list=next_buffers))
-            play_timer.start()
-            self.timer_list.append(play_timer)
-        except ValueError:
-            pass
+        deltas = deque(maxlen=100)
 
-        next_timer = Timer(end_time, self.start_play, always_run=True)
-        next_timer.start()
+        while True:
+            time_distance = self.play_next_buffer()
+            deltas.append(time_distance)
 
-        self.timer_list.append(next_timer)
+            average_delta = sum(deltas, timedelta()) / len(deltas)
 
-    def play(self, buffer_list):
-        for buffer in buffer_list:
-            self.player.put(buffer.sound_buffer)
+            print(time_distance, average_delta, len(self.buffer_list))
+
+            if average_delta.total_seconds() > 0.001 and len(deltas) > 10:
+                # schedule 10th buffer with new delta
+                self.current_delta += average_delta
+
+                self.start_player_thread_on_buffer(self.buffer_list.buffers[10])
+
+                # play 9 buffers
+                for _ in range(9):
+                    self.play_next_buffer()
+
+                # Skip last buffer
+                self.buffer_list.pop()
+
+                break
+
+    def play_next_buffer(self):
+        next_buffer = self.buffer_list.pop()
+        print("Playing", next_buffer.buffer_number)
+        self.player.put(next_buffer.sound_buffer)
+        start_time = self.calculate_start_time(next_buffer)
+        current_date = get_current_date()
+
+        return current_date - start_time
 
     def main_loop(self):
-        self.downloader_thread.start()
+        while True:
+            message = self.connection.receive()
 
-        self.start_play()
+            if message.message_type == b"control":
+                print("Got control message", message)
+            elif message.message_type == b"parameters":
+                print("Got settings", message)
+                if self._connected_channel is None:
+                    parameters = json.loads(str(message.message_body, encoding="utf8"))
+                    self.use_settings(parameters)
+                else:
+                    print("Not implemented in the moment")
+            elif message.message_type == b"content":
+                # print("Got content", message)
+                sound_buffer_with_time = SoundBufferWithTime.construct_from_string(
+                    str(message.message_body, encoding="utf8"))
 
-        for timer in self.timer_list:
-            timer.join()
+                self.buffer_list.append(sound_buffer_with_time)
+
+                if len(self.timer_list) == 0:
+                    self.start_player_thread_on_buffer(sound_buffer_with_time)
+
+            else:
+                raise ValueError(message)
+
+            for timer in self.timer_list:
+                if not timer._should_run:
+                    timer.join()
+
+    def start_player_thread_on_buffer(self, sound_buffer_with_time):
+        timer_time = self.calculate_start_time(sound_buffer_with_time) - self.current_delta
+        print("Starting first player at", timer_time)
+        next_timer = Timer(timer_time,
+                           self.start_play)
+        next_timer.start()
+        self.timer_list.append(next_timer)
+
+    def calculate_start_time(self, sound_buffer_with_time):
+        return sound_buffer_with_time.buffer_time + timedelta(seconds=3)
