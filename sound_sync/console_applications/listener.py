@@ -1,7 +1,7 @@
 import argparse
 
 from sound_sync.audio.pcm.play import PCMPlay
-from sound_sync.clients.base_listener import BaseListener
+from sound_sync.listener.base_listener import BaseListener
 
 
 def main():

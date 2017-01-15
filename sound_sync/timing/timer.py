@@ -9,7 +9,7 @@ class Timer(Thread):
     TODO: Handle reoccurring events!
     """
 
-    def __init__(self, start_time_to_wait_for, target_function):
+    def __init__(self, start_time_to_wait_for, target_function, always_run=False):
         """
         Initialize the timer process
         :param start_time_to_wait_for: the time in seconds after the Epoch
@@ -21,7 +21,7 @@ class Timer(Thread):
 
         current_time = get_current_date()
 
-        if current_time > start_time_to_wait_for:
+        if current_time > start_time_to_wait_for and not always_run:
             raise ValueError("Can not handle a start time in the past.")
 
         super(Timer, self).__init__()

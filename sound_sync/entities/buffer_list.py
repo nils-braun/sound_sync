@@ -16,3 +16,6 @@ class BufferList:
 
     def append(self, message):
         self.buffers.append(message)
+
+    def pop(self):
+        return self.buffers.popleft()
