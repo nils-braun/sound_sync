@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from mock import MagicMock
 
 from sound_sync.timing.timer import Timer
@@ -54,7 +54,6 @@ class TestTimer(TimingTestCase):
 
         timer.stop()
         self.assertEqual(timer._should_run, False)
-
 
     def test_stop_before_function(self):
         self.datetime_mock.datetime.utcnow = self.time_list_mock_function

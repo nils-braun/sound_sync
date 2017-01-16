@@ -1,5 +1,5 @@
 from unittest import TestCase
-from sound_sync.rest_server.server_items.json_pickable import JSONPickleable
+from sound_sync.entities.json_pickable import JSONPickleable
 
 
 class Class():
@@ -7,6 +7,7 @@ class Class():
         self.a = None
         self.b = None
         self.c = None
+
 
 class Encodable(JSONPickleable):
     def __init__(self):

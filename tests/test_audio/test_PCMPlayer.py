@@ -8,8 +8,7 @@ class TestPCMPlayer(SoundTestCase):
     def test_initialize(self):
         player = self.init_sound_player()
 
-        self.alsaaudio.PCM.assert_called_with(device="default", type=self.PCM_PLAYBACK,
-                                              mode=self.PCM_NONBLOCK)
+        self.alsaaudio.PCM.assert_called_with(device="default", type=self.PCM_PLAYBACK)
 
         player.pcm.setperiodsize.assert_called_with(2)
         player.pcm.setrate.assert_called_with(3)
@@ -40,25 +39,13 @@ class TestPCMPlayer(SoundTestCase):
                                 player.put, "Buffer")
 
         test_buffer = bytes("This is a buffer", encoding="utf8")
-        number_of_buffers = 5
 
         player = self.init_sound_player()
-        pcm_response = [0, 0] + [len(test_buffer) / 4] * number_of_buffers
-        player.pcm.write = MagicMock(side_effect=pcm_response)
+        player.pcm.write = MagicMock()
 
-        player.put(test_buffer * number_of_buffers)
-        send_buffers = player.pcm.write.call_args_list
-        for i in range(0, 2):
-            args, kwargs = send_buffers[i]
-            self.assertEqual(len(args), 1)
-            self.assertEqual(args[0], test_buffer * number_of_buffers)
-            self.assertEqual(kwargs, {})
+        player.put(test_buffer)
 
-        for i in range(2, number_of_buffers):
-            args, kwargs = send_buffers[i]
-            self.assertEqual(len(args), 1)
-            self.assertEqual(args[0], test_buffer * (number_of_buffers - i + 2))
-            self.assertEqual(kwargs, {})
+        player.pcm.write.assert_called_with(test_buffer)
 
     def test_put_with_errors(self):
         player = self.init_sound_player()

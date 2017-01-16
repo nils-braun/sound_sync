@@ -1,4 +1,3 @@
-from datetime import datetime, timedelta
 from unittest import TestCase
 from sound_sync.timing import time_utils
 from tests.fixtures import TimingTestCase
@@ -16,15 +15,6 @@ class TestUtils(TimingTestCase):
 
 
 class TestUtilsNoPatch(TestCase):
-    def test_waiting_time_to_datetime(self):
-        test_waiting_time = 245.65
-        result_timedelta = time_utils.waiting_time_to_datetime(test_waiting_time)
-
-        self.assertEqual(result_timedelta.days, 0)
-        self.assertEqual(result_timedelta.seconds, int(test_waiting_time))
-        self.assertEqual(result_timedelta.total_seconds(), test_waiting_time)
-        self.assertEqual(result_timedelta.microseconds, int(1E6 * (test_waiting_time - int(test_waiting_time))))
-
     def test_to_datetime(self):
         test_date_string_one = "2015-11-06 21:35:25"
         result_datetime = time_utils.to_datetime(test_date_string_one)
