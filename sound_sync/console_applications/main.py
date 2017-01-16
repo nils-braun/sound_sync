@@ -5,12 +5,17 @@ from multiprocessing import Pool
 from sound_sync.timing.time_utils import sleep
 
 if __name__ == '__main__':
+    results = []
     with Pool(3) as pool:
-        pool.apply_async(server.main)
+        results.append(pool.apply_async(server.main))
         sleep(0.1)
-        pool.apply_async(sender.main)
+        results.append(pool.apply_async(sender.main))
         sleep(0.1)
-        pool.apply_async(listener.main)
+        results.append(pool.apply_async(listener.main))
 
         pool.close()
+
+        for result in results:
+            result.get()
+
         pool.join()
