@@ -13,7 +13,7 @@ class PCMRecorder(PCMDevice):
             return
 
         self.assert_loopback_device()
-        self.initialize_pcm(card_name="hw:Loopback,1,0", capture_device=True, blocking=True)
+        self.initialize_pcm(card_name="hw:Loopback,1,0", capture_device=True)
 
     def get(self):
         length = 0

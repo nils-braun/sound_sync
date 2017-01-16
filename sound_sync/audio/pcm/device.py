@@ -9,7 +9,7 @@ class PCMDevice(SoundDevice):
         SoundDevice.__init__(self)
         self.pcm = None
 
-    def initialize_pcm(self, card_name, capture_device=False, blocking=False):
+    def initialize_pcm(self, card_name, capture_device=False):
         """
         Set the PCM device with the given parameters.
         """
@@ -18,10 +18,7 @@ class PCMDevice(SoundDevice):
         else:
             pcm_type = alsaaudio.PCM_PLAYBACK
 
-        if not blocking:
-            self.pcm = alsaaudio.PCM(device=card_name, type=pcm_type, mode=alsaaudio.PCM_NONBLOCK)
-        else:
-            self.pcm = alsaaudio.PCM(device=card_name, type=pcm_type)
+        self.pcm = alsaaudio.PCM(device=card_name, type=pcm_type)
 
         self.pcm.setchannels(int(self.channels))
         self.pcm.setrate(int(self.frame_rate))
