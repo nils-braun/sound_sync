@@ -1,9 +1,9 @@
 from sound_sync.clients.connection import Proxy, Message
-from sound_sync.entities.buffer_list import BufferList
+from sound_sync.entities.buffer_list import RingBufferList
 
 
 class Server:
-    def __init__(self, publisher_port, subscriber_port, cache_length=100):
+    def __init__(self, publisher_port, subscriber_port, cache_length=10):
         self.proxy = Proxy(publisher_port, subscriber_port, self.frontend_method, self.backend_method)
 
         # Store last instance of each topic in a cache
@@ -23,6 +23,7 @@ class Server:
                 parameter_message.send(self.proxy.backend)
 
                 # Resend the cached buffers of this channel for the newcomer
+                # TODO
                 for content_message in self.cache[topic]:
                     content_message.send(self.proxy.backend)
 
@@ -35,7 +36,7 @@ class Server:
                 self.cache[message.topic].append(message)
         elif message.message_type == b"control":
             if message.message_body == b"add":
-                self.cache[message.topic] = BufferList(self.cache_length)
+                self.cache[message.topic] = RingBufferList(self.cache_length)
             elif message.message_body == b"delete":
                 del self.cache[message.topic]
             else:
