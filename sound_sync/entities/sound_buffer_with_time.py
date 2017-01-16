@@ -19,7 +19,7 @@ class SoundBufferWithTime:
 
         sound_buffer, buffer = SoundBufferWithTime.unpack_helper(buffer)
         buffer_time_bytes_representation, buffer = SoundBufferWithTime.unpack_helper(buffer)
-        buffer_number, sound_buffer_length = unpack("LL", buffer)
+        buffer_number, sound_buffer_length = unpack("=LL", buffer)
 
         assert sound_buffer_length == len(sound_buffer)
 
@@ -35,7 +35,7 @@ class SoundBufferWithTime:
 
         data = SoundBufferWithTime.pack_helper(self.sound_buffer)
         data += SoundBufferWithTime.pack_helper(buffer_time_byte_representation)
-        data += pack("LL", self.buffer_number, self.sound_buffer_length)
+        data += pack("=LL", self.buffer_number, self.sound_buffer_length)
 
         encoded_data = str(base64.b64encode(data), encoding="utf8")
 
@@ -43,7 +43,7 @@ class SoundBufferWithTime:
 
     @staticmethod
     def unpack_helper(data):
-        fmt = "I"
+        fmt = "=I"
         size = calcsize(fmt)
         (length, ), data = unpack(fmt, data[:size]), data[size:]
         return data[:length], data[length:]
@@ -51,7 +51,7 @@ class SoundBufferWithTime:
     @staticmethod
     def pack_helper(data):
         length = len(data)
-        return pack("I%ds" % length, length, data)
+        return pack("=I%ds" % length, length, data)
 
     def __eq__(self, other):
         return (other.sound_buffer == self.sound_buffer and
