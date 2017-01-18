@@ -23,7 +23,6 @@ class Server:
                 parameter_message.send(self.proxy.backend)
 
                 # Resend the cached buffers of this channel for the newcomer
-                # TODO
                 for content_message in self.cache[topic]:
                     content_message.send(self.proxy.backend)
 
