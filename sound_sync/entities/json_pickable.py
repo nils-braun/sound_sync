@@ -3,12 +3,6 @@ class JSONPickleable:
     Mixin class for every pickable object
     """
 
-    def __init__(self):
-        """
-        Do nothing
-        """
-        pass
-
     def encode_json(self):
         """
         Encode all properties of the object into a JSON string except the ones that start with _
