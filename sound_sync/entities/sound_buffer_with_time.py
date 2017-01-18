@@ -4,6 +4,50 @@ from sound_sync.timing.time_utils import to_datetime
 from struct import pack, unpack, calcsize
 
 
+def packer(types, *variables, prefix="!"):
+    data = bytes()
+    for type, variable in zip(types, variables):
+        if type == bytes:
+            variable_length = len(variable)
+            data += pack(prefix + "I", variable_length)
+            data += pack(prefix + "%ds" % variable_length, variable)
+        elif type == int:
+            data += pack(prefix + "L", variable)
+        else:
+            raise TypeError
+
+    return base64.b64encode(data)
+
+def unpacker(types, string, prefix="!"):
+    data = base64.b64decode(string)
+
+    return_variables = []
+    for type in types:
+        if type == bytes:
+            format = prefix + "I"
+            size = calcsize(format)
+
+            (variable_length,) = unpack(format, data[:size])
+            variable = data[size:size + variable_length]
+
+            return_variables.append(variable)
+
+            data = data[size + variable_length:]
+        elif type == int:
+            format = prefix + "L"
+            size = calcsize(format)
+
+            (variable,) = unpack(format, data[:size])
+
+            return_variables.append(variable)
+
+            data = data[size:]
+        else:
+            raise TypeError
+
+    return return_variables
+
+
 class SoundBufferWithTime:
     def __init__(self, sound_buffer, buffer_number, buffer_time):
         assert isinstance(sound_buffer, bytes)
@@ -15,43 +59,30 @@ class SoundBufferWithTime:
 
     @staticmethod
     def construct_from_string(string):
-        buffer = base64.b64decode(string)
+        variables = unpacker([bytes, bytes, int, int], string)
+        sound_buffer, buffer_time_bytes_representation, buffer_number, sound_buffer_length = variables
 
-        sound_buffer, buffer = SoundBufferWithTime.unpack_helper(buffer)
-        buffer_time_bytes_representation, buffer = SoundBufferWithTime.unpack_helper(buffer)
-        buffer_number, sound_buffer_length = unpack("=LL", buffer)
+        buffer_type = to_datetime(str(buffer_time_bytes_representation, encoding="utf8"))
 
         assert sound_buffer_length == len(sound_buffer)
 
         new_sound_buffer = SoundBufferWithTime(
                 sound_buffer=sound_buffer,
                 buffer_number=buffer_number,
-                buffer_time=to_datetime(str(buffer_time_bytes_representation, encoding="utf8")))
+                buffer_time=buffer_type)
 
         return new_sound_buffer
 
     def to_string(self):
         buffer_time_byte_representation = str(self.buffer_time).encode("utf8")
 
-        data = SoundBufferWithTime.pack_helper(self.sound_buffer)
-        data += SoundBufferWithTime.pack_helper(buffer_time_byte_representation)
-        data += pack("=LL", self.buffer_number, self.sound_buffer_length)
+        encoded_string = packer([bytes, bytes, int, int],
+                                self.sound_buffer,
+                                buffer_time_byte_representation,
+                                self.buffer_number,
+                                self.sound_buffer_length)
 
-        encoded_data = str(base64.b64encode(data), encoding="utf8")
-
-        return encoded_data
-
-    @staticmethod
-    def unpack_helper(data):
-        fmt = "=I"
-        size = calcsize(fmt)
-        (length, ), data = unpack(fmt, data[:size]), data[size:]
-        return data[:length], data[length:]
-
-    @staticmethod
-    def pack_helper(data):
-        length = len(data)
-        return pack("=I%ds" % length, length, data)
+        return encoded_string
 
     def __eq__(self, other):
         return (other.sound_buffer == self.sound_buffer and
