@@ -20,6 +20,8 @@ class BaseSender(Channel):
         self.connection.add_channel_to_server()
         self.connection.set_name_and_description_of_channel(self.name, self.description)
 
+        # TODO: Send sound settings
+
         self.recorder.initialize()
 
     def main_loop(self):
