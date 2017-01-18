@@ -43,3 +43,6 @@ class Timer(Thread):
 
     def stop(self):
         self._should_run = False
+
+    def is_finished(self):
+        return not self._should_run
