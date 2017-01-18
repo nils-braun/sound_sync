@@ -9,7 +9,7 @@ class Timer(Thread):
     TODO: Handle reoccurring events!
     """
 
-    def __init__(self, start_time_to_wait_for, target_function, always_run=False):
+    def __init__(self, start_time_to_wait_for, target_function, always_run=False, **kwargs):
         """
         Initialize the timer process
         :param start_time_to_wait_for: the time in seconds after the Epoch
@@ -18,6 +18,7 @@ class Timer(Thread):
         self.start_time_to_wait_for = start_time_to_wait_for
         self.target_function = target_function
         self._should_run = True
+        self.kwargs = kwargs
 
         current_time = get_current_date()
 
@@ -34,7 +35,7 @@ class Timer(Thread):
         while self._should_run:
             current_time = get_current_date()
             if current_time >= time_to_wait_for:
-                self.target_function()
+                self.target_function(**self.kwargs)
                 self._should_run = False
                 return
 

@@ -50,12 +50,3 @@ class OrderedBufferList:
         if n >= len(self._buffers):
             return False
         return all([self._buffers[i] for i in range(n + 1)])
-
-    def glimpse(self):
-        return_buffer = self._buffers[0]
-
-        if return_buffer:
-            return return_buffer
-        else:
-            raise IndexError
-

@@ -11,36 +11,35 @@ from sound_sync.timing.time_utils import get_current_date
 from sound_sync.timing.timer import Timer
 
 
-class BaseListener:
-    def __init__(self, host, port, channel_hash):
+class PlayerClient:
+    def __init__(self):
         #: The player to send the data to. Will be used by the player_thread
         self.player = None
+
+        self.measure_chunksize = 10
+        self.restart_chunksize = 3
+
+        self.current_delta = timedelta()
+
+        self.timer_list = []
+
+        self.time_shift = None
 
         #: The buffer list
         self.buffer_list = OrderedBufferList(max_buffer_size=100)
 
-        self.chunksize = 10
+        self.deltas = deque(maxlen=self.measure_chunksize)
 
-        self.timer_list = []
+        self.maximum_delta = timedelta(seconds=0.001)
 
-        #: The connection to the rest server
-        self.connection = Subscriber(host, port, channel_hash)
-
-        #: The channel hash of the channel we want to listen to
-        self.channel_hash = channel_hash
-
-        #: The channel we are listening to
-        self._connected_channel = None
-
-        self.current_delta = timedelta()
-
-    def use_settings(self, channel_information):
-        JSONPickleable.fill_with_json(self.player, channel_information)
-        self._connected_channel = Channel()
-        JSONPickleable.fill_with_json(self._connected_channel, channel_information)
+        self.connection_time = timedelta(seconds=0.1)
 
     def initialize(self):
         self.player.initialize()
+
+        self.time_shift = self.restart_chunksize * (self.player.get_waiting_time() + self.connection_time)
+
+        print(self.time_shift)
 
     def terminate(self):
         for timer in self.timer_list:
@@ -49,81 +48,117 @@ class BaseListener:
         # TODO: This seems to hang. Why?
         #self.player.terminate()
 
-    def start_play(self):
-        print("Started player thread")
-
-        deltas = deque(maxlen=100)
+    def play_loop(self, buffer_number):
+        print("Will now restart")
+        self.deltas.clear()
 
         while True:
             next_buffer = self.buffer_list.pop()
 
-            time_distance = self.play_next_buffer(next_buffer)
-            deltas.append(time_distance)
+            assert next_buffer.buffer_number == buffer_number or buffer_number is None
 
-            average_delta = sum(deltas, timedelta()) / len(deltas)
+            buffer_number = None
 
-            print(time_distance, average_delta)
+            time_distance = self._play_and_measure_delta(next_buffer)
+            self.deltas.append(time_distance)
 
-            if average_delta.total_seconds() > 0.001 and len(deltas) > 10:
-                # schedule 10th buffer with new delta
-                self.current_delta += average_delta
-
-                assert self.buffer_list.is_continuous_until(self.chunksize)
-
-                next_playable_buffers = [self.buffer_list.pop() for _ in range(self.chunksize)]
-                self.start_player_thread_on_buffer(self.buffer_list.glimpse())
-
-                # play remaining buffers buffers
-                for next_buffer in next_playable_buffers[:-1]:
-                    self.play_next_buffer(next_buffer)
-
+            if not self._check_time_delta(next_buffer):
                 break
 
-    def play_next_buffer(self, next_buffer):
-        print("Playing", next_buffer.buffer_number)
-        self.player.put(next_buffer.sound_buffer)
-        start_time = self.calculate_start_time(next_buffer)
-        current_date = get_current_date()
+    def start_playing_at_time(self, buffer_time, buffer_number):
+        buffer_time += self.time_shift
+        buffer_time -= self.current_delta
 
-        return current_date - start_time
+        try:
+            next_timer = Timer(buffer_time, self.play_loop, buffer_number=buffer_number)
+            next_timer.start()
+            self.timer_list.append(next_timer)
+        except ValueError:
+            pass
+
+    def _check_time_delta(self, next_buffer):
+        if self.average_delta < self.maximum_delta or len(self.deltas) < self.measure_chunksize:
+            return True
+
+        print("Need to schedule a restart, because delta of", self.average_delta, "is too large")
+
+        # schedule buffer with new delta
+        self.current_delta += self.average_delta
+
+        buffer_time_after_that = next_buffer.buffer_time + (self.restart_chunksize + 1) * self.player.get_waiting_time()
+        buffer_number_after_that = next_buffer.buffer_number + self.restart_chunksize + 1
+        self.start_playing_at_time(buffer_time_after_that, buffer_number_after_that)
+
+        # play remaining buffers
+        for _ in range(self.restart_chunksize - 1):
+            next_buffer = self.buffer_list.pop()
+            self._play_and_measure_delta(next_buffer)
+
+        # Skip last buffer
+        self.buffer_list.pop()
+
+        return False
+
+    def _play_and_measure_delta(self, next_buffer):
+        self.player.put(next_buffer.sound_buffer)
+
+        # We want to compare to the real buffer time, to no current_delta in here!
+        buffer_time = next_buffer.buffer_time + self.time_shift
+        current_time = get_current_date()
+
+        return current_time - buffer_time
+
+    @property
+    def average_delta(self):
+        return sum(self.deltas, timedelta()) / len(self.deltas)
+
+
+class BaseListener(PlayerClient):
+    def __init__(self, host, port, channel_hash):
+        super().__init__()
+
+        #: The connection to the rest server
+        self.connection = Subscriber(host, port, channel_hash)
+
+        #: The channel we are listening to
+        self._connected_channel = None
+
+    def use_settings(self, channel_information):
+        JSONPickleable.fill_with_json(self.player, channel_information)
+        self._connected_channel = Channel()
+        JSONPickleable.fill_with_json(self._connected_channel, channel_information)
 
     def main_loop(self):
         while True:
             message = self.connection.receive()
 
             if message.message_type == b"control":
+                # TODO
                 print("Got control message", message)
+
             elif message.message_type == b"parameters":
-                print("Got settings", message)
                 if self._connected_channel is None:
                     parameters = json.loads(str(message.message_body, encoding="utf8"))
                     self.use_settings(parameters)
                 else:
+                    # TODO
                     print("Not implemented in the moment")
+
             elif message.message_type == b"content":
-                # print("Got content", message)
                 sound_buffer_with_time = SoundBufferWithTime.construct_from_string(
                     str(message.message_body, encoding="utf8"))
 
                 self.buffer_list.append(sound_buffer_with_time)
 
                 if len(self.timer_list) == 0:
-                    self.start_player_thread_on_buffer(sound_buffer_with_time)
+                    self.start_playing_at_time(sound_buffer_with_time.buffer_time, sound_buffer_with_time.buffer_number)
 
             else:
                 raise ValueError(message)
 
             for timer in self.timer_list:
-                if not timer._should_run:
+                if timer.is_finished():
                     timer.join()
 
-    def start_player_thread_on_buffer(self, sound_buffer_with_time):
-        timer_time = self.calculate_start_time(sound_buffer_with_time) - self.current_delta
-        print("Starting first player at", timer_time, "for", sound_buffer_with_time.buffer_number)
-        next_timer = Timer(timer_time,
-                           self.start_play)
-        next_timer.start()
-        self.timer_list.append(next_timer)
+            self.timer_list = [timer for timer in self.timer_list if not timer.is_finished()]
 
-    def calculate_start_time(self, sound_buffer_with_time):
-        return sound_buffer_with_time.buffer_time + timedelta(seconds=3)
