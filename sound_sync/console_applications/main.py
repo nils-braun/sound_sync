@@ -3,6 +3,7 @@ from sound_sync.console_applications import listener, sender, server
 from multiprocessing import Pool
 
 from sound_sync.timing.time_utils import sleep
+from multiprocessing.context import TimeoutError
 
 if __name__ == '__main__':
     results = []
@@ -15,7 +16,13 @@ if __name__ == '__main__':
 
         pool.close()
 
-        for result in results:
-            result.get()
+        while True:
+            for result in results:
+                try:
+                    result.get(timeout=0)
+                except TimeoutError:
+                    pass
+
+            sleep(0.1)
 
         pool.join()
