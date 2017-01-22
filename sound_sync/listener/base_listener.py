@@ -73,8 +73,10 @@ class PlayerClient:
             next_timer = Timer(buffer_time, self.play_loop, buffer_number=buffer_number)
             next_timer.start()
             self.timer_list.append(next_timer)
+
+            return True
         except ValueError:
-            pass
+            return False
 
     def _check_time_delta(self, next_buffer):
         if self.average_delta < self.maximum_delta or len(self.deltas) < self.measure_chunksize:
@@ -151,8 +153,8 @@ class BaseListener(PlayerClient):
                 self.buffer_list.append(sound_buffer_with_time)
 
                 if len(self.timer_list) == 0:
-                    self.start_playing_at_time(sound_buffer_with_time.buffer_time, sound_buffer_with_time.buffer_number)
-
+                    if not self.start_playing_at_time(sound_buffer_with_time.buffer_time, sound_buffer_with_time.buffer_number):
+                        self.buffer_list.pop()
             else:
                 raise ValueError(message)
 
