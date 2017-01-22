@@ -1,2 +1,2 @@
-tornado>=4.2.1
+ntplib
 pyalsaaudio==0.8.2
