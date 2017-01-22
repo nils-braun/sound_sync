@@ -1,5 +1,7 @@
 import argparse
 
+import logging
+
 from sound_sync.audio.pcm.play import PCMPlay
 from sound_sync.listener.base_listener import BaseListener
 
@@ -21,7 +23,17 @@ def main():
                         type=str,
                         help="Channel hash to listen to.",
                         dest="channel_hash")
+    parser.add_argument("-l", "--log",
+                        default="INFO",
+                        type=str,
+                        help="Log level of the application",
+                        dest="loglevel")
     args = parser.parse_args()
+
+    numeric_level = getattr(logging, args.loglevel.upper(), None)
+    if not isinstance(numeric_level, int):
+        raise ValueError('Invalid log level: %s' % args.loglevel)
+    logging.basicConfig(level=numeric_level)
 
     listener = BaseListener(args.hostname, args.port, args.channel_hash)
     listener.player = PCMPlay()

@@ -1,5 +1,7 @@
 import argparse
 
+import logging
+
 from sound_sync.audio.pcm.record import PCMRecorder
 from sound_sync.sender.base_sender import BaseSender
 
@@ -31,8 +33,19 @@ def main():
                         type=str,
                         help="Description of this channel in the channel list. Default No Description.",
                         dest="description")
+    parser.add_argument("-l", "--log",
+                        default="INFO",
+                        type=str,
+                        help="Log level of the application",
+                        dest="loglevel")
 
     args = parser.parse_args()
+
+    numeric_level = getattr(logging, args.loglevel.upper(), None)
+    if not isinstance(numeric_level, int):
+        raise ValueError('Invalid log level: %s' % args.loglevel)
+    logging.basicConfig(level=numeric_level)
+
     sender = BaseSender(args.hostname, args.port, args.hash)
     sender.recorder = PCMRecorder()
     sender.name = args.name

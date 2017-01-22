@@ -1,3 +1,5 @@
+import logging
+
 from sound_sync.networking.connection import Publisher
 from sound_sync.entities.sound_buffer_with_time import SoundBufferWithTime
 from sound_sync.entities.channel import Channel
@@ -36,6 +38,9 @@ class BaseSender(Channel):
             send_buffer = SoundBufferWithTime(sound_buffer=sound_buffer,
                                               buffer_number=buffer_number,
                                               buffer_time=buffer_time)
+
+            logging.debug("Sending buffer with number "
+                          "{buffer.buffer_number} to start at {buffer.buffer_time}".format(buffer=send_buffer))
 
             self.connection.add_buffer(send_buffer)
             buffer_number += 1
