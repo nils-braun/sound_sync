@@ -173,3 +173,34 @@ class Proxy(Socket):
         for poll_item, poll_function in self.dict_of_pollers.items():
             if poll_item in events:
                 poll_function()
+
+
+class RepReqSocket(Socket):
+    def __init__(self, context=None):
+        super().__init__(context)
+
+        self._socket = None
+
+    def send(self, message_body):
+        message = Message("", "", message_body)
+        message.send(self._socket)
+
+    def receive(self):
+        message = Message.recv(self._socket)
+        return message.message_body
+
+
+class RepSocket(RepReqSocket):
+    def __init__(self, port, context=None):
+        super().__init__(context)
+
+        self._socket = self.get_bound_socket(socket_type=zmq.REP,
+                                             url="tcp://*:{port}".format(port=port))
+
+
+class ReqSocket(RepReqSocket):
+    def __init__(self, host, port, context=None):
+        super().__init__(context)
+
+        self._socket = self.get_connected_socket(socket_type=zmq.REQ,
+                                                 url="tcp://{host}:{port}".format(host=host, port=port))
