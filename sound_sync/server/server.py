@@ -1,4 +1,4 @@
-from sound_sync.clients.connection import Proxy, Message
+from sound_sync.networking.connection import Proxy, Message
 from sound_sync.entities.buffer_list import RingBufferList
 
 
