@@ -18,10 +18,13 @@ class Message:
 
     @staticmethod
     def recv(socket):
-        message = socket.recv_multipart()
-        message = Message(*message)
+        try:
+            message = socket.recv_multipart()
+            message = Message(*message)
 
-        return message
+            return message
+        except zmq.error.Again:
+            raise RuntimeError("Failed to receive messages from the server. Is server/sender online?")
 
     @staticmethod
     def as_buffer(x):
@@ -135,7 +138,8 @@ class Subscriber(Socket):
 
         self.subscriber = self.get_connected_socket(socket_type=zmq.SUB,
                                                     url="tcp://{host}:{port}".format(host=host, port=port),
-                                                    options={zmq.SUBSCRIBE: self.topic})
+                                                    options={zmq.SUBSCRIBE: self.topic,
+                                                             zmq.RCVTIMEO: 1000})
 
     def receive(self):
         message = Message.recv(self.subscriber)
