@@ -2,7 +2,7 @@ import json
 from collections import deque
 from datetime import timedelta
 
-from sound_sync.clients.connection import Subscriber
+from sound_sync.networking.connection import Subscriber
 from sound_sync.entities.buffer_list import OrderedBufferList
 from sound_sync.entities.channel import Channel
 from sound_sync.entities.json_pickable import JSONPickleable
@@ -43,7 +43,7 @@ class PlayerClient:
 
     def terminate(self):
         for timer in self.timer_list:
-            timer.stop()
+            timer.cancel()
 
         # TODO: This seems to hang. Why?
         #self.player.terminate()

@@ -42,7 +42,7 @@ class Timer(Thread):
             time_delta = time_to_wait_for - current_time
             sleep(time_delta.total_seconds() / 2.0)
 
-    def stop(self):
+    def cancel(self):
         self._should_run = False
 
     def is_finished(self):

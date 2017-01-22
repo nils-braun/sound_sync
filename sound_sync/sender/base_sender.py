@@ -1,4 +1,4 @@
-from sound_sync.clients.connection import Publisher
+from sound_sync.networking.connection import Publisher
 from sound_sync.entities.sound_buffer_with_time import SoundBufferWithTime
 from sound_sync.entities.channel import Channel
 from sound_sync.timing.time_utils import get_current_date

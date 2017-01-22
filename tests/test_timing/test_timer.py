@@ -52,7 +52,7 @@ class TestTimer(TimingTestCase):
 
         self.assertEqual(timer._should_run, True)
 
-        timer.stop()
+        timer.cancel()
         self.assertEqual(timer._should_run, False)
 
     def test_stop_before_function(self):
