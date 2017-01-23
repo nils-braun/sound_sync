@@ -32,7 +32,7 @@ class TimingClient:
             self._timer.cancel()
 
         next_offset_query = get_current_date() + self._interval
-        self._timer = LowResolutionTimer(next_offset_query, self.get_offset_and_restart_timer())
+        self._timer = LowResolutionTimer(next_offset_query, self.get_offset_and_restart_timer)
         self._timer.start()
 
     def get_offset(self):
