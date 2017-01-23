@@ -36,8 +36,8 @@ class PCMDevice(SoundDevice):
         self.pcm.setformat(alsaaudio.PCM_FORMAT_S16_LE)
         self.pcm.setperiodsize(int(self.buffer_size))
 
-        logging.debug("Initializing a PCM device on "
-                      "{card_name} of type {pcm_type}".format(card_name=card_name, pcm_type=pcm_type))
+        logger.debug("Initializing a PCM device on "
+                     "{card_name} of type {pcm_type}".format(card_name=card_name, pcm_type=pcm_type))
 
     @staticmethod
     def assert_loopback_device():
