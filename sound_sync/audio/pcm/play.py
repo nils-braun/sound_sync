@@ -2,10 +2,10 @@ from sound_sync.audio.pcm.device import PCMDevice
 
 
 class PCMPlay(PCMDevice):
-    # The PCM device of the ALSA-Loopback-Adapter. The data coming from the applications
-    # is send through this loopback into the program. We need a frame rate of 44100 Hz and collect 10 ms of data
-    # at once.
-
+    """
+    The PCM device of the ALSA playback. The data to be played by this program is sent through
+    this into the read sound device.
+    """
     def __init__(self):
         PCMDevice.__init__(self)
 

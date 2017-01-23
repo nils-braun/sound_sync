@@ -2,6 +2,10 @@ from sound_sync.audio.pcm.device import PCMDevice
 
 
 class PCMRecorder(PCMDevice):
+    """
+    The PCM device of the ALSA-Loopback-Adapter. The data coming from the applications
+    is sent through this loopback into the program.
+    """
     def __init__(self):
         PCMDevice.__init__(self)
 
@@ -16,6 +20,11 @@ class PCMRecorder(PCMDevice):
         self.initialize_pcm(card_name="hw:Loopback,1,0", capture_device=True)
 
     def get(self):
+        """
+        Overwritten get function to retrieve not only one, but self.factor
+        sound buffers from the sound device.
+        :return: the sound data in bytes and the sound data length.
+        """
         length = 0
         sound_buffer = bytes()
         for i in range(int(self.factor)):
