@@ -4,6 +4,7 @@ from datetime import timedelta
 from sound_sync.entities.buffer_list import OrderedBufferList
 from sound_sync.timing.time_utils import get_current_date
 from sound_sync.timing.timer import Timer
+from sound_sync.tp.ptp_client import PTPClient
 
 
 class PlayerClient:
@@ -18,8 +19,6 @@ class PlayerClient:
 
         self.timer_list = []
 
-        self.time_shift = None
-
         #: The buffer list
         self.buffer_list = OrderedBufferList(max_buffer_size=100)
 
@@ -27,12 +26,16 @@ class PlayerClient:
 
         self.maximum_delta = timedelta(seconds=0.001)
 
-        self.connection_time = timedelta(seconds=0.5)
+        self.timing_client = PTPClient()
+
+    @property
+    def time_shift(self):
+        return (self.restart_chunksize + 1) * (self.player.get_waiting_time()) - self.timing_client.offset
 
     def initialize(self):
         self.player.initialize()
 
-        self.time_shift = (self.restart_chunksize + 1) * (self.player.get_waiting_time() + self.connection_time)
+        self.timing_client.get_offset_and_restart_timer()
 
     def terminate(self):
         for timer in self.timer_list:
