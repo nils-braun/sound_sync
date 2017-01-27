@@ -3,6 +3,7 @@ from collections import deque
 import logging
 logger = logging.getLogger(__name__)
 
+
 class RingBufferList:
     """
     Simple implementation of a ring buffer, that is basically
@@ -68,6 +69,8 @@ class OrderedBufferList:
         item_buffer_number = item.buffer_number
 
         if self._start_index is None:
+            logger.debug("Initialized a new buffer list with the start index {index}"
+                         .format(index=item_buffer_number))
             self._start_index = item_buffer_number
 
         index_number = item_buffer_number - self._start_index

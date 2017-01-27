@@ -46,6 +46,7 @@ class PCMDevice(SoundDevice):
         """
         card_list = alsaaudio.cards()
         if "Loopback" not in card_list:
+            logger.error("No Loopback in the module list. I have only found {card_list}.".format(card_list=card_list))
             raise ValueError("There is no Loopback module loaded by ALSA. Loopback is needed by the program. " +
                              "Try loading it via modprobe or add it to /etc/modules or to a file in /etc/modules.d/.")
 
@@ -56,7 +57,7 @@ class PCMDevice(SoundDevice):
         if self.pcm:
             self.pcm.close()
 
-        logging.debug("Closing PCM device.")
+        logger.debug("Closing PCM device.")
 
     def get(self):
         """
@@ -71,6 +72,7 @@ class PCMDevice(SoundDevice):
             current_length, current_sound_buffer = self.pcm.read()
             return current_sound_buffer, current_length
         except Exception as e:
+            logger.error("Reading from the sound device failed: {error}".format(error=e))
             raise RuntimeError("Reading from the sound device failed: " + str(e))
 
     def put(self, sound_buffer):
@@ -87,4 +89,5 @@ class PCMDevice(SoundDevice):
         try:
             self.pcm.write(sound_buffer)
         except Exception as e:
+            logger.error("Writing to the sound device failed: {error}".format(error=e))
             raise RuntimeError("Writing to the sound device failed: " + str(e))
