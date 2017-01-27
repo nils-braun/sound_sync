@@ -11,7 +11,7 @@ def mean(listable_item):
 
 
 class PTPClient(TimingClient):
-    def __init__(self, interval=timedelta(seconds=20), host="192.168.178.38", port=9999):
+    def __init__(self, host, port=8889, interval=timedelta(seconds=20)):
         super().__init__(interval)
 
         self._socket = ReqSocket(host, port)
