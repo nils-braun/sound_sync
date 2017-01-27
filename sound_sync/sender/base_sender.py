@@ -2,12 +2,9 @@ from sound_sync.networking.connection import Publisher
 from sound_sync.entities.sound_buffer_with_time import SoundBufferWithTime
 from sound_sync.entities.channel import Channel
 from sound_sync.timing.time_utils import get_current_date
-
-import logging
-
-from sound_sync.tp.ntp_client import NTPClient
 from sound_sync.tp.ptp_client import PTPClient
 
+import logging
 logger = logging.getLogger(__name__)
 
 

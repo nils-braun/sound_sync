@@ -149,20 +149,20 @@ class Subscriber(Socket):
 
 
 class Proxy(Socket):
-    def __init__(self, publisher_port, subscriber_port, frontend_method, backend_method, context=None):
+    def __init__(self, publisher_port, subscriber_port, input_method, output_method, context=None):
         super().__init__(context)
 
         # Subscribe to every single topic from publisher
-        self.frontend = self.get_bound_socket(zmq.SUB, url="tcp://*:{port}".format(port=publisher_port),
-                                              options={zmq.SUBSCRIBE: b""})
+        self.input_socket = self.get_bound_socket(zmq.SUB, url="tcp://*:{port}".format(port=publisher_port),
+                                                  options={zmq.SUBSCRIBE: b""})
 
         # Listen to all new subscriptions
-        self.backend = self.get_bound_socket(zmq.XPUB, url="tcp://*:{port}".format(port=subscriber_port),
-                                             options={zmq.XPUB_VERBOSE: True})
+        self.output_socket = self.get_bound_socket(zmq.XPUB, url="tcp://*:{port}".format(port=subscriber_port),
+                                                   options={zmq.XPUB_VERBOSE: True})
 
         self.poller = zmq.Poller()
 
-        self.dict_of_pollers = {self.frontend: frontend_method, self.backend: backend_method}
+        self.dict_of_pollers = {self.input_socket: input_method, self.output_socket: output_method}
 
         for poll_item in self.dict_of_pollers.keys():
             self.poller.register(poll_item, zmq.POLLIN)
