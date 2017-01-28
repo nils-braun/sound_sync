@@ -1,8 +1,7 @@
-from collections import deque
 from datetime import timedelta
 
 from sound_sync.networking.connection import ReqSocket
-from sound_sync.timing.time_utils import get_current_date, sleep, to_datetime
+from sound_sync.timing.time_utils import get_current_date, to_datetime
 from sound_sync.tp.timing_client import TimingClient
 
 
@@ -37,8 +36,3 @@ class PTPClient(TimingClient):
             offsets.append(offset)
 
         return mean(offsets), mean(connection_times)
-
-
-if __name__ == '__main__':
-    client = PTPClient()
-    client.start()
