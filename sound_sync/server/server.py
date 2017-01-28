@@ -2,6 +2,9 @@ from sound_sync.networking.connection import Proxy, Message
 from sound_sync.entities.buffer_list import RingBufferList
 
 import logging
+
+from sound_sync.tp.ptp_server import PTPServer
+
 logger = logging.getLogger(__name__)
 
 # Event is one byte 0 = unsub or 1 = sub, followed by topic
@@ -29,6 +32,8 @@ class Server:
 
         # How many messages should be cached
         self.cache_length = cache_length
+
+        self.timing_server = PTPServer()
 
     def output_method(self):
         message = self.proxy.output_socket.recv()
@@ -77,6 +82,8 @@ class Server:
     def main_loop(self):
         logger.debug("Starting server")
 
+        self.timing_server.start()
+
         while True:
             self.proxy.poll()
 
@@ -87,6 +94,8 @@ class Server:
 
     def terminate(self):
         logger.debug("Terminating server")
+
+        self.timing_server.cancel()
 
         # Send a goodbye to every client
         for channel_hash in self.cache:
