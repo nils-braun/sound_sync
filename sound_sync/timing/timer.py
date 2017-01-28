@@ -1,4 +1,4 @@
-from threading import Thread
+from threading import Thread, Event
 
 from sound_sync.timing.time_utils import get_current_date, sleep
 
@@ -21,7 +21,7 @@ class Timer(Thread):
         """
         self.start_time_to_wait_for = start_time_to_wait_for
         self.target_function = target_function
-        self._should_run = True
+        self._should_run = Event()
         self.kwargs = kwargs
 
         current_time = get_current_date()
@@ -40,18 +40,18 @@ class Timer(Thread):
 
         time_to_wait_for = start_time_to_wait_for
 
-        while self._should_run:
+        while not self.is_finished():
             current_time = get_current_date()
             if current_time >= time_to_wait_for:
                 self.target_function(**self.kwargs)
-                self._should_run = False
+                self._should_run.set()
                 return
 
             time_delta = time_to_wait_for - current_time
-            sleep(time_delta.total_seconds() / 2.0)
+            self._should_run.wait(time_delta.total_seconds() / 2.0)
 
     def cancel(self):
-        self._should_run = False
+        self._should_run.set()
 
     def is_finished(self):
-        return not self._should_run
+        return self._should_run.is_set()
