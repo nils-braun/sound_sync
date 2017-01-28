@@ -50,15 +50,9 @@ class TestPCMPlayer(SoundTestCase):
     def test_put_with_errors(self):
         player = self.init_sound_player()
 
-        self.counter = 0
+        def put_mock(buffer):
+            raise Exception
 
-        def player_mock(buffer):
-            self.counter += 1
-            if self.counter % 2 == 0:
-                raise RuntimeError()
-            else:
-                return 2
+        player.pcm.write = put_mock
 
-        player.pcm.write = player_mock
-
-        player.put(bytes("This is a test buffer", encoding="utf8"))
+        self.assertRaises(RuntimeError, player.put, bytes("This is a test buffer", encoding="utf8"))

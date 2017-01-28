@@ -54,3 +54,14 @@ class TestPCMRecorder(SoundTestCase):
         sound_buffer, length = recorder.get()
         self.assertEqual(sound_buffer, test_buffer*test_factor)
         self.assertEqual(length, test_buffer_length*test_factor)
+
+    def test_get_with_exception(self):
+        recorder = self.init_sound_recorder()
+
+        def mock_get():
+            raise Exception
+
+        recorder.pcm.read = mock_get
+
+        self.assertRaises(RuntimeError, recorder.get)
+

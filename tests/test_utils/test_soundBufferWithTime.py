@@ -1,7 +1,7 @@
 import datetime
 from unittest import TestCase
 
-from sound_sync.entities.sound_buffer_with_time import SoundBufferWithTime
+from sound_sync.entities.sound_buffer_with_time import SoundBufferWithTime, packer, unpacker
 
 
 class TestSoundBufferWithTime(TestCase):
@@ -44,3 +44,19 @@ class TestSoundBufferWithTime(TestCase):
         self.assertEqual(first_sound_buffer, second_sound_buffer)
         first_sound_buffer.buffer_number = 30
         self.assertNotEqual(first_sound_buffer, second_sound_buffer)
+
+
+class TestPackerAndUnpacker(TestCase):
+    def test_wrong_types(self):
+        class MyClass:
+            pass
+
+        correct_string = packer([int], 3)
+
+        a = MyClass()
+
+        self.assertRaises(TypeError, packer, [float], 1.0)
+        self.assertRaises(TypeError, unpacker, [float], correct_string)
+
+        self.assertRaises(TypeError, packer, [MyClass], a)
+        self.assertRaises(TypeError, unpacker, [MyClass], correct_string)

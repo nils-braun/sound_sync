@@ -44,30 +44,26 @@ class TestTimer(TimingTestCase):
 
         timer.run()
 
-    def test_stop(self):
+    def test_stop_before_run(self):
         self.datetime_mock.datetime.utcnow = self.time_list_mock_function
 
         start_time = datetime(2015, 11, 6, 0, 0, 2)
         timer = Timer(start_time, None)
 
-        self.assertEqual(timer._should_run, True)
+        self.assertEqual(timer.is_finished(), False)
 
         timer.cancel()
-        self.assertEqual(timer._should_run, False)
+        self.assertEqual(timer.is_finished(), True)
 
-    def test_stop_before_function(self):
+    def test_stop_while_run(self):
         self.datetime_mock.datetime.utcnow = self.time_list_mock_function
 
         start_time = datetime(2015, 11, 6, 0, 0, 2)
+        timer = Timer(start_time, None)
 
-        def sleep_function(time_delta):
-            timer._should_run = False
+        timer.start()
 
-        self.time_mock.sleep = sleep_function
+        self.assertEqual(timer.is_finished(), False)
 
-        def callable_error():
-            raise AssertionError()
-
-        timer = Timer(start_time, callable_error)
-
-        timer.run()
+        timer.cancel()
+        self.assertEqual(timer.is_finished(), True)
